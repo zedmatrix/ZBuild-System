@@ -1,5 +1,5 @@
-#
-#         Blank Install zbuild
+#!/bin/bash
+#   Blank Install zbuild
 #   unset functions
 #
 unset -f Src_package
@@ -14,9 +14,8 @@ unset -f Src_post
 # 
 # Extract the base package name and version
 Src_package() {
-    packagedir=${archive%.tar.*}       # Remove the .tar.gz (or .tar.bz2, etc.) part
-    package=${packagedir%-*}               # Extracts the package name (everything before the last hyphe>
-    pkgver=${packagedir##*-}           # Extracts the version (everything after the last hyphen)
+    packagedir=${archive%.tar.*}
+    package=${packagedir%-*}
 }
 
 Src_prepare () {
@@ -40,7 +39,7 @@ Src_prepare () {
 
 Src_configure () {
    echo "*** Configuring ${package} ***"
-   eval ${build}
+   build="--build=$(../config.guess)"
    ../configure ${build} ${host} ${target} LDFLAGS_FOR_TARGET=-L$PWD/$LFS_TGT/libgcc ${prefix} ${with} ${enable} ${disable} || exit 88
 }
 Src_compile () {
@@ -72,7 +71,7 @@ export -f Src_post
 #
 LFS=/mnt/lfs
 LFS_TGT=$(uname -m)-lfs-linux-gnu
-BUILD_SOURCE=$LFS/sources
+BUILD_SOURCE=$LFS/opt/source
 BUILD_ROOT=$LFS/BUILD
 export LFS LFS_TGT BUILD_SOURCE BUILD_ROOT
 
@@ -86,7 +85,6 @@ Src_package
 #
 # Start defining package specific options
 # 
-build='--build=$(../config.guess)'
 host="--host=$LFS_TGT"
 target="--target=$LFS_TGT"
 prefix="--prefix=/usr"
