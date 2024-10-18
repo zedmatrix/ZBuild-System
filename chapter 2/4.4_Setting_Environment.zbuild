@@ -1,3 +1,4 @@
+#!/bin/bash
 echo "* Creating {lfs} bash_profile *"
 
 if [ -f "4.4.1.bash_profile" ]; then 
