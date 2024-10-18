@@ -1,4 +1,6 @@
-mkdir -pv /{boot,home,mnt,opt,srv}
+#!/bin/bash
+echo "* Creating Directories *"
+mkdir -pv /{boot,home,mnt,srv}
 mkdir -pv /etc/{opt,sysconfig}
 mkdir -pv /lib/firmware
 mkdir -pv /media/{floppy,cdrom,usb}
