@@ -13,9 +13,10 @@ unset -f Src_post
 #   Build Functions
 # 
 # Extract the base package name and version
+# First Remove the .tar.* and Second Get Package Name
 Src_package() {
-    packagedir=${archive%.tar.*}       # Remove the .tar.gz (or .tar.bz2, etc.) part
-    package=${packagedir%-*}           # Extracts the package name (everything before the last hyphen)
+    packagedir=${archive%.tar.*}
+    package=${packagedir%-*}
 
 }
 
