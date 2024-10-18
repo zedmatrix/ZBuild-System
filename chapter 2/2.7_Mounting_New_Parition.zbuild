@@ -2,6 +2,7 @@
 
 LFS=/mnt/lfs
 ROOT=vdc3
+SWAP=vdc2
 echo "* Mounting $LFS to /dev/$ROOT *"
 
 if [ -d $LFS ]; then
@@ -9,7 +10,10 @@ if [ -d $LFS ]; then
 fi
 
 mount -v -t ext4 /dev/$ROOT $LFS
+swapon -v /dev/$SWAP
+
 export LFS
-
-echo "* Chapter 3 Packages and Patches: /mnt/sources *"
-
+echo "* Creating $LFS/BUILD"
+mkdir -pv $LFS/BUILD
+echo "* Chapter 3 Packages and Patches: $LFS/opt/source *"
+mkdir -pv $LFS/opt/source
