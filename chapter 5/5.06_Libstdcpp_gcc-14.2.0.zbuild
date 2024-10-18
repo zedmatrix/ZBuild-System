@@ -1,0 +1,103 @@
+#
+#         Blank Install zbuild
+#   unset functions
+#
+unset -f Src_package
+unset -f Src_prepare
+unset -f Src_configure
+unset -f Src_compile
+unset -f Src_check
+unset -f Src_install
+unset -f Src_post
+#
+#   Build Functions
+# 
+# Extract the base package name and version
+Src_package() {
+    packagedir=${archive%.tar.*}       # Remove the .tar.gz (or .tar.bz2, etc.) part
+    package=${packagedir%-*}               # Extracts the package name (everything before the last hyphe>
+    pkgver=${packagedir##*-}           # Extracts the version (everything after the last hyphen)
+}
+
+Src_prepare () {
+   echo "*** Preparing ${package} ***"
+   mkdir -v build
+   cd build
+}
+
+Src_configure () {
+   echo "*** Configuring ${package} ***"
+   ../libstdc++-v3/configure ${host} ${build} ${prefix} ${disable} ${with}
+}
+Src_compile () {
+   echo "*** Compiling ${package} ***"
+   make || exit 77
+}
+Src_check () {
+   echo "*** Checking ${package} ***"
+
+}
+Src_install () {
+   echo "*** Installing ${package} ***"
+   make DESTDIR=$LFS install
+}
+Src_post () {
+   echo "*** Finalizing ${package} ***"
+   rm -v $LFS/usr/lib/lib{stdc++{,exp,fs},supc++}.la
+}
+
+export -f Src_prepare
+export -f Src_configure
+export -f Src_compile
+export -f Src_check
+export -f Src_install
+export -f Src_post
+#
+#   Define configure options
+#
+LFS=/mnt/lfs
+LFS_TGT=$(uname -m)-lfs-linux-gnu
+BUILD_SOURCE=$LFS/sources
+BUILD_ROOT=$LFS/BUILD
+export LFS LFS_TGT BUILD_SOURCE BUILD_ROOT
+
+package=gcc-14.2.0
+archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
+extract="true"
+delete="true"
+patch="false"
+
+
+Src_package
+#
+# Start defining package specific options
+# 
+host="--host=$LFS_TGT"
+build="--build=$(../config.guess)"
+prefix="--prefix=/usr"
+disable="--disable-multilib --disable-nls --disable-libstdcxx-pch"
+with="--with-gxx-include-dir=/tools/$LFS_TGT/include/c++/14.2.0"
+
+export package packagedir archive
+export extract delete patch
+export host build prefix disable with
+
+$BUILD_ROOT/zbuild.sh
+exit_code=$?
+
+if [[ exit_code -ne 0 ]]; then
+    echo "___ Error Code: $exit_code"
+else
+    echo "*** Success ***"
+    unset -f Src_package
+    unset -f Src_prepare
+    unset -f Src_configure
+    unset -f Src_compile
+    unset -f Src_check
+    unset -f Src_install
+    unset -f Src_post
+    unset package packagedir archive
+    unset extract delete patch
+    unset host build prefix disable with
+fi
+

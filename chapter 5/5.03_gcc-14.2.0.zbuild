@@ -1,0 +1,118 @@
+#
+#         Blank Install zbuild
+#   unset functions
+#
+unset -f Src_package
+unset -f Src_prepare
+unset -f Src_configure
+unset -f Src_compile
+unset -f Src_check
+unset -f Src_install
+unset -f Src_post
+#
+#   Build Functions
+# 
+# Extract the base package name and version
+Src_package() {
+    packagedir=${archive%.tar.*}       # Remove the .tar.gz (or .tar.bz2, etc.) part
+    package=${packagedir%-*}               # Extracts the package name (everything before the last hyphe>
+    pkgver=${packagedir##*-}           # Extracts the version (everything after the last hyphen)
+}
+
+Src_prepare () {
+   echo "*** Preparing ${package} ***"
+   tar -xf $BUILD_SOURCE/mpfr-4.2.1.tar.xz
+   tar -xf $BUILD_SOURCE/gmp-6.3.0.tar.xz
+   tar -xf $BUILD_SOURCE/mpc-1.3.1.tar.gz
+   mv -v mpfr-4.2.1 mpfr
+   mv -v gmp-6.3.0 gmp
+   mv -v mpc-1.3.1 mpc
+
+   case $(uname -m) in
+     x86_64)
+       sed -e '/m64=/s/lib64/lib/' -i.orig gcc/config/i386/t-linux64
+     ;;
+   esac
+   mkdir -v build
+   cd build
+}
+
+Src_configure () {
+   echo "*** Configuring ${package} ***"
+   ../configure ${target} ${prefix} ${with} ${enable} ${disable}
+}
+Src_compile () {
+   echo "*** Compiling ${package} ***"
+   make || exit 77
+}
+Src_check () {
+   echo "*** Checking ${package} ***"
+#   make check
+}
+Src_install () {
+   echo "*** Installing ${package} ***"
+   make install
+   cd ..
+   cat gcc/limitx.h gcc/glimits.h gcc/limity.h > `dirname $($LFS_TGT-gcc -print-libgcc-file-name)`/include/limits.h
+
+}
+Src_post () {
+   echo "*** Finalizing ${package} ***"
+
+}
+
+export -f Src_prepare
+export -f Src_configure
+export -f Src_compile
+export -f Src_check
+export -f Src_install
+export -f Src_post
+#
+#   Define configure options
+#
+LFS=/mnt/lfs
+LFS_TGT=$(uname -m)-lfs-linux-gnu
+BUILD_SOURCE=$LFS/sources
+BUILD_ROOT=$LFS/BUILD
+export LFS LFS_TGT BUILD_SOURCE BUILD_ROOT
+
+package=gcc-14.2.0
+archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
+
+extract="true"
+delete="true"
+patch="false"
+export extract delete patch
+
+Src_package
+#
+# Start defining package specific options
+# 
+target="--target=$LFS_TGT"
+prefix="--prefix=$LFS/tools"
+with="--with-glibc-version=2.40 --with-sysroot=$LFS --with-newlib --without-headers"
+enable="--enable-default-pie --enable-default-ssp --enable-languages=c,c++"
+disable="--disable-nls --disable-shared --disable-multilib --disable-threads --disable-libatomic --disable-libgomp \
+ --disable-libquadmath --disable-libssp --disable-libvtv --disable-libstdcxx"
+
+export package packagedir archive 
+export prefix target with enable disable
+
+$BUILD_ROOT/zbuild.sh
+exit_code=$?
+
+if [[ exit_code -ne 0 ]]; then
+    echo "___ Error Code: $exit_code"
+else
+    echo "*** Success ***"
+    unset -f Src_package
+    unset -f Src_prepare
+    unset -f Src_configure
+    unset -f Src_compile
+    unset -f Src_check
+    unset -f Src_install
+    unset -f Src_post
+    unset package packagedir archive extract delete patch
+    unset prefix target with enable disable
+fi
+
