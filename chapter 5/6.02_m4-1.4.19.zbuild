@@ -25,7 +25,7 @@ Src_prepare () {
 
 Src_configure () {
    echo "*** Configuring ${package} ***"
-   eval ${build}
+   build="--build=$(build-aux/config.guess)"
    ./configure ${prefix} ${host} ${build}
 }
 Src_compile () {
@@ -72,7 +72,6 @@ Src_package
 # 
 prefix="--prefix=/usr"
 host="--host=$LFS_TGT"
-build='--build=$(build-aux/config.guess)'
 
 export package packagedir archive
 export extract delete patch
