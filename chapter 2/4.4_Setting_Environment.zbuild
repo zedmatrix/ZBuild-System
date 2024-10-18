@@ -1,22 +1,17 @@
-echo "* Creating root bash_profile *"
-cat > ~/.bash_profile << "EOF"
-exec env -i HOME=$HOME TERM=$TERM PS1='\u:\w\$ ' /bin/bash
-EOF
+echo "* Creating {lfs} bash_profile *"
 
-echo "* Creating root bashrc *"
-cat > ~/.bashrc << "EOF"
-set +h
-umask 022
-LFS=/mnt/lfs
-LC_ALL=POSIX
-LFS_TGT=$(uname -m)-lfs-linux-gnu
-PATH=/usr/bin
-if [ ! -L /bin ]; then PATH=/bin:$PATH; fi
-PATH=$LFS/tools/bin:$PATH
-CONFIG_SITE=$LFS/usr/share/config.site
-export MAKEFLAGS=-j$(nproc)
-export LFS LC_ALL LFS_TGT PATH CONFIG_SITE
-EOF
+if [ -f "4.4.1.bash_profile" ]; then 
+    cp -v 4.4.1.bash_profile ~/.bash_profile
+else
+    echo "Error: missing 4.4.1.bash_profile"
+fi
 
-source ~/.bash_profile
+if [ -f "4.4.1.bashrc" ]; then 
+    cp -v 4.4.1.bashrc ~/.bashrc
+else
+    echo "Error: missing 4.4.1.bashrc"
+fi
+
 echo "* Done *"
+echo "* If successful source the {lfs} bash_profile *"
+echo "source ~/.bash_profile"
