@@ -1,0 +1,17 @@
+#!/bin/bash
+
+echo "* Adding lfs user *"
+groupadd lfs
+useradd -s /bin/bash -g lfs -m -k /dev/null lfs
+
+echo "* Setting {lfs} user {lfs} passwd *"
+echo "lfs:lfs" | chpasswd
+
+chown -v lfs $LFS/{usr{,/*},lib,var,etc,bin,sbin,tools}
+case $(uname -m) in
+  x86_64) chown -v lfs $LFS/lib64 ;;
+esac
+
+echo "* Starting {lfs} shell *"
+su - lfs
+

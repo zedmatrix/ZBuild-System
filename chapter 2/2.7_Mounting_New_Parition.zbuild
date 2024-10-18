@@ -1,0 +1,15 @@
+#!/bin/bash
+
+LFS=/mnt/lfs
+ROOT=vdc3
+echo "* Mounting $LFS to /dev/$ROOT *"
+
+if [ -d $LFS ]; then
+	mkdir -pv $LFS
+fi
+
+mount -v -t ext4 /dev/$ROOT $LFS
+export LFS
+
+echo "* Chapter 3 Packages and Patches: /mnt/sources *"
+
