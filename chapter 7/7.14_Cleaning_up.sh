@@ -1,3 +1,4 @@
+#!/bin/bash
 echo "* remove info-man-doc"
 rm -rf /usr/share/{info,man,doc}/*
 
