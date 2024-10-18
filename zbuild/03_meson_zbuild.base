@@ -1,5 +1,5 @@
-#
-#         Blank Install zbuild
+#!/bin/bash
+#   Blank Install zbuild
 #   unset functions
 #
 unset -f Src_package
@@ -15,8 +15,8 @@ unset -f Src_post
 # Extract the base package name and version
 Src_package() {
     packagedir=${archive%.tar.*}       # Remove the .tar.gz (or .tar.bz2, etc.) part
-    package=${packagedir%-*}               # Extracts the package name (everything before the last hyphe>
-    pkgver=${packagedir##*-}           # Extracts the version (everything after the last hyphen)
+    package=${packagedir%-*}           # Extracts the package name (everything before the last hyphen)
+
 }
 
 Src_prepare () {
@@ -29,18 +29,22 @@ Src_configure () {
    echo "*** Configuring ${package} ***"
    meson setup .. ${prefix} ${build} || exit 88
 }
+
 Src_compile () {
    echo "*** Compiling ${package} ***"
    ninja || exit 77
 }
+
 Src_check () {
    echo "*** Checking ${package} ***"
-   ninja test 2>&1 $XORGLOG/${package}-make_check.log
+   ninja test 2>&1 $BUILD_LOGS/${package}-ninja_test.log    #you also use ${packagedir} here
 }
+
 Src_install () {
    echo "*** Installing ${package} ***"
    ninja install || exit 55
 }
+
 Src_post () {
    echo "*** Finalizing ${package} ***"
    /sbin/ldconfig
@@ -55,10 +59,10 @@ export -f Src_post
 #
 #   Define configure options
 #
-BUILD_SOURCE=/sources
+BUILD_SOURCE=/opt/source
 BUILD_ROOT=/BUILD
-XORGLOG=$BUILD_ROOT/xorglogs
-export BUILD_SOURCE BUILD_ROOT XORGLOG
+BUILD_LOGS=$BUILD_ROOT/build_logs
+export BUILD_SOURCE BUILD_ROOT BUILD_LOGS
 
 package=
 archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
