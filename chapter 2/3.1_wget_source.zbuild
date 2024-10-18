@@ -11,6 +11,7 @@ if [ -n $LFS ]; then
         if [ -f wget-list ] && [ -f md5sums ]; then
           wget --input-file=wget-list --continue
           md5sum -c md5sums
+          chown root:root $BUILD_SOURCE/*
           echo "* Finished Getting Sources to: $BUILD_SOURCE *"
         else
           echo "Error: make sure wget-list and md5sums are in $BUILD_SOURCE"
