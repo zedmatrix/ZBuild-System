@@ -37,7 +37,7 @@ Src_compile () {
 
 Src_check () {
    echo "*** Checking ${package} ***"
-   ninja test 2>&1 $BUILD_LOGS/${package}-ninja_test.log    #you also use ${packagedir} here
+   ninja test 2>&1 | tee $BUILD_LOGS/${package}-ninja_test.log
 }
 
 Src_install () {
