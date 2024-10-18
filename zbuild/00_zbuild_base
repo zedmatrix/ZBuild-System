@@ -1,7 +1,7 @@
+#!/bin/bash
 #
-#         Blank Install zbuild
+#   Blank Install zbuild
 #   unset functions
-#
 unset -f Src_package
 unset -f Src_prepare
 unset -f Src_configure
@@ -13,10 +13,10 @@ unset -f Src_post
 #   Build Functions
 # 
 # Extract the base package name and version
+# First Remove the .tar.* and Second Get Package Name
 Src_package() {
-    packagedir=${archive%.tar.*}       # Remove the .tar.gz (or .tar.bz2, etc.) part
-    package=${packagedir%-*}               # Extracts the package name (everything before the last hyphe>
-    pkgver=${packagedir##*-}           # Extracts the version (everything after the last hyphen)
+    packagedir=${archive%.tar.*}
+    package=${packagedir%-*}
 }
 
 Src_prepare () {
@@ -34,7 +34,7 @@ Src_compile () {
 }
 Src_check () {
    echo "*** Checking ${package} ***"
-   make check || exit 66
+   make check 2>&1 | tee $BUILD_LOGS/${package}-make-check.log
 }
 Src_install () {
    echo "*** Installing ${package} ***"
@@ -54,9 +54,10 @@ export -f Src_post
 #
 #   Define configure options
 #
-BUILD_SOURCE=/sources
+BUILD_SOURCE=/opt/source
 BUILD_ROOT=/BUILD
-export BUILD_SOURCE BUILD_ROOT
+BUILD_LOGS=$BUILD_ROOT/build_logs
+export BUILD_SOURCE BUILD_ROOT BUILD_LOGS
 
 package=
 archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
@@ -93,4 +94,3 @@ else
     unset package packagedir archive extract delete patch
     unset prefix disable docdir enable
 fi
-
