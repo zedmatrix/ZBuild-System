@@ -34,6 +34,7 @@ Src_prepare () {
 Src_configure () {
    echo "*** Configuring ${package} ***"
    echo "rootsbindir=/usr/sbin" > configparms
+   build="--build=$(../scripts/config.guess)"
    ../configure ${prefix} ${host} ${build} ${enable} ${disable} libc_cv_slibdir=/usr/lib
 }
 Src_compile () {
@@ -50,9 +51,10 @@ Src_install () {
    sed '/RTLDLIST=/s@/usr@@g' -i $LFS/usr/bin/ldd
 }
 Src_post () {
-   echo "*** Finalizing ${package} ***"
+   echo "*** Finalizing and Testing ${package} ***"
    echo 'int main(){}' | $LFS_TGT-gcc -xc -
    readelf -l a.out | grep ld-linux
+   rm -v a.out
 }
 
 export -f Src_prepare
@@ -84,7 +86,6 @@ Src_package
 # 
 prefix="--prefix=/usr"
 host="--host=$LFS_TGT"
-build="--build=$(../scripts/config.guess)"
 enable="--enable-kernel=4.19 --with-headers=$LFS/usr/include"
 disable="--disable-nscd"
 
