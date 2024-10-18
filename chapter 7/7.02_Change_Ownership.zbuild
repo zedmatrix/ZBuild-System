@@ -1,3 +1,4 @@
+#!/bin/bash
 if [ -v LFS ] && [ -n "$LFS"]; then
 	echo "* Changing Ownership from lfs to root *"
  
