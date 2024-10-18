@@ -14,6 +14,11 @@ cp -v $BUILD_SOURCE/7.06.passwd.zbuild /etc/passwd
 echo "* Creating /etc/group file *"
 cp -v $BUILD_SOURCE/7.06.group.zbuild /etc/group
 
-echo "* Localedef *"
+echo "* Localedef and tmpfiles *"
 localedef -i C -f UTF-8 C.UTF-8
 install -o tester -d /home/tester
+
+touch /var/log/{btmp,lastlog,faillog,wtmp}
+chgrp -v utmp /var/log/lastlog
+chmod -v 664  /var/log/lastlog
+chmod -v 600  /var/log/btmp
