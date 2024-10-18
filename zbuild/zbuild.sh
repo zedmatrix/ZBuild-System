@@ -1,15 +1,17 @@
 #!/bin/bash
 # build script for use with automation
-# export BUILD_USER, BUILD_GROUP, BUILD_ROOT, BUILD_SOURCE
+# export BUILD_ROOT, BUILD_SOURCE
+# export BUILD_USER, BUILD_GROUP  < not yet implemented 
 #
-#   Requires archive, package, packagedir
-#   verify the archive is in BUILD_SOURCE
+#   All Functions Should Be Defined even if just with an echo statement
 #
+#   Requires ${archive}, ${package}, ${packagedir}
 if [[ -z $archive || -z $package || -z $packagedir ]]; then
     echo "*** Check $archive *** $package *** $packagedir ***"
     echo "___Error: Check Export Variables. Exiting."
     exit 1
 fi
+#   verify the archive is in BUILD_SOURCE
 if [[ -e "$BUILD_SOURCE/${archive}" ]]; then
         pushd $BUILD_ROOT
 
@@ -88,6 +90,7 @@ if [[ -e "$BUILD_SOURCE/${archive}" ]]; then
                     fi
 
                 fi
+		popd # pop the BUILD_ROOT
         else
                 echo "*** Error *** Extraction Failed. $BUILD_ROOT | ${packagedir} ***"
                 exit 1
