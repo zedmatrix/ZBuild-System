@@ -1,6 +1,10 @@
 #!/bin/bash
-
+# zbuild cross compile environment
 LFS=/mnt/lfs
+BUILD_ROOT=$LFS/BUILD
+BUILD_SOURCE=$LFS/opt/source
+
+# change your ROOT and SWAP devices
 ROOT=vdc3
 SWAP=vdc2
 echo "* Mounting $LFS to /dev/$ROOT *"
@@ -12,8 +16,10 @@ fi
 mount -v -t ext4 /dev/$ROOT $LFS
 swapon -v /dev/$SWAP
 
-export LFS
-echo "* Creating $LFS/BUILD"
-mkdir -pv $LFS/BUILD
-echo "* Chapter 3 Packages and Patches: $LFS/opt/source *"
-mkdir -pv $LFS/opt/source
+echo "* Creating $BUILD_ROOT"
+mkdir -pv $BUILD_ROOT
+echo "* Chapter 3 Packages and Patches: $BUILD_SOURCE *"
+mkdir -pv $BUILD_SOURCE
+
+export LFS BUILD_ROOT BUILD_SOURCE
+echo "* Done * Now Download the Sources *"
