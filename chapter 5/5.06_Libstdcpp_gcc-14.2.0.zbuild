@@ -26,6 +26,7 @@ Src_prepare () {
 
 Src_configure () {
    echo "*** Configuring ${package} ***"
+   build="--build=$(../config.guess)"
    ../libstdc++-v3/configure ${host} ${build} ${prefix} ${disable} ${with}
 }
 Src_compile () {
@@ -72,7 +73,6 @@ Src_package
 # Start defining package specific options
 # 
 host="--host=$LFS_TGT"
-build="--build=$(../config.guess)"
 prefix="--prefix=/usr"
 disable="--disable-multilib --disable-nls --disable-libstdcxx-pch"
 with="--with-gxx-include-dir=/tools/$LFS_TGT/include/c++/14.2.0"
