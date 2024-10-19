@@ -1,5 +1,5 @@
-#
-#         Blank Install zbuild
+#!/bin/bash
+#   8.21 - GMP-6.3.0
 #   unset functions
 #
 unset -f Src_package
@@ -10,20 +10,29 @@ unset -f Src_check
 unset -f Src_install
 unset -f Src_post
 #
+# Global Settings
+#
+BUILD_SOURCE=/opt/source
+BUILD_ROOT=/BUILD
+
+package=gmp-6.3.0
+archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
+extract="true"
+delete="true"
+patch="false"
+#
 #   Build Functions
 # 
-# Extract the base package name and version
 Src_package() {
-    packagedir=${archive%.tar.*}       # Remove the .tar.gz (or .tar.bz2, etc.) part
-    package=${packagedir%-*}               # Extracts the package name (everything before the last hyphe>
-    pkgver=${packagedir##*-}           # Extracts the version (everything after the last hyphen)
+    packagedir=${archive%.tar.*}
+    package=${packagedir%-*}
+    pkgver=${packagedir##*-}
 }
-
+# Executed after pushd
 Src_prepare () {
    echo "*** Preparing ${package} ***"
 
 }
-
 Src_configure () {
    echo "*** Configuring ${package} ***"
    ./configure ${prefix} ${enable} ${disable} ${docdir} || exit 88
@@ -42,34 +51,16 @@ Src_install () {
    make install || exit 55
    make install-html
 }
+# Executed after popd
 Src_post () {
    echo "*** Finalizing ${package} ***"
    awk '/# PASS:/{total+=$3} ; END{print total}' $BUILD_ROOT/gmp-check-log
 }
-
-export -f Src_prepare
-export -f Src_configure
-export -f Src_compile
-export -f Src_check
-export -f Src_install
-export -f Src_post
+# Extract the base package name and version
+Src_package
 #
 #   Define configure options
 #
-BUILD_SOURCE=/sources
-BUILD_ROOT=/BUILD
-export BUILD_SOURCE BUILD_ROOT
-
-package=gmp-6.3.0
-archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
-extract="true"
-delete="true"
-patch="false"
-
-Src_package
-#
-# Start defining package specific options
-# 
 prefix="--prefix=/usr"
 enable="--enable-cxx"
 disable="--disable-static"
@@ -77,6 +68,13 @@ docdir="--docdir=/usr/share/doc/${packagedir}"
 
 export package packagedir archive extract delete patch 
 export prefix enable disable docdir
+export BUILD_SOURCE BUILD_ROOT
+export -f Src_prepare
+export -f Src_configure
+export -f Src_compile
+export -f Src_check
+export -f Src_install
+export -f Src_post
 
 $BUILD_ROOT/zbuild.sh
 exit_code=$?
