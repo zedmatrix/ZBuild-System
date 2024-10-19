@@ -1,5 +1,5 @@
 #!/bin/bash
-#   Expect-5.45.4
+#   8.17 - Expect-5.45.4
 #   unset functions
 #
 unset -f Src_package
@@ -14,7 +14,6 @@ unset -f Src_post
 #
 BUILD_SOURCE=/opt/source
 BUILD_ROOT=/BUILD
-export BUILD_SOURCE BUILD_ROOT
 
 package=expect5.45.4
 archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
@@ -68,15 +67,15 @@ enable="--enable-shared"
 mandir="--mandir=/usr/share/man"
 with="--with-tcl=/usr/lib --with-tclinclude=/usr/include"
 
+export package packagedir archive patch extract delete
+export prefix enable disable mandir with
+export BUILD_SOURCE BUILD_ROOT
 export -f Src_prepare
 export -f Src_configure
 export -f Src_compile
 export -f Src_check
 export -f Src_install
 export -f Src_post
-
-export package packagedir archive patch extract delete
-export prefix enable disable mandir with
 
 $BUILD_ROOT/zbuild.sh
 exit_code=$?
