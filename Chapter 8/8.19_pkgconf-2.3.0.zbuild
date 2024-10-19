@@ -18,7 +18,7 @@ BUILD_ROOT=/BUILD
 package=pkgconf-2.3.0
 archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
 extract="true"
-delete="true
+delete="true"
 patch="false"
 
 #
@@ -57,16 +57,14 @@ Src_post () {
    ln -sv pkgconf.1 /usr/share/man/man1/pkg-config.1
 }
 #
-#   Define configure options
-#
-# Extract the base package name and version
-Src_package
-#
 # Start defining package specific options
 # 
 prefix="--prefix=/usr"
 disable="--disable-static"
 docdir="--docdir=/usr/share/doc/${packagedir}"
+
+# Extract the base package name and version
+Src_package
 
 export package packagedir archive extract delete patch
 export prefix disable docdir 
