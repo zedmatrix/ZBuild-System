@@ -1,5 +1,5 @@
 #!/bin/bash
-#   Blank Install zbuild
+#   8.11 - File-5.45
 #   unset functions
 #
 unset -f Src_package
@@ -10,15 +10,25 @@ unset -f Src_check
 unset -f Src_install
 unset -f Src_post
 #
+#   Global
+#
+BUILD_SOURCE=/opt/source
+BUILD_ROOT=/BUILD
+
+package=file-5.45
+archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
+extract="true"
+delete="true"
+patch="false"
+#
 #   Build Functions
 # 
-# Extract the base package name and version
 Src_package() {
     packagedir=${archive%.tar.*}
     package=${packagedir%-*}
     pkgver=${packagedir##*-}
 }
-
+# Executed After pushd
 Src_prepare () {
    echo "*** Preparing ${package} ***"
 
@@ -40,38 +50,27 @@ Src_install () {
    echo "*** Installing ${package} ***"
    make install || exit 55
 }
+# Executed After popd
 Src_post () {
    echo "*** Finalizing ${package} ***"
 
 }
+#
+#  Start defining package specific options
+# 
+prefix="--prefix=/usr"
 
+# Extract the base package name and version
+Src_package
+
+export package packagedir archive prefix extract delete false
+export BUILD_SOURCE BUILD_ROOT
 export -f Src_prepare
 export -f Src_configure
 export -f Src_compile
 export -f Src_check
 export -f Src_install
 export -f Src_post
-#
-#   Define configure options
-#
-BUILD_SOURCE=/opt/source
-BUILD_ROOT=/BUILD
-export BUILD_SOURCE BUILD_ROOT
-
-package=file-5.45
-archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
-extract="true"
-delete="true"
-patch="false"
-
-Src_package
-#
-# Start defining package specific options
-# 
-prefix="--prefix=/usr"
-
-export package packagedir archive
-export prefix extract delete false
 
 $BUILD_ROOT/zbuild.sh
 exit_code=$?
