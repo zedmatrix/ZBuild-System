@@ -1,4 +1,4 @@
-#
+#!/bin/bash
 #         Blank Install zbuild
 #   unset functions
 #
@@ -14,9 +14,9 @@ unset -f Src_post
 # 
 # Extract the base package name and version
 Src_package() {
-    packagedir=${archive%.tar.*}       # Remove the .tar.gz (or .tar.bz2, etc.) part
-    package=${packagedir%-*}               # Extracts the package name (everything before the last hyphe>
-    pkgver=${packagedir##*-}           # Extracts the version (everything after the last hyphen)
+    packagedir=${archive%.tar.*}
+    package=${packagedir%-*}
+    pkgver=${packagedir##*-}
 }
 
 Src_prepare () {
@@ -57,7 +57,7 @@ export -f Src_post
 #
 #   Define configure options
 #
-BUILD_SOURCE=/sources
+BUILD_SOURCE=/opt/source
 BUILD_ROOT=/BUILD
 export BUILD_SOURCE BUILD_ROOT
 
