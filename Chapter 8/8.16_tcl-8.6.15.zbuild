@@ -1,5 +1,5 @@
-#
-#         Blank Install zbuild
+#!/bin/bash
+#   Tcl-8.6.15
 #   unset functions
 #
 unset -f Src_package
@@ -12,11 +12,15 @@ unset -f Src_post
 #
 #   Build Functions
 # 
+BUILD_SOURCE=/opt/source
+BUILD_ROOT=/BUILD
+export BUILD_SOURCE BUILD_ROOT
+
 # Extract the base package name and version
 Src_package() {
-    packagedir=${archive%.tar.*}       # Remove the .tar.gz (or .tar.bz2, etc.) part
-    package=${packagedir%-*}               # Extracts the package name (everything before the last hyphe>
-    pkgver=${packagedir##*-}           # Extracts the version (everything after the last hyphen)
+    packagedir=${archive%.tar.*}
+    package=${packagedir%-*}
+    pkgver=${packagedir##*-}
 }
 
 Src_prepare () {
@@ -73,9 +77,6 @@ export -f Src_post
 #
 #   Define configure options
 #
-BUILD_SOURCE=/sources
-BUILD_ROOT=/BUILD
-export BUILD_SOURCE BUILD_ROOT
 
 package=tcl8.6.15-src
 archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
