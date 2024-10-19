@@ -1,5 +1,5 @@
 #!/bin/bash
-#   Tcl-8.6.15
+#   8.16 - Tcl-8.6.15
 #   unset functions
 #
 unset -f Src_package
@@ -10,25 +10,31 @@ unset -f Src_check
 unset -f Src_install
 unset -f Src_post
 #
-#   Build Functions
-# 
+#  Global
+#
 BUILD_SOURCE=/opt/source
 BUILD_ROOT=/BUILD
-export BUILD_SOURCE BUILD_ROOT
 
-# Extract the base package name and version
+package=tcl8.6.15-src
+archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
+extract="true"
+delete="true"
+patch="false"
+
+#
+#   Build Functions
+# 
 Src_package() {
     packagedir=${archive%.tar.*}
     package=${packagedir%-*}
     pkgver=${packagedir##*-}
 }
-
+# Executed after pushd
 Src_prepare () {
    echo "*** Preparing ${package} ***"
    SRCDIR=$(pwd)
 
 }
-
 Src_configure () {
    echo "*** Configuring ${package} ***"
    cd unix
@@ -61,41 +67,33 @@ Src_install () {
    mkdir -vp /usr/share/doc/tcl-8.6.15
    cp -vr ./html/* /usr/share/doc/tcl-8.6.15
 }
+# Executed after popd
 Src_post () {
    echo "*** Finalizing ${package} ***"
    ln -sfv tclsh8.6 /usr/bin/tclsh
    mv /usr/share/man/man3/{Thread,Tcl_Thread}.3
 
 }
-
-export -f Src_prepare
-export -f Src_configure
-export -f Src_compile
-export -f Src_check
-export -f Src_install
-export -f Src_post
-#
-#   Define configure options
-#
-
-package=tcl8.6.15-src
-archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
-extract="true"
-delete="true"
-patch="false"
-
-Src_package
 #
 # Start defining package specific options
 # 
 prefix="--prefix=/usr"
 disable="--disable-rpath"
 mandir="--mandir=/usr/share/man"
+
+# Extract the base package name and version
+Src_package
 packagedir=tcl8.6.15
 
-export package packagedir archive
+export package packagedir archive extract delete patch
 export prefix disable mandir
-export extract delete patch
+export BUILD_SOURCE BUILD_ROOT
+export -f Src_prepare
+export -f Src_configure
+export -f Src_compile
+export -f Src_check
+export -f Src_install
+export -f Src_post
 
 $BUILD_ROOT/zbuild.sh
 exit_code=$?
