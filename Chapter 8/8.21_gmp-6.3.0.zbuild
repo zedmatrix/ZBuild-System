@@ -14,6 +14,7 @@ unset -f Src_post
 #
 BUILD_SOURCE=/opt/source
 BUILD_ROOT=/BUILD
+BUILD_LOG=$BUILD_ROOT/zbuild_logs
 
 package=gmp-6.3.0
 archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
@@ -44,7 +45,7 @@ Src_compile () {
 }
 Src_check () {
    echo "*** Checking ${package} ***"
-   make check 2>&1 | tee $BUILD_ROOT/gmp-check-log || exit 66
+   make check 2>&1 | tee $BUILD_LOG/gmp-check-log || exit 66
 }
 Src_install () {
    echo "*** Installing ${package} ***"
@@ -56,8 +57,7 @@ Src_post () {
    echo "*** Finalizing ${package} ***"
    awk '/# PASS:/{total+=$3} ; END{print total}' $BUILD_ROOT/gmp-check-log
 }
-# Extract the base package name and version
-Src_package
+
 #
 #   Define configure options
 #
@@ -66,9 +66,12 @@ enable="--enable-cxx"
 disable="--disable-static"
 docdir="--docdir=/usr/share/doc/${packagedir}"
 
+# Extract the base package name and version
+Src_package
+
 export package packagedir archive extract delete patch 
 export prefix enable disable docdir
-export BUILD_SOURCE BUILD_ROOT
+export BUILD_SOURCE BUILD_ROOT BUILD_LOG
 export -f Src_prepare
 export -f Src_configure
 export -f Src_compile
