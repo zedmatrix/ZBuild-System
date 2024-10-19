@@ -1,5 +1,5 @@
 #!/bin/bash
-if [ -v LFS ] && [ -n "$LFS"]; then
+if [ -v LFS ] && [ -n "$LFS" ]; then
 
   echo "* Changing Ownership from lfs to root *"
   chown --from lfs -vR root:root $LFS/{usr,lib,var,etc,bin,sbin,tools,BUILD}
