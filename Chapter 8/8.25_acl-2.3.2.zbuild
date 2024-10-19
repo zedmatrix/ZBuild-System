@@ -12,7 +12,7 @@ unset -f Src_post
 #
 #  Global
 #
-BUILD_SOURCE=/sources
+BUILD_SOURCE=/opt/source
 BUILD_ROOT=/BUILD
 BUILD_LOG=$BUILD_ROOT/zbuild_logs
 
