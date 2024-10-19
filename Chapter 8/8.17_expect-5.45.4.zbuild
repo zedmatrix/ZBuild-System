@@ -10,8 +10,8 @@ unset -f Src_check
 unset -f Src_install
 unset -f Src_post
 #
-#   Build Functions
-# 
+# Global Defaults
+#
 BUILD_SOURCE=/opt/source
 BUILD_ROOT=/BUILD
 export BUILD_SOURCE BUILD_ROOT
@@ -22,18 +22,19 @@ patch="expect-5.45.4-gcc14-1.patch"
 extract="true"
 delete="true"
 
-# Extract the base package name and version
+#
+# Build Functions
+# 
 Src_package() {
     packagedir=${archive%.tar.*}
     package=${packagedir%-*}
     pkgver=${packagedir##*-}
 }
-
+# Done after pushd
 Src_prepare () {
    echo "*** Preparing ${package} ***"
    python3 -c 'from pty import spawn; spawn(["echo", "ok"])'
 }
-
 Src_configure () {
    echo "*** Configuring ${package} ***"
    ./configure ${prefix} ${with} ${enable} ${disable} ${mandir} || exit 88
@@ -51,10 +52,21 @@ Src_install () {
    make install || exit 55
    ln -svf expect5.45.4/libexpect5.45.4.so /usr/lib
 }
+# Done After popd
 Src_post () {
    echo "*** Finalizing ${package} ***"
 
 }
+# Extract the base package name and version
+Src_package
+#
+#   Define configure options
+# 
+prefix="--prefix=/usr"
+disable="--disable-rpath"
+enable="--enable-shared"
+mandir="--mandir=/usr/share/man"
+with="--with-tcl=/usr/lib --with-tclinclude=/usr/include"
 
 export -f Src_prepare
 export -f Src_configure
@@ -62,19 +74,6 @@ export -f Src_compile
 export -f Src_check
 export -f Src_install
 export -f Src_post
-#
-#   Define configure options
-#
-
-Src_package
-#
-# Start defining package specific options
-# 
-prefix="--prefix=/usr"
-disable="--disable-rpath"
-enable="--enable-shared"
-mandir="--mandir=/usr/share/man"
-with="--with-tcl=/usr/lib --with-tclinclude=/usr/include"
 
 export package packagedir archive patch extract delete
 export prefix enable disable mandir with
