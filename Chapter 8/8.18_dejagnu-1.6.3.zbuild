@@ -14,7 +14,6 @@ unset -f Src_post
 #
 BUILD_SOURCE=/opt/source
 BUILD_ROOT=/BUILD
-export BUILD_SOURCE BUILD_ROOT
 
 package=dejagnu-1.6.3
 archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
@@ -60,19 +59,16 @@ Src_post () {
    echo "*** Finalizing ${package} ***"
 
 }
-
-#
-#   Define configure options
-#
-# Extract the base package name and version
-Src_package
 #
 # Start defining package specific options
 # 
 prefix="--prefix=/usr"
 
-export package packagedir archive prefix
-export extract delete patch
+# Extract the base package name and version
+Src_package
+
+export package packagedir archive prefix extract delete patch
+export BUILD_SOURCE BUILD_ROOT
 export -f Src_prepare
 export -f Src_configure
 export -f Src_compile
