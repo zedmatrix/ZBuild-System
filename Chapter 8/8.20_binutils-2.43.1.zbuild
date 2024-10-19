@@ -29,7 +29,7 @@ Src_package() {
     package=${packagedir%-*}
     pkgver=${packagedir##*-}
 }
-# Done After pushd
+# Executed after pushd
 Src_prepare () {
    echo "*** Preparing ${package} ***"
    mkdir -v build
@@ -52,16 +52,11 @@ Src_install () {
    echo "*** Installing ${package} ***"
    make tooldir=/usr install || exit 55
 }
+# Executed after popd
 Src_post () {
    echo "*** Finalizing ${package} ***"
    rm -fv /usr/lib/lib{bfd,ctf,ctf-nobfd,gprofng,opcodes,sframe}.a
 }
-
-#
-#   Define configure options
-#
-# Extract the base package name and version
-Src_package
 #
 # Start defining package specific options
 # 
@@ -70,6 +65,9 @@ sysconfdir="--sysconfdir=/etc"
 disable="--disable-werror"
 enable="--enable-gold --enable-ld=default --enable-plugins --enable-shared --enable-64-bit-bfd --enable-new-dtags"
 with="--with-system-zlib"
+
+# Extract the base package name and version
+Src_package
 
 export package packagedir archive extract delete patch
 export prefix sysconfdir enable disable with
