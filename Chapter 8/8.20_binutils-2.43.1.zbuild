@@ -1,5 +1,5 @@
-#
-#         Blank Install zbuild
+#!/bin/bash
+#   8.20 - Binutils=2.43.1
 #   unset functions
 #
 unset -f Src_package
@@ -10,21 +10,31 @@ unset -f Src_check
 unset -f Src_install
 unset -f Src_post
 #
+# Global Settings
+#
+BUILD_SOURCE=/opt/source
+BUILD_ROOT=/BUILD
+
+package=binutils-2.43.1
+archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
+extract="true"
+delete="true"
+patch="false"
+
+#
 #   Build Functions
 # 
-# Extract the base package name and version
 Src_package() {
-    packagedir=${archive%.tar.*}       # Remove the .tar.gz (or .tar.bz2, etc.) part
-    package=${packagedir%-*}               # Extracts the package name (everything before the last hyphe>
-    pkgver=${packagedir##*-}           # Extracts the version (everything after the last hyphen)
+    packagedir=${archive%.tar.*}
+    package=${packagedir%-*}
+    pkgver=${packagedir##*-}
 }
-
+# Done After pushd
 Src_prepare () {
    echo "*** Preparing ${package} ***"
-   #mkdir -v build
+   mkdir -v build
    cd build
 }
-
 Src_configure () {
    echo "*** Configuring ${package} ***"
    ../configure ${prefix} ${sysconfdir} ${enable} ${disable} ${with} --enable-default-hash-style=gnu || exit 88
@@ -47,25 +57,10 @@ Src_post () {
    rm -fv /usr/lib/lib{bfd,ctf,ctf-nobfd,gprofng,opcodes,sframe}.a
 }
 
-export -f Src_prepare
-export -f Src_configure
-export -f Src_compile
-export -f Src_check
-export -f Src_install
-export -f Src_post
 #
 #   Define configure options
 #
-BUILD_SOURCE=/sources
-BUILD_ROOT=/BUILD
-export BUILD_SOURCE BUILD_ROOT
-
-package=binutils-2.43.1
-archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
-extract="true"
-delete="true"
-patch="false"
-
+# Extract the base package name and version
 Src_package
 #
 # Start defining package specific options
@@ -76,9 +71,15 @@ disable="--disable-werror"
 enable="--enable-gold --enable-ld=default --enable-plugins --enable-shared --enable-64-bit-bfd --enable-new-dtags"
 with="--with-system-zlib"
 
-export package packagedir archive
-export extract delete patch
+export package packagedir archive extract delete patch
 export prefix sysconfdir enable disable with
+export BUILD_SOURCE BUILD_ROOT
+export -f Src_prepare
+export -f Src_configure
+export -f Src_compile
+export -f Src_check
+export -f Src_install
+export -f Src_post
 
 $BUILD_ROOT/zbuild.sh
 exit_code=$?
