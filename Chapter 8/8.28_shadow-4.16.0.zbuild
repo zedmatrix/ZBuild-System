@@ -1,0 +1,113 @@
+#!/binbash
+#   Blank Install zbuild
+#   unset functions
+#
+unset -f Src_package
+unset -f Src_prepare
+unset -f Src_configure
+unset -f Src_compile
+unset -f Src_check
+unset -f Src_install
+unset -f Src_post
+#
+#   Build Functions
+# 
+# Extract the base package name and version
+Src_package() {
+    packagedir=${archive%.tar.*}
+    package=${packagedir%-*}
+}
+
+Src_prepare () {
+   echo "*** Preparing ${package} ***"
+  sed -i 's/groups$(EXEEXT) //' src/Makefile.in
+  find man -name Makefile.in -exec sed -i 's/groups\.1 / /'   {} \;
+  find man -name Makefile.in -exec sed -i 's/getspnam\.3 / /' {} \;
+  find man -name Makefile.in -exec sed -i 's/passwd\.5 / /'   {} \;
+  sed -e 's:#ENCRYPT_METHOD DES:ENCRYPT_METHOD YESCRYPT:' -e 's:/var/spool/mail:/var/mail:' \
+    -e '/PATH=/{s@/sbin:@@;s@/bin:@@}' -i etc/login.defs
+
+}
+
+Src_configure () {
+   echo "*** Configuring ${package} ***"
+   touch /usr/bin/passwd
+   ./configure ${sysconfdir} ${disable} ${with} ${without} || exit 88
+}
+Src_compile () {
+   echo "*** Compiling ${package} ***"
+   make || exit 77
+}
+Src_check () {
+   echo "*** Checking ${package} ***"
+
+}
+Src_install () {
+   echo "*** Installing ${package} ***"
+   make ${prefix} install || exit 55
+   make -C man install-man
+}
+Src_post () {
+   echo "*** Finalizing ${package} ***"
+   pwconv
+   grpconv
+   mkdir -pv /etc/default
+   useradd -D --gid 999
+   echo "*********************"
+   echo "*                   *"
+   echo "* Set Root Password *"
+   echo "*                   *"
+   echo "*********************"
+}
+
+export -f Src_prepare
+export -f Src_configure
+export -f Src_compile
+export -f Src_check
+export -f Src_install
+export -f Src_post
+#
+#   Define configure options
+#
+BUILD_SOURCE=/opt/source
+BUILD_ROOT=/BUILD
+export BUILD_SOURCE BUILD_ROOT
+
+package=shadow-4.16.0
+archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
+extract="true"
+delete="true"
+patch="false"
+
+Src_package
+#
+# Start defining package specific options
+# 
+prefix="exec_prefix=/usr"
+sysconfdir="--sysconfdir=/etc"
+disable="--disable-static"
+without="--without-libbsd"
+with="--with-bcrypt --with-yescrypt --with-group-name-max-length=32"
+
+
+export package packagedir archive extract delete patch
+export prefix disable with without sysconfdir
+
+$BUILD_ROOT/zbuild.sh
+exit_code=$?
+
+if [[ exit_code -ne 0 ]]; then
+    echo "___ Error Code: $exit_code"
+else
+    echo "*** Success ***"
+    unset -f Src_package
+    unset -f Src_prepare
+    unset -f Src_configure
+    unset -f Src_compile
+    unset -f Src_check
+    unset -f Src_install
+    unset -f Src_post
+    unset package packagedir archive extract delete patch
+    unset prefix disable with without sysconfdir
+fi
+

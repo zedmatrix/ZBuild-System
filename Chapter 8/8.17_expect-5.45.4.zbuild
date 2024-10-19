@@ -1,0 +1,98 @@
+#
+#         Blank Install zbuild
+#   unset functions
+#
+unset -f Src_package
+unset -f Src_prepare
+unset -f Src_configure
+unset -f Src_compile
+unset -f Src_check
+unset -f Src_install
+unset -f Src_post
+#
+#   Build Functions
+# 
+# Extract the base package name and version
+Src_package() {
+    packagedir=${archive%.tar.*}       # Remove the .tar.gz (or .tar.bz2, etc.) part
+    package=${packagedir%-*}               # Extracts the package name (everything before the last hyphe>
+    pkgver=${packagedir##*-}           # Extracts the version (everything after the last hyphen)
+}
+
+Src_prepare () {
+   echo "*** Preparing ${package} ***"
+   python3 -c 'from pty import spawn; spawn(["echo", "ok"])'
+}
+
+Src_configure () {
+   echo "*** Configuring ${package} ***"
+   ./configure ${prefix} ${with} ${enable} ${disable} ${mandir} || exit 88
+}
+Src_compile () {
+   echo "*** Compiling ${package} ***"
+   make || exit 77
+}
+Src_check () {
+   echo "*** Checking ${package} ***"
+   make test || exit 66
+}
+Src_install () {
+   echo "*** Installing ${package} ***"
+   make install || exit 55
+   ln -svf expect5.45.4/libexpect5.45.4.so /usr/lib
+}
+Src_post () {
+   echo "*** Finalizing ${package} ***"
+
+}
+
+export -f Src_prepare
+export -f Src_configure
+export -f Src_compile
+export -f Src_check
+export -f Src_install
+export -f Src_post
+#
+#   Define configure options
+#
+BUILD_SOURCE=/sources
+BUILD_ROOT=/BUILD
+export BUILD_SOURCE BUILD_ROOT
+
+package=expect5.45.4
+archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
+patch="expect-5.45.4-gcc14-1.patch"
+extract="true"
+delete="true"
+
+Src_package
+#
+# Start defining package specific options
+# 
+prefix="--prefix=/usr"
+disable="--disable-rpath"
+enable="--enable-shared"
+mandir="--mandir=/usr/share/man"
+with="--with-tcl=/usr/lib --with-tclinclude=/usr/include"
+
+export package packagedir archive patch extract delete
+export prefix enable disable mandir with
+
+$BUILD_ROOT/zbuild.sh
+exit_code=$?
+
+if [[ exit_code -ne 0 ]]; then
+    echo "___ Error Code: $exit_code"
+else
+    echo "*** Success ***"
+    unset -f Src_package
+    unset -f Src_prepare
+    unset -f Src_configure
+    unset -f Src_compile
+    unset -f Src_check
+    unset -f Src_install
+    unset -f Src_post
+    unset package packagedir archive patch extract delete
+    unset prefix enable disable mandir with
+fi
+
