@@ -16,6 +16,12 @@ BUILD_SOURCE=/opt/source
 BUILD_ROOT=/BUILD
 export BUILD_SOURCE BUILD_ROOT
 
+package=expect5.45.4
+archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
+patch="expect-5.45.4-gcc14-1.patch"
+extract="true"
+delete="true"
+
 # Extract the base package name and version
 Src_package() {
     packagedir=${archive%.tar.*}
@@ -59,12 +65,6 @@ export -f Src_post
 #
 #   Define configure options
 #
-
-package=expect5.45.4
-archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
-patch="expect-5.45.4-gcc14-1.patch"
-extract="true"
-delete="true"
 
 Src_package
 #
