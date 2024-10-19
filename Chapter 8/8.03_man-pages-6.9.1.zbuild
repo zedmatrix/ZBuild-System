@@ -1,5 +1,5 @@
 #!/bin/bash
-#   Blank Install zbuild
+#   8.03 - Man-Pages-6.9.1
 #   unset functions
 #
 unset -f Src_package
@@ -10,15 +10,26 @@ unset -f Src_check
 unset -f Src_install
 unset -f Src_post
 #
+# Global Settings
+#
+BUILD_SOURCE=/opt/source
+BUILD_ROOT=/BUILD
+
+package=man-pages-6.9.1
+archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
+extract="true"
+delete="true"
+patch="false"
+
+#
 #   Build Functions
 # 
-# Extract the base package name and version
 Src_package() {
     packagedir=${archive%.tar.*}
     package=${packagedir%-*}
     pkgver=${packagedir##*-}
 }
-
+# Executed after pushd
 Src_prepare () {
    echo "*** Preparing ${package} ***"
    rm -v man3/crypt*
@@ -40,38 +51,28 @@ Src_install () {
    echo "*** Installing ${package} ***"
    make ${prefix} install
 }
+# Executed after popd
 Src_post () {
    echo "*** Finalizing ${package} ***"
 
 }
+#
+#   Define configure options
+#
+prefix="prefix=/usr"
 
+# Extract the base package name and version
+Src_package
+
+export package packagedir archive
+export extract delete patch prefix
+export BUILD_SOURCE BUILD_ROOT
 export -f Src_prepare
 export -f Src_configure
 export -f Src_compile
 export -f Src_check
 export -f Src_install
 export -f Src_post
-#
-#   Define configure options
-#
-BUILD_SOURCE=/opt/source
-BUILD_ROOT=/BUILD
-export BUILD_SOURCE BUILD_ROOT
-
-package=man-pages-6.9.1
-archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
-extract="true"
-delete="true"
-patch="false"
-
-Src_package
-#
-# Start defining package specific options
-# 
-prefix="prefix=/usr"
-
-export package packagedir archive
-export extract delete patch prefix
 
 $BUILD_ROOT/zbuild.sh
 exit_code=$?
