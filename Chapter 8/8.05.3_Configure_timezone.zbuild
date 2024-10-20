@@ -1,4 +1,4 @@
-
+#!/bin/bash
 timezonedir=$BUILD_ROOT/timezone
 mkdir -v $timezonedir
 
@@ -20,4 +20,5 @@ zic -d $ZONEINFO -p America/New_York
 unset ZONEINFO
 
 popd
-
+echo "* Cleaning Up $timezonedir *"
+rm -rf $timezonedir
