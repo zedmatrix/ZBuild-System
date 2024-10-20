@@ -1,3 +1,4 @@
+#!/bin/bash
 cat > /etc/vimrc << "EOF"
 " Begin /etc/vimrc
 
@@ -15,3 +16,4 @@ endif
 
 " End /etc/vimrc
 EOF
+echo "* DONE *"
