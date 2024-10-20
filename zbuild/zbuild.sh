@@ -1,7 +1,7 @@
 #!/bin/bash
 # build script for use with automation
-# export BUILD_ROOT, BUILD_SOURCE
-# export BUILD_USER, BUILD_GROUP  < not yet implemented 
+# REQUIRES: BUILD_ROOT, BUILD_SOURCE, BUILD_LOG
+# To-Do: BUILD_USER, BUILD_GROUP
 #
 #   All Functions Should Be Defined even if just with an echo statement
 #
@@ -18,6 +18,7 @@ if [[ -e "$BUILD_SOURCE/${archive}" ]]; then
 	if [ "$extract" = "true" ]; then 
 	        echo "*** Extracting $archive ***"
 	        tar xf "$BUILD_SOURCE/${archive}"
+	 	#tar xf "$BUILD_SOURCE/${archive}" -C "$BUILD_ROOT/${packagedir}" --strip-components=1
 	else
 		echo "*** Skipping Extraction ***"
 	fi
