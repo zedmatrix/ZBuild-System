@@ -1,5 +1,5 @@
-#
-#         Blank Install zbuild
+#!/bin/bash
+#   8.76 - Systemd-256.5
 #   unset functions
 #
 unset -f Src_package
@@ -10,22 +10,33 @@ unset -f Src_check
 unset -f Src_install
 unset -f Src_post
 #
+#  Global
+#
+BUILD_SOURCE=/opt/source
+BUILD_ROOT=/BUILD
+BUILD_LOG=$BUILD_ROOT/zbuild_logs
+
+package=systemd-256.5
+archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
+extract="true"
+delete="true"
+patch="false"
+
+#
 #   Build Functions
 # 
-# Extract the base package name and version
 Src_package() {
-    packagedir=${archive%.tar.*}       # Remove the .tar.gz (or .tar.bz2, etc.) part
-    package=${packagedir%-*}               # Extracts the package name (everything before the last hyphe>
-    pkgver=${packagedir##*-}           # Extracts the version (everything after the last hyphen)
+    packagedir=${archive%.tar.*}
+    package=${packagedir%-*}
+    pkgver=${packagedir##*-}
 }
-
+# Executed After pushd
 Src_prepare () {
    echo "*** Preparing ${package} ***"
    sed -i -e 's/GROUP="render"/GROUP="video"/' -e 's/GROUP="sgx", //' rules.d/50-udev-default.rules.in
    mkdir -v build
    cd build
 }
-
 Src_configure () {
    echo "*** Configuring ${package} ***"
    meson setup .. ${prefix} ${build} ${default} ${firstboot} ${disable} ${system} ${security} ${docdir}
@@ -44,31 +55,12 @@ Src_install () {
    ninja install
    tar -xf $BUILD_SOURCE/systemd-man-pages-256.5.tar.xz --no-same-owner --strip-components=1 -C /usr/share/man
 }
+# Executed After popd
 Src_post () {
    echo "*** Finalizing ${package} ***"
    systemd-machine-id-setup
    systemctl preset-all
 }
-
-export -f Src_prepare
-export -f Src_configure
-export -f Src_compile
-export -f Src_check
-export -f Src_install
-export -f Src_post
-#
-#   Define configure options
-#
-BUILD_ROOT=/BUILD
-BUILD_SOURCE=/sources
-export BUILD_ROOT BUILD_SOURCE
-package=systemd-256.5
-archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
-extract="true"
-delete="true"
-patch="false"
-
-Src_package
 #
 # Start defining package specific options
 # 
@@ -82,8 +74,18 @@ disable="-D homed=disabled -D man=disabled -D sysupdate=disabled -D ukify=disabl
 system="-D ldconfig=false -D sysusers=false -D dev-kvm-mode=0660"
 security="-D rpmmacrosdir=no -D userdb=false -D pamconfdir=no "
 
+# Extract the base package name and version
+Src_package
+
 export package packagedir archive prefix build extract patch delete
 export docdir default firstboot disable system security
+export BUILD_ROOT BUILD_SOURCE BUILD_LOG
+export -f Src_prepare
+export -f Src_configure
+export -f Src_compile
+export -f Src_check
+export -f Src_install
+export -f Src_post
 
 $BUILD_ROOT/zbuild.sh
 exit_code=$?
