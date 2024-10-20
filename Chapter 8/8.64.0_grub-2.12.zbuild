@@ -1,5 +1,5 @@
 #!/bin/bash
-#   Blank Install zbuild
+#   8.64 - Grub2-2.12 
 #   unset functions
 #
 unset -f Src_package
@@ -10,14 +10,26 @@ unset -f Src_check
 unset -f Src_install
 unset -f Src_post
 #
+#  Global
+#
+BUILD_SOURCE=/opt/source
+BUILD_ROOT=/BUILD
+BUILD_LOG=$BUILD_ROOT/zbuild_logs
+
+package=grub-2.12
+archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
+extract="true"
+delete="true"
+patch="false"
+
+#
 #   Build Functions
 # 
-# Extract the base package name and version
 Src_package() {
     packagedir=${archive%.tar.*}
     package=${packagedir%-*}
 }
-
+# Executed After pushd
 Src_prepare () {
    echo "*** Preparing ${package} ***"
 
@@ -41,31 +53,11 @@ Src_install () {
    make install || exit 55
    mv -v /etc/bash_completion.d/grub /usr/share/bash-completion/completions
 }
+# Executed After popd
 Src_post () {
    echo "*** Finalizing ${package} ***"
 
 }
-
-export -f Src_prepare
-export -f Src_configure
-export -f Src_compile
-export -f Src_check
-export -f Src_install
-export -f Src_post
-#
-#   Define configure options
-#
-BUILD_SOURCE=/opt/source
-BUILD_ROOT=/BUILD
-export BUILD_SOURCE BUILD_ROOT
-
-package=grub-2.12
-archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
-extract="true"
-delete="true"
-patch="false"
-
-Src_package
 #
 # Start defining package specific options
 #
@@ -73,8 +65,18 @@ prefix="--prefix=/usr"
 sysconfdir="--sysconfdir=/etc"
 disable="--disable-efiemu --disable-werror"
 
+# Extract the base package name and version
+Src_package
+
 export package packagedir archive extract patch delete
 export prefix sysconfdir disable
+export BUILD_SOURCE BUILD_ROOT BUILD_LOG
+export -f Src_prepare
+export -f Src_configure
+export -f Src_compile
+export -f Src_check
+export -f Src_install
+export -f Src_post
 
 $BUILD_ROOT/zbuild.sh
 exit_code=$?
