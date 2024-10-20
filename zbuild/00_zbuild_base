@@ -10,54 +10,11 @@ unset -f Src_check
 unset -f Src_install
 unset -f Src_post
 #
-#   Build Functions
-# 
-# Extract the base package name and version
-# First Remove the .tar.* and Second Get Package Name
-Src_package() {
-    packagedir=${archive%.tar.*}
-    package=${packagedir%-*}
-}
-
-Src_prepare () {
-   echo "*** Preparing ${package} ***"
-
-}
-
-Src_configure () {
-   echo "*** Configuring ${package} ***"
-   ./configure ${prefix} ${disable} ${docdir} || exit 88
-}
-Src_compile () {
-   echo "*** Compiling ${package} ***"
-   make || exit 77
-}
-Src_check () {
-   echo "*** Checking ${package} ***"
-   make check 2>&1 | tee $BUILD_LOGS/${package}-make-check.log
-}
-Src_install () {
-   echo "*** Installing ${package} ***"
-   make install || exit 55
-}
-Src_post () {
-   echo "*** Finalizing ${package} ***"
-
-}
-
-export -f Src_prepare
-export -f Src_configure
-export -f Src_compile
-export -f Src_check
-export -f Src_install
-export -f Src_post
-#
-#   Define configure options
+#  Global
 #
 BUILD_SOURCE=/opt/source
 BUILD_ROOT=/BUILD
-BUILD_LOGS=$BUILD_ROOT/build_logs
-export BUILD_SOURCE BUILD_ROOT BUILD_LOGS
+BUILD_LOG=$BUILD_ROOT/zbuild_logs
 
 package=
 archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
@@ -65,17 +22,60 @@ delete="true"
 extract="true"
 patch="false"
 
-Src_package
+#
+#   Build Functions
+# 
+# First Remove the .tar.* and Second Get Package Name
+Src_package() {
+    packagedir=${archive%.tar.*}
+    package=${packagedir%-*}
+}
+# Executed After pushd
+Src_prepare () {
+   echo "*** Preparing ${package} ***"
+
+}
+Src_configure () {
+   echo "*** Configuring ${package} ***"
+   ./configure ${prefix} ${disable} ${docdir} || exit 88
+}
+Src_compile () {
+   echo "*** Compiling ${package} ***"
+   make 2>&1 | tee $BUILD_LOG/${package}-make.log || exit 77
+}
+Src_check () {
+   echo "*** Checking ${package} ***"
+   make check 2>&1 | tee $BUILD_LOG/${package}-check.log
+}
+Src_install () {
+   echo "*** Installing ${package} ***"
+   make install || exit 55
+}
+# Executed After popd
+Src_post () {
+   echo "*** Finalizing ${package} ***"
+
+}
 #
 # Start defining package specific options
 # 
 prefix="--prefix=/usr"
-enable=""
 disable="--disable-static"
 docdir="--docdir=/usr/share/doc/${packagedir}"
+enable=""
+
+# Extract the base package name and version
+Src_package
 
 export package packagedir archive extract delete patch
 export prefix disable docdir enable
+export BUILD_SOURCE BUILD_ROOT BUILD_LOGS
+export -f Src_prepare
+export -f Src_configure
+export -f Src_compile
+export -f Src_check
+export -f Src_install
+export -f Src_post
 
 $BUILD_ROOT/zbuild.sh
 exit_code=$?
