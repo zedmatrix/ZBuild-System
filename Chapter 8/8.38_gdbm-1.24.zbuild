@@ -27,9 +27,9 @@ patch="false"
 # 
 
 Src_package() {
-    packagedir=${archive%.tar.*}       # Remove the .tar.gz (or .tar.bz2, etc.) part
-    package=${packagedir%-*}               # Extracts the package name (everything before the last hyphe>
-    pkgver=${packagedir##*-}           # Extracts the version (everything after the last hyphen)
+    packagedir=${archive%.tar.*}
+    package=${packagedir%-*}
+    pkgver=${packagedir##*-}
 }
 # Executed After pushd
 Src_prepare () {
