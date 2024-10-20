@@ -1,5 +1,5 @@
-#
-#         Blank Install zbuild
+#!/bin/bash
+#   8.81 - E2fs-1.47.1
 #   unset functions
 #
 unset -f Src_package
@@ -10,21 +10,33 @@ unset -f Src_check
 unset -f Src_install
 unset -f Src_post
 #
+#  Global
+#
+BUILD_SOURCE=/opt/source
+BUILD_ROOT=/BUILD
+BUILD_LOG=$BUILD_ROOT/zbuild_logs
+
+package=e2fsprogs-1.47.1
+archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
+extract="true"
+delete="true"
+patch="false"
+
+#
 #   Build Functions
 # 
-# Extract the base package name and version
-Src_package() {
-    packagedir=${archive%.tar.*}       # Remove the .tar.gz (or .tar.bz2, etc.) part
-    package=${packagedir%-*}               # Extracts the package name (everything before the last hyphe>
-    pkgver=${packagedir##*-}           # Extracts the version (everything after the last hyphen)
-}
 
+Src_package() {
+    packagedir=${archive%.tar.*}
+    package=${packagedir%-*}
+    pkgver=${packagedir##*-}
+}
+# Executed After pushd
 Src_prepare () {
    echo "*** Preparing ${package} ***"
    mkdir -v build
    cd build
 }
-
 Src_configure () {
    echo "*** Configuring ${package} ***"
    ../configure ${prefix} ${sysconfdir} ${enable} ${disable} || exit 88
@@ -44,6 +56,7 @@ Src_install () {
    install -vm644 doc/com_err.info /usr/share/info
    install-info --dir-file=/usr/share/info/dir /usr/share/info/com_err.info
 }
+# Executed After popd
 Src_post () {
    echo "*** Finalizing ${package} ***"
    rm -fv /usr/lib/{libcom_err,libe2p,libext2fs,libss}.a
@@ -51,27 +64,6 @@ Src_post () {
    install-info --dir-file=/usr/share/info/dir /usr/share/info/libext2fs.info
 
 }
-
-export -f Src_prepare
-export -f Src_configure
-export -f Src_compile
-export -f Src_check
-export -f Src_install
-export -f Src_post
-#
-#   Define configure options
-#
-BUILD_SOURCE=/sources
-BUILD_ROOT=/BUILD
-export BUILD_SOURCE BUILD_ROOT
-
-package=e2fsprogs-1.47.1
-archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
-extract="true"
-delete="true"
-patch="false"
-
-Src_package
 #
 # Start defining package specific options
 # 
@@ -80,8 +72,18 @@ sysconfdir="--sysconfdir=/etc"
 enable="--enable-elf-shlibs"
 disable="--disable-libblkid --disable-libuuid --disable-uuidd --disable-fsck"
 
+# Extract the base package name and version
+Src_package
+
 export package packagedir archive extract patch delete
 export prefix disable sysconfdir enable
+export BUILD_SOURCE BUILD_ROOT BUILD_LOG
+export -f Src_prepare
+export -f Src_configure
+export -f Src_compile
+export -f Src_check
+export -f Src_install
+export -f Src_post
 
 $BUILD_ROOT/zbuild.sh
 exit_code=$?
