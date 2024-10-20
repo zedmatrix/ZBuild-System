@@ -1,5 +1,5 @@
-#!/binbash
-#   Blank Install zbuild
+#!/bin/bash
+#   8.28 - Shadow - 4.16.0
 #   unset functions
 #
 unset -f Src_package
@@ -10,14 +10,26 @@ unset -f Src_check
 unset -f Src_install
 unset -f Src_post
 #
+#  Global
+#
+BUILD_SOURCE=/opt/source
+BUILD_ROOT=/BUILD
+BUILD_LOG=$BUILD_ROOT/zbuild_logs
+
+package=shadow-4.16.0
+archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
+extract="true"
+delete="true"
+patch="false"
+
+#
 #   Build Functions
 # 
-# Extract the base package name and version
 Src_package() {
     packagedir=${archive%.tar.*}
     package=${packagedir%-*}
 }
-
+# Executed After pushd
 Src_prepare () {
    echo "*** Preparing ${package} ***"
   sed -i 's/groups$(EXEEXT) //' src/Makefile.in
@@ -47,6 +59,7 @@ Src_install () {
    make ${prefix} install || exit 55
    make -C man install-man
 }
+# Executed After popd
 Src_post () {
    echo "*** Finalizing ${package} ***"
    pwconv
@@ -60,26 +73,6 @@ Src_post () {
    echo "*********************"
 }
 
-export -f Src_prepare
-export -f Src_configure
-export -f Src_compile
-export -f Src_check
-export -f Src_install
-export -f Src_post
-#
-#   Define configure options
-#
-BUILD_SOURCE=/opt/source
-BUILD_ROOT=/BUILD
-export BUILD_SOURCE BUILD_ROOT
-
-package=shadow-4.16.0
-archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
-extract="true"
-delete="true"
-patch="false"
-
-Src_package
 #
 # Start defining package specific options
 # 
@@ -89,9 +82,18 @@ disable="--disable-static"
 without="--without-libbsd"
 with="--with-bcrypt --with-yescrypt --with-group-name-max-length=32"
 
+# Extract the base package name and version
+Src_package
 
 export package packagedir archive extract delete patch
 export prefix disable with without sysconfdir
+export BUILD_SOURCE BUILD_ROOT BUILD_LOG
+export -f Src_prepare
+export -f Src_configure
+export -f Src_compile
+export -f Src_check
+export -f Src_install
+export -f Src_post
 
 $BUILD_ROOT/zbuild.sh
 exit_code=$?
