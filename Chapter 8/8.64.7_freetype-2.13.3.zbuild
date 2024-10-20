@@ -1,5 +1,5 @@
-#
-#         Blank Install zbuild
+#!/bin/bash
+#   BLFS Freetype-2.13.3
 #   unset functions
 #
 unset -f Src_package
@@ -10,15 +10,26 @@ unset -f Src_check
 unset -f Src_install
 unset -f Src_post
 #
+#  Global
+#
+BUILD_SOURCE=/opt/source
+BUILD_ROOT=/BUILD
+BUILD_LOG=$BUILD_ROOT/zbuild_logs
+
+package=freetype-2.13.3
+archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
+extract="true"
+delete="true"
+patch="false"
+#
 #   Build Functions
 # 
-# Extract the base package name and version
 Src_package() {
-    packagedir=${archive%.tar.*}       # Remove the .tar.gz (or .tar.bz2, etc.) part
-    package=${packagedir%-*}               # Extracts the package name (everything before the last hyphe>
-    pkgver=${packagedir##*-}           # Extracts the version (everything after the last hyphen)
+    packagedir=${archive%.tar.*}
+    package=${packagedir%-*}
+    pkgver=${packagedir##*-}
 }
-
+# Executed After pushd
 Src_prepare () {
    echo "*** Preparing ${package} ***"
    tar xf $BUILD_SOURCE/freetype-doc-2.13.3.tar.xz --strip-components=2 -C docs
@@ -26,7 +37,6 @@ Src_prepare () {
    sed -r "s:.*(#.SUBPIXEL_RENDERING) .*:\1:" -i include/freetype/config/ftoption.h
 
 }
-
 Src_configure () {
    echo "*** Configuring ${package} ***"
    ./configure ${prefix} ${disable} ${enable} || exit 88
@@ -45,31 +55,11 @@ Src_install () {
    cp -vR docs -T ${docdir}
    rm -v ${docdir}/freetype-config.1
 }
+# Executed After popd
 Src_post () {
    echo "*** Finalizing ${package} ***"
 
 }
-
-export -f Src_prepare
-export -f Src_configure
-export -f Src_compile
-export -f Src_check
-export -f Src_install
-export -f Src_post
-#
-#   Define configure options
-#
-BUILD_SOURCE=/sources
-BUILD_ROOT=/BUILD
-export BUILD_SOURCE BUILD_ROOT
-
-package=freetype-2.13.3
-archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
-extract="true"
-delete="true"
-patch="false"
-
-Src_package
 #
 # Start defining package specific options
 # 
@@ -78,8 +68,18 @@ enable="--enable-freetype-config"
 disable="--disable-static"
 docdir="/usr/share/doc/${packagedir}"
 
+# Extract the base package name and version
+Src_package
+
 export package packagedir archive extract patch delete
 export prefix disable docdir enable
+export BUILD_SOURCE BUILD_ROOT BUILD_LOG
+export -f Src_prepare
+export -f Src_configure
+export -f Src_compile
+export -f Src_check
+export -f Src_install
+export -f Src_post
 
 $BUILD_ROOT/zbuild.sh
 exit_code=$?
