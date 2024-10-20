@@ -1,3 +1,4 @@
+#!/bin/bash
 cat > /etc/nsswitch.conf << "EOF"
 # Begin /etc/nsswitch.conf
 
@@ -16,4 +17,3 @@ rpc: files
 # End /etc/nsswitch.conf
 EOF
 echo "* done *"
-
