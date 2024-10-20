@@ -1,5 +1,5 @@
-#
-#         Blank Install zbuild
+#!/bin/bash
+#   8.56.2 - Ninja-1.12.1
 #   unset functions
 #
 unset -f Src_package
@@ -10,20 +10,31 @@ unset -f Src_check
 unset -f Src_install
 unset -f Src_post
 #
+#  Global
+#
+BUILD_SOURCE=/opt/source
+BUILD_ROOT=/BUILD
+BUILD_LOG=$BUILD_ROOT/zbuild_logs
+
+package=ninja-1.12.1
+archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
+extract="true"
+delete="true"
+patch="false"
+
+#
 #   Build Functions
 # 
-# Extract the base package name and version
 Src_package() {
-    packagedir=${archive%.tar.*}       # Remove the .tar.gz (or .tar.bz2, etc.) part
-    package=${packagedir%-*}               # Extracts the package name (everything before the last hyphe>
-    pkgver=${packagedir##*-}           # Extracts the version (everything after the last hyphen)
+    packagedir=${archive%.tar.*}
+    package=${packagedir%-*}
+    pkgver=${packagedir##*-}
 }
-
+# Executed After pushd
 Src_prepare () {
    echo "*** Preparing ${package} ***"
    export NINJAJOBS=4
 }
-
 Src_configure () {
    echo "*** Configuring ${package} ***"
 sed -i '/int Guess/a \
@@ -48,36 +59,25 @@ Src_install () {
    install -vDm644 misc/bash-completion /usr/share/bash-completion/completions/ninja
    install -vDm644 misc/zsh-completion  /usr/share/zsh/site-functions/_ninja
 }
+# Executed After popd
 Src_post () {
    echo "*** Finalizing ${package} ***"
 
 }
+#
+# Start defining package specific options
+# 
+# Extract the base package name and version
+Src_package
 
+export package packagedir archive extract patch delete
+export BUILD_SOURCE BUILD_ROOT BUILD_LOG
 export -f Src_prepare
 export -f Src_configure
 export -f Src_compile
 export -f Src_check
 export -f Src_install
 export -f Src_post
-#
-#   Define configure options
-#
-BUILD_SOURCE=/sources
-BUILD_ROOT=/BUILD
-export BUILD_SOURCE BUILD_ROOT
-
-package=ninja-1.12.1
-archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
-extract="true"
-delete="true"
-patch="false"
-
-Src_package
-#
-# Start defining package specific options
-# 
-
-export package packagedir archive extract patch delete
 
 $BUILD_ROOT/zbuild.sh
 exit_code=$?
