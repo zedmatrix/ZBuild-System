@@ -14,7 +14,7 @@ unset -f Src_post
 #
 BUILD_SOURCE=/opt/source
 BUILD_ROOT=/BUILD
-BUILD_LOG=$BUILD_ROOT/zbuild_logs
+BUILD_LOG=$BUILD_ROOT/Zbuild_Logs
 
 package=util-linux-2.40.2
 archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
@@ -24,7 +24,11 @@ patch="false"
 
 #
 #   Build Functions
-# 
+#
+Src_Extract() {
+    echo "*** Extracting: ${package} ***"
+
+}
 Src_package() {
     packagedir=${archive%.tar.*}
     package=${packagedir%-*}
