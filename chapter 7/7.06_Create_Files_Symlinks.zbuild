@@ -1,9 +1,9 @@
 #!/bin/bash
-if [ -z "$BUILD_SOURCE" ]; then
-   echo "Error: Can't Find the \$BUILD_SOURCE. Exiting."
+if [ -z "$BUILD_ROOT" ]; then
+   echo "Error: Can't Find the \$BUILD_ROOT. Exiting."
    exit 1
 fi
-FILESDIR="$BUILD_SOURCE/chapter 7"
+FILESDIR="$BUILD_ROOT/chapter 7"
 
 echo "* Creating mtab and hosts *"
 ln -sv /proc/self/mounts /etc/mtab
