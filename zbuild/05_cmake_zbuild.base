@@ -1,5 +1,5 @@
 #!/bin/bash
-#   Blank Install zbuild
+#   CMake Basic Blank Install zbuild
 #   unset functions
 unset -f Src_package
 unset -f Src_prepare
@@ -9,22 +9,37 @@ unset -f Src_check
 unset -f Src_install
 unset -f Src_post
 #
+#   Global
+#
+BUILD_SOURCE=/opt/source
+BUILD_ROOT=/BUILD
+BUILD_LOGS=$BUILD_ROOT/Zbuild_Logs
+
+package=
+archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
+delete="true"
+extract="true"
+patch="false"
+
+#
 #   Build Functions
 # 
-# Extract the base package name and version
+Src_Extract() {
+    echo "*** Extracting: ${package} ***"
+
+}
 # First Remove the .tar.* and Second get Package Name
 Src_package() {
     packagedir=${archive%.tar.*}
     package=${packagedir%-*}
 
 }
-
+# executed after pushd
 Src_prepare () {
    echo "*** Preparing ${package} ***"
    mkdir -v build
    cd build
 }
-
 Src_configure () {
    echo "*** Configuring ${package} ***"
    cmake ${prefix} ${build} ${disable} ${ninja} || exit 88
@@ -41,31 +56,11 @@ Src_install () {
    echo "*** Installing ${package} ***"
    ninja install || exit 55
 }
+# executed after popd
 Src_post () {
    echo "*** Finalizing ${package} ***"
 
 }
-
-export -f Src_prepare
-export -f Src_configure
-export -f Src_compile
-export -f Src_check
-export -f Src_install
-export -f Src_post
-#
-#   Define configure options
-#
-BUILD_SOURCE=/opt/source
-BUILD_ROOT=/BUILD
-export BUILD_SOURCE BUILD_ROOT
-
-package=
-archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
-delete="true"
-extract="true"
-patch="false"
-
-Src_package
 #
 # Start defining package specific options
 # 
@@ -76,9 +71,19 @@ enable=""
 ninja="-G Ninja .."
 
 docdir="/usr/share/doc/${packagedir}"
+# Extract the base package name and version
+Src_package
+#Src_Extract
 
 export package packagedir archive extract delete patch
 export prefix build disable docdir enable
+export BUILD_SOURCE BUILD_ROOT BUILD_LOGS
+export -f Src_prepare
+export -f Src_configure
+export -f Src_compile
+export -f Src_check
+export -f Src_install
+export -f Src_post
 
 $BUILD_ROOT/zbuild.sh
 exit_code=$?
