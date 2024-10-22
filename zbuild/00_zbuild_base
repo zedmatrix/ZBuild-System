@@ -25,6 +25,10 @@ patch="false"
 #
 #   Build Functions
 # 
+Src_Extract() {
+    echo "*** Extracting: ${package} ***"
+
+}
 # First Remove the .tar.* and Second Get Package Name
 Src_package() {
     packagedir=${archive%.tar.*}
