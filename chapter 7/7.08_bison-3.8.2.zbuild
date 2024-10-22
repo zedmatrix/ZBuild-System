@@ -24,7 +24,11 @@ patch="false"
 
 #
 #   Build Functions
-# 
+#
+Src_Extract() {
+    echo "*** Extracting: ${package} ***"
+
+}
 Src_package() {
     packagedir=${archive%.tar.*}
     package=${packagedir%-*}
