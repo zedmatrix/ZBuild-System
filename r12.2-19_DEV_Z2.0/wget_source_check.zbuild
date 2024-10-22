@@ -1,0 +1,27 @@
+#!/bin/bash
+ROOT="/Zbuild"
+
+WGET="${ROOT}/lfs-19-wgetlist.zbuild"
+LOG="${ROOT}/ZBuild_Logs/wget-download.log"
+
+SOURCE="/opt/source"
+
+while read -r md5 url file; do
+
+    [[ "$md5" =~ ^#.*$ || -z "$md5" ]] && continue
+
+    package_url="${url}/${file}"
+    echo "Downloading: $package_url"
+    wget -P "$SOURCE" "$package_url" --continue
+
+    downloaded_file="${SOURCE}/${file}"
+
+    if echo "$md5  $downloaded_file" | md5sum -c -; then
+        echo "File: $file MD5 checksum: OK" >> $LOG
+    else
+        echo "File: $file MD5 checksum: FAIL" >> $LOG
+    fi
+done < <(grep -v '^#' "$WGET")
+
+fail="Fail: $(grep 'FAIL' "$LOG" | wc -l)"
+echo "All Downloads Completed. $fail"
