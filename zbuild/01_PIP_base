@@ -10,16 +10,31 @@ unset -f Src_check
 unset -f Src_install
 unset -f Src_post
 #
+#   Global
+#
+BUILD_SOURCE=/opt/source
+BUILD_ROOT=/BUILD
+BUILD_LOGS=$BUILD_ROOT/zbuild_logs
+package=
+archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
+extract="true"
+delete="true"
+patch="false"
+
+#
 #   Build Functions
 # 
-# Extract the base package name and version
 # First Remove the .tar.* and Second Get Package Name
+Src_Extract() {
+    echo "*** Extracting: ${package} ***"
+
+}
 Src_package() {
     packagedir=${archive%.tar.*}
     package=${packagedir%-*}
 
 }
-
+# executed after pushd
 Src_prepare () {
    echo "*** Preparing ${package} ***"
 
@@ -41,37 +56,27 @@ Src_install () {
    echo "*** Installing ${package} ***"
    pip3 install --no-index --no-user --find-links dist {}
 }
+# executed after popd
 Src_post () {
    echo "*** Finalizing ${package} ***"
 
 }
+#
+# Start defining package specific options
+# 
 
+# Extract the base package name and version
+Src_package
+#Src_Extract
+
+export package packagedir archive extract patch delete
+export BUILD_SOURCE BUILD_ROOT BUILD_LOGS
 export -f Src_prepare
 export -f Src_configure
 export -f Src_compile
 export -f Src_check
 export -f Src_install
 export -f Src_post
-#
-#   Define configure options
-#
-BUILD_SOURCE=/opt/source
-BUILD_ROOT=/BUILD
-BUILD_LOGS=$BUILD_ROOT/build_logs
-export BUILD_SOURCE BUILD_ROOT BUILD_LOGS
-
-package=
-archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
-extract="true"
-delete="true"
-patch="false"
-
-Src_package
-#
-# Start defining package specific options
-# 
-
-export package packagedir archive extract patch delete
 
 $BUILD_ROOT/zbuild.sh
 exit_code=$?
