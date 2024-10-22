@@ -11,7 +11,7 @@ fail() {
     echo "Exiting with code $exitcode: $1"
     exit $exitcode
 }
-bail() { echo "Error: $*"; exit 1 }
+bail() { echo "Error: $*"; exit 1; }
 warn() { echo "Warning: $*" }
 
 [ -z "$archive" ] && bail "Archive not set"
