@@ -15,7 +15,7 @@ unset -f Src_post
 #
 BUILD_SOURCE=/opt/source
 BUILD_ROOT=/BUILD
-BUILD_LOG=$BUILD_ROOT/zbuild_logs
+BUILD_LOG=$BUILD_ROOT/Zbuild_Logs
 
 package=
 archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
