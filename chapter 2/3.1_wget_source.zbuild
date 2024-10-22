@@ -1,8 +1,8 @@
 #!/bin/bash
-if [ -n $LFS ]; then
+if [ -n "$LFS" ] && [ -d "$LFS" ]; then
    echo "* Good $LFS is set *"
    
-   if [[ -d $BUILD_SOURCE ]]; then
+   if [ -d "$BUILD_SOURCE" ]; then
       echo "* Good $BUILD_SOURCE is set and exists *"
    
       chmod -v a+wt $BUILD_SOURCE
@@ -14,11 +14,11 @@ if [ -n $LFS ]; then
           chown root:root $BUILD_SOURCE/*
           echo "* Finished Getting Sources to: $BUILD_SOURCE *"
         else
-          echo "Error: make sure wget-list and md5sums are in $BUILD_SOURCE"
+          echo "Error: make sure 'wget-list' and 'md5sums' are in $BUILD_SOURCE"
         fi
       popd
    else
-      echo "Error: $BUILD_SOURCE doesn't exist *"
+      echo "Error: $BUILD_SOURCE is not available. *"
    fi
 else
    echo "Error: \$LFS is not set"
