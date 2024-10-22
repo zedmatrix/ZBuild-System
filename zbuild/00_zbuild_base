@@ -14,7 +14,7 @@ unset -f Src_post
 #
 BUILD_SOURCE=/opt/source
 BUILD_ROOT=/BUILD
-BUILD_LOG=$BUILD_ROOT/zbuild_logs
+BUILD_LOG=$BUILD_ROOT/Zbuild_Logs
 
 package=
 archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
@@ -62,10 +62,11 @@ Src_post () {
 prefix="--prefix=/usr"
 disable="--disable-static"
 docdir="--docdir=/usr/share/doc/${packagedir}"
-enable=""
+enable="--enable-shared"
 
 # Extract the base package name and version
 Src_package
+#Src_Extract
 
 export package packagedir archive extract delete patch
 export prefix disable docdir enable
