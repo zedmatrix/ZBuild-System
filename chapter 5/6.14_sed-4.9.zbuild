@@ -1,5 +1,5 @@
 #!/bin/bash
-#   Blank Install zbuild
+#   6.14 - Sed-4.9 - temporary
 #   unset functions
 #
 unset -f Src_package
@@ -9,20 +9,35 @@ unset -f Src_compile
 unset -f Src_check
 unset -f Src_install
 unset -f Src_post
+# 
+#  Global
+#
+LFS=/mnt/lfs
+LFS_TGT=$(uname -m)-lfs-linux-gnu
+BUILD_SOURCE=$LFS/opt/source
+BUILD_ROOT=$LFS/BUILD
+BUILD_LOGS=$BUILD_ROOT/Zbuild_Logs
+package=sed-4.9
+archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
+extract="true"
+delete="true"
+patch="false"
+
 #
 #   Build Functions
 # 
-# Extract the base package name and version
+Src_Extract() {
+    echo "*** Extracting: ${package} ***"
+
+}
 Src_package() {
     packagedir=${archive%.tar.*}
     package=${packagedir%-*}
 }
-
 Src_prepare () {
    echo "*** Preparing ${package} ***"
 
 }
-
 Src_configure () {
    echo "*** Configuring ${package} ***"
    build="--build=$(./build-aux/config.guess)"
@@ -44,38 +59,24 @@ Src_post () {
    echo "*** Finalizing ${package} ***"
 
 }
-
-export -f Src_prepare
-export -f Src_configure
-export -f Src_compile
-export -f Src_check
-export -f Src_install
-export -f Src_post
-#
-#   Define configure options
-#
-LFS=/mnt/lfs
-LFS_TGT=$(uname -m)-lfs-linux-gnu
-BUILD_SOURCE=$LFS/opt/source
-BUILD_ROOT=$LFS/BUILD
-export LFS LFS_TGT BUILD_SOURCE BUILD_ROOT
-
-package=sed-4.9
-archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
-extract="true"
-delete="true"
-patch="false"
-
-Src_package
 #
 # Start defining package specific options
 # 
 prefix="--prefix=/usr"
 host="--host=$LFS_TGT"
 
-export package packagedir archive
-export extract delete patch
+# Extract the base package name and version
+Src_package
+
+export package packagedir archive extract delete patch
 export prefix host build
+export LFS LFS_TGT BUILD_SOURCE BUILD_ROOT BUILD_LOGS
+export -f Src_prepare
+export -f Src_configure
+export -f Src_compile
+export -f Src_check
+export -f Src_install
+export -f Src_post
 
 $BUILD_ROOT/zbuild.sh
 exit_code=$?
