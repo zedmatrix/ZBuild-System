@@ -3,10 +3,11 @@
 LFS=/mnt/lfs
 BUILD_ROOT=$LFS/BUILD
 BUILD_SOURCE=$LFS/opt/source
+BUILD_LOGS=$BUILD_ROOT/Zbuild_Logs
 
 # change your ROOT and SWAP devices
-ROOT=vdc3
-SWAP=vdc2
+ROOT=sdb3
+SWAP=sdb2
 echo "* Mounting $LFS to /dev/$ROOT *"
 
 if [ -d $LFS ]; then
@@ -18,8 +19,10 @@ swapon -v /dev/$SWAP
 
 echo "* Creating $BUILD_ROOT"
 mkdir -pv $BUILD_ROOT
+echo "* Creating $BUILD_LOGS *"
+mkdir -pv $BUILD_LOGS
 echo "* Chapter 3 Packages and Patches: $BUILD_SOURCE *"
 mkdir -pv $BUILD_SOURCE
 
-export LFS BUILD_ROOT BUILD_SOURCE
+export LFS BUILD_ROOT BUILD_SOURCE BUILD_LOGS
 echo "* Done * Now Download the Sources *"
