@@ -12,7 +12,7 @@ fail() {
     exit $exitcode
 }
 bail() { echo "Error: $*"; exit 1; }
-warn() { echo "Warning: $*" }
+warn() { echo "Warning: $*"; }
 
 [ -z "$archive" ] && bail "Archive not set"
 [ -z "$package" ] && bail "Package not set"
@@ -76,16 +76,14 @@ pushd $BUILD_ROOT
         popd
 
 # Src_post function
-    if declare -f Src_post > /dev/null; then
-        Src_post || warn "Src_post not set."
+    Src_post || warn "Src_post not set."
 
-        if [ "$delete" = "true" ]; then
-            echo "*** Cleaning Up $BUILD_ROOT/${packagedir} ***"
-            rm -rf $BUILD_ROOT/${packagedir}
-        else
-            echo "*** Not Removing Source Folder ***"
-        fi
-
+    if [ "$delete" = "true" ]; then
+        echo "*** Cleaning Up $BUILD_ROOT/${packagedir} ***"
+        rm -rf $BUILD_ROOT/${packagedir}
+    else
+        echo "*** Not Removing Source Folder ***"
     fi
-    popd # pop the BUILD_ROOT
+
+popd # pop the BUILD_ROOT
 echo "*** Zbuild Finished.***"
