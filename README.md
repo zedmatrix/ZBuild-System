@@ -12,14 +12,14 @@ Choose the Minimum Live CD and a Stage 3 File to Begin<br>
 <br>
 * You can either burn the Live CD or Write it to a USB
 * Once Booted into the Live CD Enviroment.
-* Mount a USB for the Gentoo Root FS `mount /dev/sdX /mnt/genoo && cd /mnt/gentoo`
+* Mount a USB for the Gentoo Root FS `mount /dev/sdX /mnt/gentoo && cd /mnt/gentoo`
 * Now Download the stage 3 file and extract.
 ```
 wget [Gentoo Stage 3]
-tar xpvf stage3-*.tar.xz --xattrs-include='*.*' --numeric-owner
+tar -xpvf stage3-*.tar.xz --xattrs-include='*.*' --numeric-owner
 ```
 * Now copy over the resolv.conf
-   ` cp --dereference /etc/resolv.conf /mnt/gentoo/etc/ `
+   ` cp -v --dereference /etc/resolv.conf /mnt/gentoo/etc/ `
 * or Create a simple one like:
 ```
 cat > /mnt/gentoo/etc/resolv.conf << EOF
