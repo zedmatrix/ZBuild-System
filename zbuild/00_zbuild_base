@@ -1,8 +1,10 @@
 #!/bin/bash
 #
-#   Blank Install zbuild
-#   unset functions
-unset -f Src_package
+#    Blank Install Zbuild v2.0
+#    DEPENDS ()
+#
+#    unset functions
+unset -f Src_Extract
 unset -f Src_prepare
 unset -f Src_configure
 unset -f Src_compile
@@ -10,71 +12,62 @@ unset -f Src_check
 unset -f Src_install
 unset -f Src_post
 #
-#  Global
+# Start defining package specific options
 #
-BUILD_SOURCE=/opt/source
-BUILD_ROOT=/BUILD
-BUILD_LOG=$BUILD_ROOT/Zbuild_Logs
+#BUILD_SOURCE=/opt/source    #* moved to zbuild_env.sh
+#BUILD_ROOT=/BUILD
+#BUILD_LOG=$BUILD_ROOT/Zbuild_Logs
 
 package=
-archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
+packagedir=${package}
+archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)     #adjust as some may be *.tgz
 delete="true"
-extract="true"
 patch="false"
+prefix="--prefix=/usr"
+enable="--enable-shared"
+disable="--disable-static"
+docdir="--docdir=/usr/share/doc/${packagedir}"
 
 #
 #   Build Functions
 # 
 Src_Extract() {
-    echo "*** Extracting: ${package} ***"
+    print "Extracting: ${archive}"
+    mkdir -v "${BUILD_ROOT}/${packagedir}"
+    tar -xf "${BUILD_SOURCE/${archive}" -C "${BUILD_ROOT}/${packagedir}" --strip-components=1
 
 }
-# First Remove the .tar.* and Second Get Package Name
-Src_package() {
-    packagedir=${archive%.tar.*}
-    package=${packagedir%-*}
-}
-# Executed After pushd
-Src_prepare () {
-   echo "*** Preparing ${package} ***"
+# Executed After pushd    this is optional just warns
+Src_prepare() {
+    print "Preparing ${packagedir}"
 
 }
-Src_configure () {
-   echo "*** Configuring ${package} ***"
-   ./configure ${prefix} ${disable} ${docdir} || exit 88
+Src_configure() {
+    print "Configuring ${packagedir}"
+    ./configure ${prefix} ${enable} ${disable} ${docdir} || exit 88
 }
-Src_compile () {
-   echo "*** Compiling ${package} ***"
-   make 2>&1 | tee $BUILD_LOG/${package}-make.log || exit 77
+Src_compile() {
+    print "Compiling ${package}"
+    make || exit 77  # 2>&1 | tee $BUILD_LOG/${package}-make.log || exit 77  #Optional Logging for Make phase
 }
-Src_check () {
-   echo "*** Checking ${package} ***"
-   make check 2>&1 | tee $BUILD_LOG/${package}-check.log
+Src_check() {
+    print "Checking ${packagedir}"
+    make check 2>&1 | tee $BUILD_LOG/${packagedir}-check.log
 }
-Src_install () {
-   echo "*** Installing ${package} ***"
-   make install || exit 55
+Src_install() {
+    print "Installing ${packagedir}"
+    make install || exit 55
 }
-# Executed After popd
-Src_post () {
-   echo "*** Finalizing ${package} ***"
+# Executed After popd    this is optional just warns
+Src_post() {
+    print "Finalizing ${packagedir}"
 
+    /usr/sbin/ldconfig
 }
-#
-# Start defining package specific options
-# 
-prefix="--prefix=/usr"
-disable="--disable-static"
-docdir="--docdir=/usr/share/doc/${packagedir}"
-enable="--enable-shared"
 
-# Extract the base package name and version
-Src_package
-#Src_Extract
-
-export package packagedir archive extract delete patch
-export prefix disable docdir enable
-export BUILD_SOURCE BUILD_ROOT BUILD_LOGS
+export package packagedir archive delete patch
+export prefix enable disable docdir
+export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
 export -f Src_compile
@@ -82,14 +75,14 @@ export -f Src_check
 export -f Src_install
 export -f Src_post
 
-$BUILD_ROOT/zbuild.sh
+# setup in zbuild_env.sh
+${BUILD_CMD}
 exit_code=$?
 
 if [[ exit_code -ne 0 ]]; then
-    echo "___ Error Code: $exit_code"
+    print " Error Code: $exit_code"
 else
-    echo "*** Success ***"
-    unset -f Src_package
+    print " Success "
     unset -f Src_prepare
     unset -f Src_configure
     unset -f Src_compile
@@ -97,5 +90,5 @@ else
     unset -f Src_install
     unset -f Src_post
     unset package packagedir archive extract delete patch
-    unset prefix disable docdir enable
+    unset prefix enable disable docdir
 fi
