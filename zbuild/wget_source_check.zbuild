@@ -1,5 +1,5 @@
 #!/bin/bash
-bail() { echo "$*"; exit 1; }
+bail() { print "$*"; exit 1; }
 
 _getfile=${1}
 WGET="${PWD}/${_getfile}"
@@ -18,10 +18,10 @@ while read -r md5 url file; do
     download_file="${SOURCE}/${file}"
 
 	if [ ! -f "${download_file}" ]; then
-	    echo "Downloading: $package_url"
+	    print "Downloading: $package_url"
     	wget -P "${SOURCE}" "${package_url}" --continue
 	else
-		echo "Skipping: ${file} ...Exists."
+		print "Skipping: ${file} ...Exists."
 	fi
 
     if echo "$md5  $download_file" | md5sum -c -; then
@@ -32,5 +32,4 @@ while read -r md5 url file; do
 done < <(grep -v '^#' "$WGET")
 
 fail="Fail: $(grep 'FAIL' "$LOG" | wc -l)"
-echo "All Downloads Completed. $fail"
-
+print "All Downloads Completed. $fail"
