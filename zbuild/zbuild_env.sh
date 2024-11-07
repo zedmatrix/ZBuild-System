@@ -1,4 +1,5 @@
 #!/bin/bash
+# begin /etc/profile.d/zbuild.sh
 PackageCheck() {
     pkg=${1}
     [ -z $pkg ] && { echo "Usage: PackageCheck 'Package Name' "; exit 1; }
@@ -27,3 +28,5 @@ BUILD_CMD="${BUILD_ROOT}/zbuild2.sh"
 export RED GREEN YELLOW NORMAL
 export BUILD_CMD BUILD_LOG BUILD_ROOT BUILD_SOURCE
 export -f PackageCheck print
+
+# end /etc/profile.d/zbuild.sh
