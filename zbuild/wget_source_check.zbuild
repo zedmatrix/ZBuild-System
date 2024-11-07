@@ -1,0 +1,36 @@
+#!/bin/bash
+bail() { echo "$*"; exit 1; }
+
+_getfile=${1}
+WGET="${PWD}/${_getfile}"
+[ ! -f "$WGET" ] && bail "Missing $WGET list"
+
+LOG="${BUILD_LOG}/wget_${_getfile}.log"
+
+SOURCE="${BUILD_SOURCE}"
+[ ! -d "$SOURCE" ] && bail "Missing \$SOURCE directory"
+
+while read -r md5 url file; do
+
+    [[ "$md5" =~ ^#.*$ || -z "$md5" ]] && continue
+
+    package_url="${url}/${file}"
+    download_file="${SOURCE}/${file}"
+
+	if [ ! -f "${download_file}" ]; then
+	    echo "Downloading: $package_url"
+    	wget -P "${SOURCE}" "${package_url}" --continue
+	else
+		echo "Skipping: ${file} ...Exists."
+	fi
+
+    if echo "$md5  $download_file" | md5sum -c -; then
+        echo "File: $file MD5 checksum: OK" >> $LOG
+    else
+        echo "File: $file MD5 checksum: FAIL" >> $LOG
+    fi
+done < <(grep -v '^#' "$WGET")
+
+fail="Fail: $(grep 'FAIL' "$LOG" | wc -l)"
+echo "All Downloads Completed. $fail"
+
