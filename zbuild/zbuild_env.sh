@@ -13,6 +13,12 @@ PackageCheck() {
         printf "... False\n"
     fi
 }
+Src_Extract() {
+    print "Extracting: ${archive}"
+    mkdir -v "${BUILD_ROOT}/${packagedir}"
+    tar -xf "${BUILD_SOURCE}/${archive}" -C "${BUILD_ROOT}/${packagedir}" --strip-components=1
+}
+
 print() { printf "*** %s ***\n" "$*"; }
 
 RED="\e[1;31m"
@@ -27,6 +33,6 @@ BUILD_CMD="${BUILD_ROOT}/zbuild2.sh"
 
 export RED GREEN YELLOW NORMAL
 export BUILD_CMD BUILD_LOG BUILD_ROOT BUILD_SOURCE
-export -f PackageCheck print
+export -f PackageCheck print Src_Extract
 
 # end /etc/profile.d/zbuild.sh
