@@ -1,5 +1,6 @@
 #!/bin/bash
-#   Blank Install zbuild
+#   PIP Install zbuild2
+#    Blank
 #   unset functions
 #
 unset -f Src_package
@@ -12,12 +13,10 @@ unset -f Src_post
 #
 #   Global
 #
-BUILD_SOURCE=/opt/source
-BUILD_ROOT=/BUILD
-BUILD_LOGS=$BUILD_ROOT/Zbuild_Logs
+pkg=
 package=
+packagedir=${package}
 archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
-extract="true"
 delete="true"
 patch="false"
 
@@ -26,50 +25,36 @@ patch="false"
 # 
 # First Remove the .tar.* and Second Get Package Name
 Src_Extract() {
-    echo "*** Extracting: ${package} ***"
-
-}
-Src_package() {
-    packagedir=${archive%.tar.*}
-    package=${packagedir%-*}
-
+    print "Extracting: ${archive}"
+    mkdir -v "${BUILD_ROOT}/${packagedir}"
+    tar -xf "${BUILD_SOURCE}/${archive}" -C "${BUILD_ROOT}/${packagedir}" --strip-components=1 || exit 99
 }
 # executed after pushd
-Src_prepare () {
-   echo "*** Preparing ${package} ***"
-
+Src_prepare() {
+    print "No Prepare"
 }
-Src_configure () {
-   echo "*** Configuring ${package} ***"
-
+Src_configure() {
+    print "No Configure"
 }
 Src_compile () {
-   echo "*** Compiling ${package} ***"
-   pip3 wheel -w dist --no-cache-dir --no-build-isolation --no-deps $PWD
+    print "Building ${package}"
+    pip3 wheel -w dist --no-cache-dir --no-build-isolation --no-deps $PWD
 }
 Src_check () {
-   echo "*** Checking ${package} ***"
+    print "No Testsuite"
 
 }
 Src_install () {
-   echo "*** Installing ${package} ***"
-   pip3 install --no-index --no-user --find-links dist {}
+    print "Installing ${pkg}"
+    pip3 install --no-index --no-user --find-links dist ${pkg}
 }
 # executed after popd
 Src_post () {
-   echo "*** Finalizing ${package} ***"
-
+    print "Finalizing ${package}"
 }
-#
-# Start defining package specific options
-# 
 
-# Extract the base package name and version
-Src_package
-#Src_Extract
-
-export package packagedir archive extract patch delete
-export BUILD_SOURCE BUILD_ROOT BUILD_LOGS
+export package packagedir archive patch delete
+export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
 export -f Src_compile
@@ -77,20 +62,19 @@ export -f Src_check
 export -f Src_install
 export -f Src_post
 
-$BUILD_ROOT/zbuild.sh
+${BUILD_CMD}
 exit_code=$?
 
 if [[ exit_code -ne 0 ]]; then
-    echo "___ Error Code: $exit_code"
+    print " Error Code: $exit_code "
 else
-    echo "*** Success ***"
-    unset -f Src_package
+    print " Success "
     unset -f Src_prepare
     unset -f Src_configure
     unset -f Src_compile
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive extract patch delete
+    unset package packagedir archive patch delete
 fi
 
