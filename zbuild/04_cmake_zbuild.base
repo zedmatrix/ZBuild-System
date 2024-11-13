@@ -1,8 +1,8 @@
 #!/bin/bash
-#   CMAKE Blank Install zbuild
+#   CMAKE Install zbuild2
+#    Blank
 #   unset functions
 #
-unset -f Src_package
 unset -f Src_prepare
 unset -f Src_configure
 unset -f Src_compile
@@ -12,74 +12,60 @@ unset -f Src_post
 #
 #   Global
 #
-BUILD_SOURCE=/opt/source
-BUILD_ROOT=/BUILD
-BUILD_LOGS=$BUILD_ROOT/Zbuild_Logs
 
 package=
+packagedir=${package}
 archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
 delete="true"
-extract="true"
 patch="false"
+prefix="-D CMAKE_INSTALL_PREFIX=/usr"
+build="-D CMAKE_BUILD_TYPE=Release"
+system="-D CMAKE_INSTALL_LIBEXECDIR=libexec"
+enable="-D KDE_INSTALL_USE_QT_SYS_PATHS=ON"
+disable="-D BUILD_TESTING=OFF -W no-dev"
+ninja="-G Ninja"
+docdir="/usr/share/doc/${packagedir}"
 
 #
 #   Build Functions
 # 
 Src_Extract() {
-    echo "*** Extracting: ${package} ***"
-
-}
-# First Remove the .tar.* and Second get Package Name
-Src_package() {
-    packagedir=${archive%.tar.*}
-    package=${packagedir%-*}
-
+    print "Extracting: ${archive}"
+    mkdir -v "${BUILD_ROOT}/${packagedir}"
+    tar -xf "${BUILD_SOURCE}/${archive}" -C "${BUILD_ROOT}/${packagedir}" --strip-components=1 || exit 99
 }
 # executed After pushd
-Src_prepare () {
-   echo "*** Preparing ${package} ***"
-   mkdir -v build
-   cd build
+Src_prepare() {
+    print "Preparing ${package}"
+    mkdir -v build
+    cd build
 }
-Src_configure () {
-   echo "*** Configuring ${package} ***"
-   cmake ${prefix} ${build} ${enable} ${shared} ${tests} ${ninja} || exit 88
+Src_configure() {
+    print "Configuring ${package}"
+    cmake .. ${prefix} ${build} ${system} ${enable} ${disable} || exit 88
 }
-Src_compile () {
-   echo "*** Compiling ${package} ***"
-   ninja || exit 77
+Src_compile() {
+    print "Compiling ${package}"
+    ninja || exit 77
+    make || exit 77
 }
-Src_check () {
-   echo "*** Checking ${package} ***"
-   ninja test 
+Src_check() {
+    print "No Testsuite Available"
 }
-Src_install () {
-   echo "*** Installing ${package} ***"
-   ninja install || exit 55
+Src_install() {
+    print "Installing ${package}"
+    ninja install || exit 55
+    make install || exit 55
 }
 # executed After popd
-Src_post () {
-   echo "*** Finalizing ${package} ***"
-
+Src_post() {
+    print "Finalizing ${package}"
+    /usr/sbin/ldconfig
 }
-#
-# Start defining package specific options
-# 
-prefix="-D CMAKE_INSTALL_PREFIX=/usr"
-build="-D CMAKE_BUILD_TYPE=Release"
-enable="-D =ON"
-shared="-D BUILD_SHARED_LIBS=ON"
-tests="-D _TESTS=ON"
-ninja="-G Ninja .."
 
-docdir="/usr/share/doc/${packagedir}"
-# Extract the base package name and version
-Src_package
-#Src_Extract
-
-export package packagedir archive extract delete patch
-export prefix build enable shared tests ninja
-export BUILD_SOURCE BUILD_ROOT BUILD_LOGS
+export package packagedir archive delete patch
+export prefix build system disable enable docdir
+export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
 export -f Src_compile
@@ -87,21 +73,21 @@ export -f Src_check
 export -f Src_install
 export -f Src_post
 
-$BUILD_ROOT/zbuild.sh
+${BUILD_CMD}
 exit_code=$?
 
 if [[ exit_code -ne 0 ]]; then
-    echo "___ Error Code: $exit_code"
+    print " Error Code: $exit_code "
 else
-    echo "*** Success ***"
-    unset -f Src_package
+    print " Success "
+
     unset -f Src_prepare
     unset -f Src_configure
     unset -f Src_compile
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive extract delete patch
-    unset prefix build enable shared tests ninja
+    unset package packagedir archive delete patch
+    unset prefix build system disable enable docdir
 fi
 
