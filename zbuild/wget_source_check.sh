@@ -1,9 +1,14 @@
 #!/bin/bash
 bail() { print "$*"; exit 1; }
+usage() {
+	print "wget.list = {MD5} {Base URL} {Archive}"
+	print "$0 <wget.list>"
+ 	bail "Missing WGET list"
+}
 
 _getfile=${1}
 WGET="${PWD}/${_getfile}"
-[ ! -f "$WGET" ] && bail "Missing $WGET list"
+[ ! -f "$WGET" ] && usage
 
 LOG="${BUILD_LOG}/wget_${_getfile}.log"
 
@@ -22,6 +27,7 @@ while read -r md5 url file; do
     	wget -P "${SOURCE}" "${package_url}" --continue
 	else
 		print "Skipping: ${file} ...Exists."
+  		echo "Skipping Existing: ${file}" >> $LOG
 	fi
 
     if echo "$md5  $download_file" | md5sum -c -; then
