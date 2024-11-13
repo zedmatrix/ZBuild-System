@@ -12,61 +12,46 @@ unset -f Src_post
 #
 # Global Settings
 #
-BUILD_SOURCE=/opt/source
-BUILD_ROOT=/BUILD
-
 package=man-pages-6.9.1
+packagedir=${package}
 archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
-extract="true"
 delete="true"
 patch="false"
+prefix="prefix=/usr"
 
 #
 #   Build Functions
-# 
-Src_package() {
-    packagedir=${archive%.tar.*}
-    package=${packagedir%-*}
-    pkgver=${packagedir##*-}
+#
+Src_Extract() {
+    print "Extracting: ${archive}"
+    mkdir -v "${BUILD_ROOT}/${packagedir}"
+    tar -xf "${BUILD_SOURCE}/${archive}" -C "${BUILD_ROOT}/${packagedir}" --strip-components=1
 }
 # Executed after pushd
-Src_prepare () {
-   echo "*** Preparing ${package} ***"
-   rm -v man3/crypt*
+Src_prepare() {
+    print "Preparing ${package}"
+    rm -v man3/crypt*
 }
-
-Src_configure () {
-   echo "*** Configuring ${package} ***"
-
+Src_configure() {
+    print "No Configure ${package}"
 }
-Src_compile () {
-   echo "*** Compiling ${package} ***"
-
+Src_compile() {
+    print "No Compile ${package}"
 }
-Src_check () {
-   echo "*** Checking ${package} ***"
-
+Src_check() {
+    print "No Check ${package}"
 }
-Src_install () {
-   echo "*** Installing ${package} ***"
-   make ${prefix} install
+Src_install() {
+    print "Installing ${package}"
+    make ${prefix} install
 }
 # Executed after popd
 Src_post () {
-   echo "*** Finalizing ${package} ***"
-
+    print "Finalizing ${package}"
 }
-#
-#   Define configure options
-#
-prefix="prefix=/usr"
 
-# Extract the base package name and version
-Src_package
-
-export package packagedir archive
-export extract delete patch prefix
-export BUILD_SOURCE BUILD_ROOT
+export package packagedir archive delete patch prefix
+export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
 export -f Src_compile
@@ -74,21 +59,18 @@ export -f Src_check
 export -f Src_install
 export -f Src_post
 
-$BUILD_ROOT/zbuild.sh
+${BUILD_CMD}
 exit_code=$?
 
 if [[ exit_code -ne 0 ]]; then
-    echo "___ Error Code: $exit_code"
+    print " Error Code: $exit_code "
 else
-    echo "*** Success ***"
-    unset -f Src_package
+    print " Success "
     unset -f Src_prepare
     unset -f Src_configure
     unset -f Src_compile
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive
-    unset extract delete patch prefix
+    unset package packagedir archive delete patch prefix
 fi
-
