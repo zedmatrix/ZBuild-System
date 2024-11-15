@@ -73,6 +73,7 @@ Src_post() {
 
 export package packagedir archive delete patch
 export prefix target with enable disable
+export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
 export -f Src_compile

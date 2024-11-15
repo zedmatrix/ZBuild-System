@@ -2,7 +2,6 @@
 #   5.05 - Glibc-2.40 temporary
 #   unset functions
 #
-unset -f Src_package
 unset -f Src_prepare
 unset -f Src_configure
 unset -f Src_compile
@@ -12,83 +11,69 @@ unset -f Src_post
 # 
 #  Global
 #
-LFS=/mnt/lfs
-LFS_TGT=$(uname -m)-lfs-linux-gnu
-BUILD_SOURCE=$LFS/opt/source
-BUILD_ROOT=$LFS/BUILD
-BUILD_LOGS=$BUILD_ROOT/Zbuild_Logs
 package=glibc-2.40
+packagedir=${package}
 archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
-extract="true"
 delete="true"
 patch="glibc-2.40-fhs-1.patch"
+prefix="--prefix=/usr"
+host="--host=${LFS_TGT}"
+enable="--enable-kernel=4.19 --with-headers=${LFS}/usr/include"
+disable="--disable-nscd"
 
 #
 #   Build Functions
 # 
 Src_Extract() {
-    echo "*** Extracting: ${package} ***"
-
-}
-Src_package() {
-    packagedir=${archive%.tar.*}
-    package=${packagedir%-*}
+	print "Extracting: ${archive}"
+	mkdir -v "${BUILD_ROOT}/${packagedir}"
+	tar -xf "${BUILD_SOURCE}/${archive}" -C "${BUILD_ROOT}/${packagedir}" --strip-components=1
 }
 # executes after pushd
-Src_prepare () {
-   echo "*** Preparing ${package} ***"
- case $(uname -m) in
-   i?86)   ln -sfv ld-linux.so.2 $LFS/lib/ld-lsb.so.3
-   ;;
-   x86_64) ln -sfv ../lib/ld-linux-x86-64.so.2 $LFS/lib64
-           ln -sfv ../lib/ld-linux-x86-64.so.2 $LFS/lib64/ld-lsb-x86-64.so.2
-   ;;
- esac
- mkdir -v build
- cd build
+Src_prepare() {
+    print " Preparing ${package} "
+    case $(uname -m) in
+        i?86)
+            ln -sfv ld-linux.so.2 $LFS/lib/ld-lsb.so.3
+        ;;
+        x86_64)
+            ln -sfv ../lib/ld-linux-x86-64.so.2 $LFS/lib64
+            ln -sfv ../lib/ld-linux-x86-64.so.2 $LFS/lib64/ld-lsb-x86-64.so.2
+        ;;
+    esac
+    mkdir -v build
+    cd build
 }
+Src_configure() {
+    print " Configuring ${package} "
+    echo "rootsbindir=/usr/sbin" > configparms
+    build="--build=$(../scripts/config.guess)"
+    ../configure ${prefix} ${host} ${build} ${enable} ${disable} libc_cv_slibdir=/usr/lib
+}
+Src_compile() {
+    print " Compiling ${package} "
+    make || exit 77
+}
+Src_check() {
+    print "No Testsuite ${package} "
 
-Src_configure () {
-   echo "*** Configuring ${package} ***"
-   echo "rootsbindir=/usr/sbin" > configparms
-   build="--build=$(../scripts/config.guess)"
-   ../configure ${prefix} ${host} ${build} ${enable} ${disable} libc_cv_slibdir=/usr/lib
 }
-Src_compile () {
-   echo "*** Compiling ${package} ***"
-   make || exit 77
-}
-Src_check () {
-   echo "*** Checking ${package} ***"
-
-}
-Src_install () {
-   echo "*** Installing ${package} ***"
-   make DESTDIR=$LFS install
-   sed '/RTLDLIST=/s@/usr@@g' -i $LFS/usr/bin/ldd
+Src_install() {
+    print " Installing ${package} "
+    make DESTDIR=$LFS install
+    sed '/RTLDLIST=/s@/usr@@g' -i $LFS/usr/bin/ldd
 }
 # executes after popd
-Src_post () {
-   echo "*** Finalizing and Testing ${package} ***"
-   echo 'int main(){}' | $LFS_TGT-gcc -xc -
-   readelf -l a.out | grep ld-linux
-   rm -v a.out
+Src_post() {
+    print " Finalizing and Testing ${package} "
+    echo 'int main(){}' | $LFS_TGT-gcc -xc -
+    readelf -l a.out | grep ld-linux
+    rm -v a.out
 }
-#
-# Start defining package specific options
-# 
-prefix="--prefix=/usr"
-host="--host=$LFS_TGT"
-enable="--enable-kernel=4.19 --with-headers=$LFS/usr/include"
-disable="--disable-nscd"
 
-# Extract the base package name and version
-Src_package
-#Src_Extract
-
-export package packagedir archive extract delete patch
+export package packagedir archive delete patch
 export prefix host build enable disable
-export LFS LFS_TGT BUILD_SOURCE BUILD_ROOT BUILD_LOGS
+export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
 export -f Src_compile
@@ -96,23 +81,20 @@ export -f Src_check
 export -f Src_install
 export -f Src_post
 
-$BUILD_ROOT/zbuild.sh
+${BUILD_CMD}
 exit_code=$?
 
 if [[ exit_code -ne 0 ]]; then
-    echo "___ Error Code: $exit_code"
+    print " Error Code: ${exit_code} "
 else
-    echo "*** Success ***"
-    unset -f Src_package
+    print " Success "
     unset -f Src_prepare
     unset -f Src_configure
     unset -f Src_compile
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive
-    unset extract delete patch
+    unset package packagedir archive delete patch
     unset prefix host build enable disable
-
 fi
 
