@@ -6,8 +6,8 @@ NORMAL="\e[0m"
 
 LFS=/mnt/lfs
 LFS_TGT=$(uname -m)-lfs-linux-gnu
-BUILD_ROOT="/BUILD"
-BUILD_SOURCE="/opt/source"
+BUILD_ROOT="${LFS}/BUILD"
+BUILD_SOURCE="${LFS}/opt/source"
 BUILD_LOG="${BUILD_ROOT}/Zbuild_Logs"
 BUILD_CMD="${BUILD_ROOT}/zbuild2.sh"
 
