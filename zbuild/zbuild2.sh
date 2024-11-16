@@ -1,19 +1,22 @@
 #!/bin/bash
 # ZBuild script v2.0 - Linux From Scratch
 #   Source zbuild_env.sh or add it to /etc/profile.d
-# REQUIRES: BUILD_ROOT, BUILD_SOURCE, BUILD_LOG
-# To-Do: BUILD_USER, BUILD_GROUP
+#
+# REQUIRES: ZBUILD_root, ZBUILD_sources, ZBUILD_log, zprint function
+#
+# To-Do: ZBUILD_user, ZBUILD_group
 #
 #   All Functions Should Be Defined even if just with an echo statement
 #
 #   Requires ${archive}, ${package}, ${packagedir}
+#
 fail() {
     local exitcode="${2:-1}"
-    print " Exiting with code $exitcode: $1"
+    zprint " Exiting with code $exitcode: $1"
     exit $exitcode
 }
-bail() { print "${RED} Bailing: $* ${NORMAL}"; exit 1; }
-warn() { print "${YELLOW} Warning: $* ${NORMAL}"; }
+bail() { zprint "${RED} Bailing: $* ${NORMAL}"; exit 1; }
+warn() { zprint "${YELLOW} Warning: $* ${NORMAL}"; }
 stars() { printf "${GREEN}"; printf '%.0s*' {1..30}; printf "${NORMAL}\n"; }
 
 [ -z "$archive" ] && bail "Archive not set"
@@ -21,26 +24,26 @@ stars() { printf "${GREEN}"; printf '%.0s*' {1..30}; printf "${NORMAL}\n"; }
 [ -z "$packagedir" ] && bail "Packagedir not set"
 
 #   verify the archive is in BUILD_SOURCE
-[ ! -e "$BUILD_SOURCE/$archive" ] && bail "Missing Source Archive"
+[ ! -e "$ZBUILD_sources/$archive" ] && bail "Missing Source Archive"
 
-pushd $BUILD_ROOT
+pushd $ZBUILD_root
 	stars
     if declare -f Src_Extract > /dev/null; then
         Src_Extract || bail "Extraction: $?"
     else
-        print "Skipping Extraction"
+        zprint "Skipping Extraction"
     fi
 
-    [ ! -d "$BUILD_ROOT/$packagedir" ] && bail "$packagedir Failure $?"
+    [ ! -d "$ZBUILD_root/$packagedir" ] && bail "$packagedir Failure $?"
 
-    pushd $BUILD_ROOT/$packagedir
+    pushd $ZBUILD_root/$packagedir
 
 # Run a $patch if set
-        if [ ! "$patch" = "false" ] && [ -f "${BUILD_SOURCE}/${patch}" ]; then
-            print "Patching ${package} with ${patch}"
-            patch -Np1 -i "${BUILD_SOURCE}/${patch}" || bail "Patching Failed $?"
+        if [ ! "$patch" = "false" ] && [ -f "${ZBUILD_sources}/${patch}" ]; then
+            zprint "Patching ${package} with ${patch}"
+            patch -Np1 -i "${ZBUILD_sources}/${patch}" || bail "Patching Failed $?"
         else
-            print "Skipping Patch"
+            zprint "Skipping Patch"
         fi
 
 # Src_prepare or just warning
@@ -74,20 +77,20 @@ pushd $BUILD_ROOT
             fail "Src_install not set. Exiting." 55
         fi
 
-# back to BUILD_ROOT
+# back to ZBUILD_root
         popd
 
 # Src_post function
     type -t Src_post &>/dev/null && Src_post || warn "Src_post not set."
 
     if [ "$delete" = "true" ]; then
-        print "Cleaning Up ${BUILD_ROOT}/${packagedir}"
-        rm -rf ${BUILD_ROOT}/${packagedir}
+        zprint "Cleaning Up ${ZBUILD_root}/${packagedir}"
+        rm -rf ${ZBUILD_root}/${packagedir}
     else
         print "Not Removing Source Folder"
     fi
 
 popd # pop the BUILD_ROOT
-print "Zbuild Finished."
+zprint "Zbuild Finished."
 stars
 # The End
