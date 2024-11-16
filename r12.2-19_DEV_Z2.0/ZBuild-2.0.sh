@@ -1,7 +1,9 @@
 #!/bin/bash
-# ZBuild script v2.0 - Linux From Scratch
-# REQUIRES: BUILD_ROOT, BUILD_SOURCE, BUILD_LOGS
-# To-Do: BUILD_USER, BUILD_GROUP
+#       ZBuild script v2.0 - Linux From Scratch - revised 16-Nov-2024
+#
+# REQUIRES: ZBUILD_root, ZBUILD_sources, ZBUILD_log
+#
+# To-Do: ZBUILD_user, ZBUILD_group
 #
 #   All Functions Should Be Defined even if just with an echo statement
 #
@@ -13,32 +15,33 @@ fail() {
 }
 bail() { echo "Error: $*"; exit 1; }
 warn() { echo "Warning: $*"; }
+zprint() { printf "${YELLOW} *** %s *** ${NORMAL} \n" "$*"; }
 
 [ -z "$archive" ] && bail "Archive not set"
 [ -z "$package" ] && bail "Package not set"
 [ -z "$packagedir" ] && bail "Packagedir not set"
 
 #   verify the archive is in BUILD_SOURCE
-[ ! -e "$BUILD_SOURCE/$archive" ] && bail "Missing Source Archive"
+[ ! -e "${ZBUILD_sources}/${archive}" ] && bail "Missing Source Archive"
 
-pushd $BUILD_ROOT
+pushd "${ZBUILD_root}"
 
     if declare -f Src_Extract > /dev/null; then
         Src_Extract || bail "Extraction: $?"
     else
-        echo "*** Skipping Extraction ***"
+        zprint "*** Skipping Extraction ***"
     fi
 
-    [ ! -d "$BUILD_ROOT/$packagedir" ] && bail "$packagedir Failure $?"
+    [ ! -d "${ZBUILD_root}/${packagedir}" ] && bail "${packagedir} Failure $?"
 
-    pushd $BUILD_ROOT/$packagedir
+    pushd "${ZBUILD_root}/${packagedir}"
 
 # Run a $patch if set
-        if [ ! "$patch" = "false" ] && [ -f $BUILD_SOURCE/$patch ]; then
-            echo "*** Patching $package with $patch ***"
-            patch -Np1 -i "$BUILD_SOURCE/$patch" || bail "Patching Failed $?"
+        if [ ! "${patch}" = "false" ] && [ -f "${ZBUILD_sources}/${patch}" ]; then
+            zprint " Patching ${package} with ${patch} "
+            patch -Np1 -i "${ZBUILD_sources}/${patch}" || bail "Patching Failed $?"
         else
-            echo "*** Skipping Patch ***"
+            zprint " Skipping Patch "
         fi
 
 # Src_prepare or just warning
@@ -72,18 +75,18 @@ pushd $BUILD_ROOT
             fail "Src_install not set. Exiting." 55
         fi
 
-# back to BUILD_ROOT
+# back to ZBUILD_root
         popd
 
 # Src_post function
     Src_post || warn "Src_post not set."
 
-    if [ "$delete" = "true" ]; then
-        echo "*** Cleaning Up $BUILD_ROOT/${packagedir} ***"
-        rm -rf $BUILD_ROOT/${packagedir}
+    if [ "${delete}" = "true" ]; then
+        zprint " Cleaning Up ${ZBUILD_root}/${packagedir} ***"
+        rm -rf "${ZBUILD_root}/${packagedir}"
     else
-        echo "*** Not Removing Source Folder ***"
+        zprint " Not Removing Build Extract Folder "
     fi
 
-popd # pop the BUILD_ROOT
-echo "*** Zbuild Finished.***"
+popd # back to $PWD
+zprint " Zbuild Finished."
