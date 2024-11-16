@@ -2,78 +2,57 @@
 #   6.09 - Gawk-5.3.1 - temporary
 #   unset functions
 #
-unset -f Src_package
 unset -f Src_prepare
 unset -f Src_configure
 unset -f Src_compile
 unset -f Src_check
 unset -f Src_install
 unset -f Src_post
-
-
 # 
 #  Global
 #
-LFS=/mnt/lfs
-LFS_TGT=$(uname -m)-lfs-linux-gnu
-BUILD_SOURCE=$LFS/opt/source
-BUILD_ROOT=$LFS/BUILD
-BUILD_LOGS=$BUILD_ROOT/Zbuild_Logs
 package=gawk-5.3.1
+packagedir=${package}
 archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
-extract="true"
 delete="true"
 patch="false"
-
+prefix="--prefix=/usr"
+host="--host=${LFS_TGT}"
 #
 #   Build Functions
 # 
 Src_Extract() {
-    echo "*** Extracting: ${package} ***"
-
+	print "Extracting: ${archive}"
+	mkdir -v "${BUILD_ROOT}/${packagedir}"
+	tar -xf "${BUILD_SOURCE}/${archive}" -C "${BUILD_ROOT}/${packagedir}" --strip-components=1
 }
-Src_package() {
-    packagedir=${archive%.tar.*}
-    package=${packagedir%-*}
-}
-
+# Excuted After pushd to build_root/archive
 Src_prepare () {
-   echo "*** Preparing ${package} ***"
-   sed -i 's/extras//' Makefile.in
+    print " Preparing ${package} "
+    sed -i 's/extras//' Makefile.in
+}
+Src_configure() {
+    print " Configuring ${package} "
+    build="--build=$(build-aux/config.guess)"
+    ./configure ${prefix} ${host} ${build}
+}
+Src_compile() {
+    print " Compiling ${package} "
+    make || exit 77
+}
+Src_check() {
+    print " No Testsuite ${package} "
+}
+Src_install() {
+    print " Installing ${package} "
+    make DESTDIR=$LFS install
+}
+Src_post() {
+    print " Finalizing ${package} "
 }
 
-Src_configure () {
-   echo "*** Configuring ${package} ***"
-   build="--build=$(build-aux/config.guess)"
-   ./configure ${prefix} ${host} ${build}
-}
-Src_compile () {
-   echo "*** Compiling ${package} ***"
-   make || exit 77
-}
-Src_check () {
-   echo "*** Checking ${package} ***"
-
-}
-Src_install () {
-   echo "*** Installing ${package} ***"
-   make DESTDIR=$LFS install
-}
-Src_post () {
-   echo "*** Finalizing ${package} ***"
-
-}
-#
-# Start defining package specific options
-# 
-prefix="--prefix=/usr"
-host="--host=$LFS_TGT"
-# Extract the base package name and version
-Src_package
-
-export package packagedir archive extract delete patch
-export prefix host build
-export LFS LFS_TGT BUILD_SOURCE BUILD_ROOT BUILD_LOGS
+export package packagedir archive extract delete patch prefix host build
+export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
 export -f Src_compile
@@ -81,22 +60,19 @@ export -f Src_check
 export -f Src_install
 export -f Src_post
 
-$BUILD_ROOT/zbuild.sh
+${BUILD_CMD}
 exit_code=$?
 
 if [[ exit_code -ne 0 ]]; then
-    echo "___ Error Code: $exit_code"
+    print " Error Code: ${exit_code} "
 else
-    echo "*** Success ***"
-    unset -f Src_package
+    print " Success "
     unset -f Src_prepare
     unset -f Src_configure
     unset -f Src_compile
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive
-    unset prefix host build
-    unset extract delete patch
+    unset package packagedir archive delete patch prefix host build
 fi
 

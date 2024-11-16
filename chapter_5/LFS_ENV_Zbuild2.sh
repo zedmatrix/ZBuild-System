@@ -17,8 +17,7 @@ Src_Extract() {
 	tar -xf "${BUILD_SOURCE}/${archive}" -C "${BUILD_ROOT}/${packagedir}" --strip-components=1
 }
 
-print() { printf "${RED}*** ${YELLOW}%s ${RED}***${NORMAL}\n" "$*"; }
-
+print() { printf "${YELLOW}*** %s ***${NORMAL}\n" "$*"; }
 
 export RED GREEN YELLOW NORMAL
 export BUILD_CMD BUILD_LOG BUILD_ROOT BUILD_SOURCE LFS LFS_TGT
