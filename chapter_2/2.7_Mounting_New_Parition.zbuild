@@ -1,15 +1,16 @@
 #!/bin/bash
 # zbuild cross compile environment
-LFS=/mnt/lfs
-BUILD_ROOT=$LFS/BUILD
-BUILD_SOURCE=$LFS/opt/source
-BUILD_LOGS=$BUILD_ROOT/Zbuild_Logs
+LFS="/mnt/lfs"
+ZBUILD_root="$LFS/BUILD"
+ZBUILD_sources="$LFS/opt/source"
+ZBUILD_log="$ZBUILD_root/Zbuild_Log"
+ZBUILD_script="$ZBUILD_root/zbuild2.sh"
 
 # change your ROOT and SWAP devices
 ROOT=sdb3
 SWAP=sdb2
-echo "* Mounting $LFS to /dev/$ROOT *"
 
+echo "* Mounting $LFS to /dev/$ROOT *"
 if [ -d $LFS ]; then
 	mkdir -pv $LFS
 fi
@@ -17,12 +18,14 @@ fi
 mount -v -t ext4 /dev/$ROOT $LFS
 swapon -v /dev/$SWAP
 
-echo "* Creating $BUILD_ROOT"
-mkdir -pv $BUILD_ROOT
-echo "* Creating $BUILD_LOGS *"
-mkdir -pv $BUILD_LOGS
-echo "* Chapter 3 Packages and Patches: $BUILD_SOURCE *"
-mkdir -pv $BUILD_SOURCE
+echo "* Creating ZBUILD_root to $ZBUILD_root"
+mkdir -pv $ZBUILD_root
 
-export LFS BUILD_ROOT BUILD_SOURCE BUILD_LOGS
-echo "* Done * Now Download the Sources *"
+echo "* Creating ZBUILD_log $ZBUILD_log *"
+mkdir -pv $ZBUILD_log
+
+echo "* Creating ZBUILD_sources to $ZBUILD_sources *"
+mkdir -pv $ZBUILD_sources
+
+export LFS ZBUILD_root ZBUILD_sources ZBUILD_log ZBUILD_script
+echo "* Done - Next Chapter 3 - Download the Sources and Patches *"
