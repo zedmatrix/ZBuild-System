@@ -2,10 +2,10 @@
 # Start of Temporary Build Environment Setup
 set +h
 umask 022
-RED="\e[1;31m"
-GREEN="\e[1;32"
-YELLOW="\e[1;33m"
-NORMAL="\e[0m"
+RED="${RED:-\033[1;31m}"
+GREEN="${GREEN:-\033[1;32m}"
+YELLOW="${YELLOW:-\033[1;33m}"
+NORMAL="${NORMAL:-\033[0m}"
 
 LFS=/mnt/lfs
 LC_ALL=POSIX
@@ -26,11 +26,13 @@ Src_Extract() {
 	tar -xf "${BUILD_SOURCE}/${archive}" -C "${BUILD_ROOT}/${packagedir}" --strip-components=1
 }
 
-print() { printf "${YELLOW}*** %s ***${NORMAL}\n" "$*"; }
+# Print a message in yellow with surrounding asterisks
+zprint() { printf "${YELLOW}*** %s ***${NORMAL}\n" "$@"; }
 
 export MAKEFLAGS=-j$(nproc)
 export LFS LC_ALL LFS_TGT PATH CONFIG_SITE
 export ZBUILD_root ZBUILD_sources ZBUILD_log ZBUILD_script
-export -f Src_Extract print
+export RED GREEN YELLOW NORMAL
+export -f Src_Extract zprint
 
 # End of Temporary Build Environment Setup
