@@ -1,8 +1,8 @@
 #!/bin/bash
-ROOT="/Zbuild"
 
+ROOT="/BUILD"
 WGET="${ROOT}/lfs-19-wgetlist.zbuild"
-LOG="${ROOT}/ZBuild_Logs/wget-download.log"
+LOG="${ROOT}/ZBuild_log/wget-download.log"
 
 SOURCE="/opt/source"
 

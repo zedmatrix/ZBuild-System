@@ -46,12 +46,12 @@ _packagelist=$1
 print "$_packagelist"
 [ ! -f "${_root}/${_packagelist}" ] && bail "File Doesn't Exist."
 
-_checkvar "BUILD_SOURCE" || bail "${_var} Not Set"
+_checkvar "ZBUILD_sources" || bail "${_var} Not Set"
 printf "%.0s=" {1..30}
 printf '\n'
 
 while read -r _pkg; do
-    _checkfile "${_pkg}" "${BUILD_SOURCE}"
+    _checkfile "${_pkg}" "${ZBUILD_sources}"
 done < "${_root}/${_packagelist}"
 
 printf "%.0s=" {1..30}

@@ -3,16 +3,16 @@ bail() { print "$*"; exit 1; }
 usage() {
 	print "wget.list = {MD5} {Base URL} {Archive}"
 	print "$0 <wget.list>"
- 	bail "Missing WGET list"
+	bail "Missing WGET list"
 }
 
 _getfile=${1}
 WGET="${PWD}/${_getfile}"
 [ ! -f "$WGET" ] && usage
 
-LOG="${BUILD_LOG}/wget_${_getfile}.log"
+LOG="${ZBUILD_log}/wget_${_getfile}.log"
 
-SOURCE="${BUILD_SOURCE}"
+SOURCE="${ZBUILD_sources}"
 [ ! -d "$SOURCE" ] && bail "Missing \$SOURCE directory"
 
 while read -r md5 url file; do
