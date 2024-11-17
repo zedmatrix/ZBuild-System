@@ -1,7 +1,8 @@
 #!/bin/bash
-#   7.07 - Gettext-0.22.5
+#   7.10 - Python-3.13.0 - Temporary
 #   unset functions
 #
+unset -f Src_package
 unset -f Src_prepare
 unset -f Src_configure
 unset -f Src_compile
@@ -9,7 +10,7 @@ unset -f Src_check
 unset -f Src_install
 unset -f Src_post
 #
-#   Global
+#  Global
 #
 ZBUILD_root="/BUILD"
 ZBUILD_sources="/opt/source"
@@ -18,12 +19,15 @@ ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 #
 #   Package Specific
 #
-package=gettext-0.22.5
+package=Python-3.13.0
 packagedir=${package}
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
-disable="--disable-shared"
+prefix="--prefix=/usr"
+enable="--enable-shared"
+without="--without-ensurepip"
+
 #
 #   Build Functions
 # 
@@ -35,22 +39,23 @@ Src_Extract() {
 # Executed After pushd into $ZBUILD_root/packagedir
 Src_prepare() {
     zprint " Preparing ${packagedir} "
+
 }
 Src_configure() {
     zprint " Configuring ${packagedir} "
-    ./configure ${disable}
+    ./configure ${prefix} ${enable} ${without}
 }
 Src_compile() {
     zprint " Compiling ${packagedir} "
     make || exit 77
 }
 Src_check() {
-    zprint " No Testsuite ${packagedir} "
+    zprint " Checking ${packagedir} "
 
 }
 Src_install() {
     zprint " Installing ${packagedir} "
-    cp -v gettext-tools/src/{msgfmt,msgmerge,xgettext} /usr/bin
+    make install
 }
 # Executed After popd
 Src_post() {
@@ -58,7 +63,7 @@ Src_post() {
 
 }
 
-export package packagedir archive delete patch disable
+export package packagedir archive delete patch prefix enable without
 export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
@@ -80,6 +85,6 @@ else
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive delete patch disable
+    unset package packagedir archive delete patch prefix enable without
 fi
 

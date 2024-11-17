@@ -14,3 +14,33 @@ Now that all the packages which are required to build the rest of the needed too
 ## 7.5 Creating Directories
 
 ## 7.6 Creating Essential Files and Symlinks
+
+## 7.13.2. Backup
+
+At this point the essential programs and libraries have been created and your current LFS system is in a good state. Your system can now be backed up for later reuse. In case of fatal failures in the subsequent chapters, it often turns out that removing everything and starting over (more carefully) is the best way to recover. Unfortunately, all the temporary files will be removed, too. To avoid spending extra time to redo something which has been done successfully, creating a backup of the current LFS system may prove useful. 
+
+```exit``` 
+
+Before making a backup, unmount the virtual file systems:
+```
+mountpoint -q $LFS/dev/shm && umount $LFS/dev/shm
+umount $LFS/dev/pts
+umount $LFS/{sys,proc,run,dev}
+```
+Make sure you have at least 1 GB free disk space (the source tarballs will be included in the backup archive) on the file system containing the directory where you create the backup archive.
+```
+cd $LFS
+tar -cJpf $HOME/lfs-temp-tools-r12.2-15-systemd.tar.xz .
+```
+
+## 7.13.3. Restore
+
+In case some mistakes have been made and you need to start over, you can use this backup to restore the system and save some recovery time. Since the sources are located under $LFS, they are included in the backup archive as well, so they do not need to be downloaded again. After checking that $LFS is set properly, you can restore the backup by executing the following commands:
+
+```
+cd $LFS
+rm -rf ./*
+tar -xpf $HOME/lfs-temp-tools-r12.2-15-systemd.tar.xz
+```
+
+<br> Note the $HOME is where the archive is located and where you want to save it <br>

@@ -1,24 +1,29 @@
 #!/bin/bash
 # Start of /etc/profile
-RED="\e[1;31m"
-GREEN="\e[1;32"
-YELLOW="\e[1;33m"
-NORMAL="\e[0m"
+LC_ALL=POSIX
+LANG=C.UTF-8
 
-BUILD_ROOT="/BUILD"
-BUILD_SOURCE="/opt/source"
-BUILD_LOG="${BUILD_ROOT}/Zbuild_Logs"
-BUILD_CMD="${BUILD_ROOT}/zbuild2.sh"
+RED="${RED:-\033[1;31m}"
+GREEN="${GREEN:-\033[1;32m}"
+YELLOW="${YELLOW:-\033[1;33m}"
+NORMAL="${NORMAL:-\033[0m}"
 
+ZBUILD_root="/BUILD"
+ZBUILD_sources="/opt/source"
+ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
+ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
+
+zprint() { printf "${YELLOW}*** %s ***${NORMAL}\n" "$*"; }
 Src_Extract() {
-	print "Extracting: ${archive}"
-	mkdir -v "${BUILD_ROOT}/${packagedir}"
-	tar -xf "${BUILD_SOURCE}/${archive}" -C "${BUILD_ROOT}/${packagedir}" --strip-components=1
+	zprint "Extracting: ${archive}"
+	mkdir -v "${ZBUILD_root}/${packagedir}"
+	tar -xf "${ZBUILD_sources}/${archive}" -C "${ZBUILD_root}/${packagedir}" --strip-components=1
 }
 
-print() { printf "${YELLOW}*** %s ***${NORMAL}\n" "$*"; }
 PS1="${RED}(lfs chroot) \u [ ${GREEN}\w ${RED}]# ${NORMAL}"
-export RED GREEN YELLOW NORMAL PS1
-export BUILD_CMD BUILD_LOG BUILD_ROOT BUILD_SOURCE
-export -f Src_Extract print
+
+export RED GREEN YELLOW NORMAL PS1 LANG LC_ALL
+export ZBUILD_script ZBUILD_log ZBUILD_root ZBUILD_sources
+export -f Src_Extract zprint
+
 # End of /etc/profile
