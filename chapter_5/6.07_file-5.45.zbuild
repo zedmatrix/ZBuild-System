@@ -13,7 +13,7 @@ unset -f Src_post
 #
 package=file-5.45
 packagedir=${package}
-archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
+archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
 disable="--disable-bzlib --disable-libseccomp --disable-xzlib --disable-zlib"
@@ -24,13 +24,13 @@ host="--host=${LFS_TGT}"
 #   Build Functions
 # 
 Src_Extract() {
-	print "Extracting: ${archive}"
-	mkdir -v "${BUILD_ROOT}/${packagedir}"
-	tar -xf "${BUILD_SOURCE}/${archive}" -C "${BUILD_ROOT}/${packagedir}" --strip-components=1
+	zprint "Extracting: ${archive}"
+	mkdir -v "${ZBUILD_root}/${packagedir}"
+	tar -xf "${ZBUILD_sources}/${archive}" -C "${ZBUILD_root}/${packagedir}" --strip-components=1
 }
 # executed after pushd
 Src_prepare() {
-    print " Preparing ${package} "
+    zprint " Preparing ${package} "
     mkdir build
     pushd build
       ../configure ${disable}
@@ -38,24 +38,24 @@ Src_prepare() {
     popd
 }
 Src_configure() {
-    print " Configuring ${package} "
+    zprint " Configuring ${package} "
     build="--build=$(./config.guess)"
     ./configure ${prefix} ${host} ${build}
 }
 Src_compile() {
-    print " Compiling ${package} "
+    zprint " Compiling ${package} "
     make FILE_COMPILE=$(pwd)/build/src/file || exit 77
 }
 Src_check() {
-    print " No Testsuite ${package} "
+    zprint " No Testsuite ${package} "
 }
 Src_install() {
-    print " Installing ${package} "
+    zprint " Installing ${package} "
     make DESTDIR=$LFS install
 }
 # executed after popd
 Src_post() {
-    print " Finalizing ${package} "
+    zprint " Finalizing ${package} "
     rm -v $LFS/usr/lib/libmagic.la
 }
 
@@ -68,13 +68,13 @@ export -f Src_check
 export -f Src_install
 export -f Src_post
 
-${BUILD_CMD}
+${ZBUILD_script} || { echo "Error: Missing ZBUILD_script."; exit 2; }
 exit_code=$?
 
 if [[ exit_code -ne 0 ]]; then
-    print " Error Code: ${exit_code} "
+    zprint " Error Code: ${exit_code} "
 else
-    print " Success "
+    zprint " Success "
     unset -f Src_prepare
     unset -f Src_configure
     unset -f Src_compile

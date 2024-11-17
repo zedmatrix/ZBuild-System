@@ -13,7 +13,7 @@ unset -f Src_post
 #
 package=gcc-14.2.0
 packagedir=${package}
-archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
+archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
 host="--host=${LFS_TGT}"
@@ -27,15 +27,16 @@ disable="--disable-nls --disable-multilib --disable-libatomic --disable-libgomp 
 #   Build Functions
 # 
 Src_Extract() {
-	print "Extracting: ${archive}"
-	mkdir -v "${BUILD_ROOT}/${packagedir}"
-	tar -xf "${BUILD_SOURCE}/${archive}" -C "${BUILD_ROOT}/${packagedir}" --strip-components=1
+	zprint "Extracting: ${archive}"
+	mkdir -v "${ZBUILD_root}/${packagedir}"
+	tar -xf "${ZBUILD_sources}/${archive}" -C "${ZBUILD_root}/${packagedir}" --strip-components=1
 }
+# exit code 99
 Src_prepare() {
-    print " Preparing ${package} "
-    tar -xf "${BUILD_SOURCE}/mpfr-4.2.1.tar.xz"
-    tar -xf "${BUILD_SOURCE}/gmp-6.3.0.tar.xz"
-    tar -xf "${BUILD_SOURCE}/mpc-1.3.1.tar.gz"
+    zprint " Preparing ${package} "
+    tar -xf "${ZBUILD_sources}/mpfr-4.2.1.tar.xz" || { echo "Extract of mpfr failed."; exit 99; }
+    tar -xf "${ZBUILD_sources}/gmp-6.3.0.tar.xz" || { echo "Extract of gmp failed."; exit 99; }
+    tar -xf "${ZBUILD_sources}/mpc-1.3.1.tar.gz" || { echo "Extract of mpc failed."; exit 99; }
     mv -v mpfr-4.2.1 mpfr
     mv -v gmp-6.3.0 gmp
     mv -v mpc-1.3.1 mpc
@@ -49,25 +50,27 @@ Src_prepare() {
     mkdir -v build
     cd build
 }
-
+# exit code 88
 Src_configure() {
-    print " Configuring ${package} "
+    zprint " Configuring ${package} "
     build="--build=$(../config.guess)"
     ../configure ${build} ${host} ${target} LDFLAGS_FOR_TARGET=-L$PWD/$LFS_TGT/libgcc ${prefix} ${with} ${enable} ${disable} || exit 88
 }
+# exit code 77
 Src_compile() {
-    print " Compiling ${package} "
+    zprint " Compiling ${package} "
     make || exit 77
 }
+# exit code 66
 Src_check() {
-    print " No Testsuite ${package} "
+    zprint " No Testsuite ${package} "
 }
 Src_install() {
-    print " Installing ${package} "
+    zprint " Installing ${package} "
     make DESTDIR=$LFS install
 }
 Src_post() {
-    print " Finalizing ${package} "
+    zprint " Finalizing ${package} "
     ln -sv gcc $LFS/usr/bin/cc
 }
 
@@ -80,13 +83,13 @@ export -f Src_check
 export -f Src_install
 export -f Src_post
 
-${BUILD_CMD}
+${ZBUILD_script} || { echo "Error: Missing ZBUILD_script."; exit 2; }
 exit_code=$?
 
 if [[ exit_code -ne 0 ]]; then
-    print " Error Code: ${exit_code} "
+    zprint " Error Code: ${exit_code} "
 else
-    print " Success "
+    zprint " Success "
     unset -f Src_prepare
     unset -f Src_configure
     unset -f Src_compile

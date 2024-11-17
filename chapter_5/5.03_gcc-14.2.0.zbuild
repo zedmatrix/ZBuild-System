@@ -30,11 +30,12 @@ Src_Extract() {
 	mkdir -v "${ZBUILD_root}/${packagedir}"
 	tar -xf "${ZBUILD_sources}/${archive}" -C "${ZBUILD_root}/${packagedir}" --strip-components=1
 }
+# exit code 99 - executed inside ${packagedir}
 Src_prepare() {
     zprint " Preparing ${package} "
-    tar -xf ${ZBUILD_sources}/mpfr-4.2.1.tar.xz
-    tar -xf ${ZBUILD_sources}/gmp-6.3.0.tar.xz
-    tar -xf ${ZBUILD_sources}/mpc-1.3.1.tar.gz
+    tar -xf ${ZBUILD_sources}/mpfr-4.2.1.tar.xz || { echo "Extract of mpfr failed."; exit 99; }
+    tar -xf ${ZBUILD_sources}/gmp-6.3.0.tar.xz || { echo "Extract of gmp failed."; exit 99; }
+    tar -xf ${ZBUILD_sources}/mpc-1.3.1.tar.gz || { echo "Extract of mpc failed."; exit 99; }
     mv -v mpfr-4.2.1 mpfr
     mv -v gmp-6.3.0 gmp
     mv -v mpc-1.3.1 mpc
@@ -47,25 +48,29 @@ Src_prepare() {
     mkdir -v build
     cd build
 }
-
+# exit code 88
 Src_configure() {
     zprint " Configuring ${package} "
-    ../configure ${target} ${prefix} ${with} ${enable} ${disable}
+    ../configure ${target} ${prefix} ${with} ${enable} ${disable} || exit 88
 }
+# exit code 77
 Src_compile() {
     zprint " Compiling ${package} "
     make || exit 77
 }
+# exit code 66
 Src_check() {
     zprint " Checking ${package} "
 #   make check
 }
+# exit code 55
 Src_install() {
     zprint " Installing ${package} "
-    make install
+    make install || exit 55
     cd ..
     cat gcc/limitx.h gcc/glimits.h gcc/limity.h > `dirname $($LFS_TGT-gcc -print-libgcc-file-name)`/include/limits.h
 }
+# executed outside $[packagedir] inside ${ZBUILD_root}
 Src_post() {
     zprint " Finalizing ${package} "
 
