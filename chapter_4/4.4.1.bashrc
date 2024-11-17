@@ -22,8 +22,8 @@ PATH=$LFS/tools/bin:$PATH
 CONFIG_SITE=$LFS/usr/share/config.site
 Src_Extract() {
 	print "Extracting: ${archive}"
-	mkdir -v "${BUILD_ROOT}/${packagedir}"
-	tar -xf "${BUILD_SOURCE}/${archive}" -C "${BUILD_ROOT}/${packagedir}" --strip-components=1
+	mkdir -v "${ZBUILD_root}/${packagedir}"
+	tar -xf "${ZBUILD_sources}/${archive}" -C "${ZBUILD_root}/${packagedir}" --strip-components=1
 }
 
 # Print a message in yellow with surrounding asterisks

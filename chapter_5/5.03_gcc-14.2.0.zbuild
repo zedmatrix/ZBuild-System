@@ -1,5 +1,5 @@
 #!/bin/bash
-#   5.03 - GCC-14.2.0
+#   5.03 - GCC-14.2.0 - Pass 1
 #   unset functions
 #
 unset -f Src_prepare
@@ -13,7 +13,7 @@ unset -f Src_post
 #
 package=gcc-14.2.0
 packagedir=${package}
-archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
+archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
 target="--target=${LFS_TGT}"
@@ -26,15 +26,15 @@ disable="--disable-nls --disable-shared --disable-multilib --disable-threads --d
 #   Build Functions
 # 
 Src_Extract() {
-	print " Extracting: ${archive} "
-	mkdir -v "${BUILD_ROOT}/${packagedir}"
-	tar -xf "${BUILD_SOURCE}/${archive}" -C "${BUILD_ROOT}/${packagedir}" --strip-components=1
+	zprint " Extracting: ${archive} "
+	mkdir -v "${ZBUILD_root}/${packagedir}"
+	tar -xf "${ZBUILD_sources}/${archive}" -C "${ZBUILD_root}/${packagedir}" --strip-components=1
 }
 Src_prepare() {
-    print " Preparing ${package} "
-    tar -xf ${BUILD_SOURCE}/mpfr-4.2.1.tar.xz
-    tar -xf ${BUILD_SOURCE}/gmp-6.3.0.tar.xz
-    tar -xf ${BUILD_SOURCE}/mpc-1.3.1.tar.gz
+    zprint " Preparing ${package} "
+    tar -xf ${ZBUILD_sources}/mpfr-4.2.1.tar.xz
+    tar -xf ${ZBUILD_sources}/gmp-6.3.0.tar.xz
+    tar -xf ${ZBUILD_sources}/mpc-1.3.1.tar.gz
     mv -v mpfr-4.2.1 mpfr
     mv -v gmp-6.3.0 gmp
     mv -v mpc-1.3.1 mpc
@@ -49,25 +49,25 @@ Src_prepare() {
 }
 
 Src_configure() {
-    print " Configuring ${package} "
+    zprint " Configuring ${package} "
     ../configure ${target} ${prefix} ${with} ${enable} ${disable}
 }
 Src_compile() {
-    print " Compiling ${package} "
+    zprint " Compiling ${package} "
     make || exit 77
 }
 Src_check() {
-    print " Checking ${package} "
+    zprint " Checking ${package} "
 #   make check
 }
 Src_install() {
-    print " Installing ${package} "
+    zprint " Installing ${package} "
     make install
     cd ..
     cat gcc/limitx.h gcc/glimits.h gcc/limity.h > `dirname $($LFS_TGT-gcc -print-libgcc-file-name)`/include/limits.h
 }
 Src_post() {
-    print " Finalizing ${package} "
+    zprint " Finalizing ${package} "
 
 }
 
@@ -81,13 +81,13 @@ export -f Src_check
 export -f Src_install
 export -f Src_post
 
-${BUILD_CMD}
+${ZBUILD_script} || { echo "Error: Missing ZBUILD_script."; exit 2; }
 exit_code=$?
 
 if [[ exit_code -ne 0 ]]; then
-    print " Error Code: ${exit_code} "
+    zprint " Error Code: ${exit_code} "
 else
-    print " Success "
+    zprint " Success "
     unset -f Src_prepare
     unset -f Src_configure
     unset -f Src_compile

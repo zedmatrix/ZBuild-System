@@ -13,7 +13,7 @@ unset -f Src_post
 #
 package=bash-5.2.37
 packagedir=${package}
-archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
+archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
 prefix="--prefix=/usr"
@@ -24,33 +24,33 @@ disable="--without-bash-malloc bash_cv_strtold_broken=no"
 #   Build Functions
 # 
 Src_Extract() {
-	print "Extracting: ${archive}"
-	mkdir -v "${BUILD_ROOT}/${packagedir}"
-	tar -xf "${BUILD_SOURCE}/${archive}" -C "${BUILD_ROOT}/${packagedir}" --strip-components=1
+	zprint "Extracting: ${archive}"
+	mkdir -v "${ZBUILD_root}/${packagedir}"
+	tar -xf "${ZBUILD_sources}/${archive}" -C "${ZBUILD_root}/${packagedir}" --strip-components=1
 }
 # executed after pushd
 Src_prepare() {
-    print " Preparing ${package} "
+    zprint " Preparing ${package} "
 }
 Src_configure() {
-    print " Configuring ${package} "
+    zprint " Configuring ${package} "
     build="--build=$(sh support/config.guess)"
     ./configure ${prefix} ${host} ${build} ${disable}
 }
 Src_compile() {
-    print " Compiling ${package} "
+    zprint " Compiling ${package} "
     make || exit 77
 }
 Src_check() {
-    print " No Testsuite ${package} "
+    zprint " No Testsuite ${package} "
 }
 Src_install() {
-    print " Installing ${package} "
+    zprint " Installing ${package} "
     make DESTDIR=$LFS install
 }
 # executed after popd
 Src_post() {
-    print " Finalizing ${package} "
+    zprint " Finalizing ${package} "
     ln -sv bash $LFS/bin/sh
 }
 
@@ -63,7 +63,7 @@ export -f Src_check
 export -f Src_install
 export -f Src_post
 
-${BUILD_CMD}
+${ZBUILD_script} || { echo "Error: Missing ZBUILD_script."; exit 2; }
 exit_code=$?
 
 if [[ exit_code -ne 0 ]]; then

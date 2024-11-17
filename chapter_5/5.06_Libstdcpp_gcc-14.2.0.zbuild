@@ -13,7 +13,7 @@ unset -f Src_post
 #
 package=gcc-14.2.0
 packagedir=${package}
-archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
+archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
 host="--host=${LFS_TGT}"
@@ -25,33 +25,33 @@ with="--with-gxx-include-dir=/tools/${LFS_TGT}/include/c++/14.2.0"
 #   Build Functions
 # 
 Src_Extract() {
-	print "Extracting: ${archive}"
-	mkdir -v "${BUILD_ROOT}/${packagedir}"
-	tar -xf "${BUILD_SOURCE}/${archive}" -C "${BUILD_ROOT}/${packagedir}" --strip-components=1
+	zprint "Extracting: ${archive}"
+	mkdir -v "${ZBUILD_root}/${packagedir}"
+	tar -xf "${ZBUILD_sources}/${archive}" -C "${ZBUILD_root}/${packagedir}" --strip-components=1
 }
 Src_prepare() {
-    print " Preparing ${package} "
+    zprint " Preparing ${package} "
     mkdir -v build
     cd build
 }
 Src_configure() {
-    print " Configuring ${package} "
+    zprint " Configuring ${package} "
     build="--build=$(../config.guess)"
     ../libstdc++-v3/configure ${host} ${build} ${prefix} ${disable} ${with}
 }
 Src_compile() {
-    print " Compiling ${package} "
+    zprint " Compiling ${package} "
     make || exit 77
 }
 Src_check() {
-    print " No Testsuite ${package} "
+    zprint " No Testsuite ${package} "
 }
 Src_install() {
-    print " Installing ${package} "
+    zprint " Installing ${package} "
     make DESTDIR=${LFS} install
 }
 Src_post() {
-    print " Finalizing ${package} "
+    zprint " Finalizing ${package} "
     rm -v ${LFS}/usr/lib/lib{stdc++{,exp,fs},supc++}.la
 }
 
@@ -65,13 +65,13 @@ export -f Src_check
 export -f Src_install
 export -f Src_post
 
-${BUILD_CMD}
+${ZBUILD_script} || { echo "Error: Missing ZBUILD_script."; exit 2; }
 exit_code=$?
 
 if [[ exit_code -ne 0 ]]; then
-    print " Error Code: ${exit_code} "
+    zprint " Error Code: ${exit_code} "
 else
-    print " Success "
+    zprint " Success "
     unset -f Src_prepare
     unset -f Src_configure
     unset -f Src_compile
