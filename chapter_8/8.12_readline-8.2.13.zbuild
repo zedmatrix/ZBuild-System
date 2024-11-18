@@ -2,7 +2,6 @@
 #   8.12 - Readline-8.2.13
 #   unset functions
 #
-unset -f Src_package
 unset -f Src_prepare
 unset -f Src_configure
 unset -f Src_compile
@@ -10,69 +9,60 @@ unset -f Src_check
 unset -f Src_install
 unset -f Src_post
 #
-#  Global Settings
+# Global Settings
 #
-BUILD_SOURCE=/opt/source
-BUILD_ROOT=/BUILD
+[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
+ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
+ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
 package=readline-8.2.13
-archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
-extract="true"
+packagedir=${package}
+archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
+prefix="--prefix=/usr"
+disable="--disable-static"
+with="--with-curses"
+docdir="/usr/share/doc/${packagedir}"
 
 #
 #   Build Functions
 # 
-Src_package() {
-    packagedir=${archive%.tar.*}
-    package=${packagedir%-*}
-    pkgver=${packagedir##*-}
+Src_Extract() {
+    zprint "Extracting: ${archive}"
+    mkdir -v "${ZBUILD_root}/${packagedir}"
+    tar -xf "${ZBUILD_sources}/${archive}" -C "${ZBUILD_root}/${packagedir}" --strip-components=1
 }
-# Executed After pushd
-Src_prepare () {
-   echo "*** Preparing ${package} ***"
-   sed -i '/MV.*old/d' Makefile.in
-   sed -i '/{OLDSUFF}/c:' support/shlib-install
-   sed -i 's/-Wl,-rpath,[^ ]*//' support/shobj-conf
+# Executed After pushd into $ZBUILD_root/packagedir
+Src_prepare() {
+    zprint " Preparing ${packagedir} "
+    sed -i '/MV.*old/d' Makefile.in
+    sed -i '/{OLDSUFF}/c:' support/shlib-install
+    sed -i 's/-Wl,-rpath,[^ ]*//' support/shobj-conf
 }
-
-Src_configure () {
-   echo "*** Configuring ${package} ***"
-   ./configure ${prefix} ${disable} ${with} ${docdir} || exit 88
+Src_configure() {
+    zprint " Configuring ${packagedir} "
+    ./configure ${prefix} ${disable} ${with} --docdir=${docdir} || exit 88
 }
-Src_compile () {
-   echo "*** Compiling ${package} ***"
-   make SHLIB_LIBS="-lncursesw" || exit 77
+Src_compile() {
+    zprint " Compiling ${package} "
+    make SHLIB_LIBS="-lncursesw" || exit 77
 }
-Src_check () {
-   echo "*** Checking ${package} ***"
-
+Src_check() {
+    zprint " No Testsuite ${packagedir} "
 }
-Src_install () {
-   echo "*** Installing ${package} ***"
-   make SHLIB_LIBS="-lncursesw" install || exit 55
-   install -vm644 doc/*.{ps,pdf,html,dvi} /usr/share/doc/${packagedir}
+Src_install() {
+    zprint " Installing ${packagedir} "
+    make SHLIB_LIBS="-lncursesw" install || exit 55
+    install -vm644 doc/*.{ps,pdf,html,dvi} ${docdir}
 }
 # Executed After popd
-Src_post () {
-   echo "*** Finalizing ${package} ***"
-
+Src_post() {
+    zprint " Finalizing ${packagedir} "
 }
 
-#
-#   Define configure options
-#
-prefix="--prefix=/usr"
-disable="--disable-static"
-with="--with-curses"
-docdir="--docdir=/usr/share/doc/${packagedir}"
-# Extract the base package name and version
-Src_package
-
-export package packagedir archive extract delete patch
-export prefix disable docdir with
-export BUILD_SOURCE BUILD_ROOT
+export package packagedir archive delete patch prefix disable docdir with
+export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
 export -f Src_compile
@@ -80,22 +70,18 @@ export -f Src_check
 export -f Src_install
 export -f Src_post
 
-$BUILD_ROOT/zbuild.sh
+${ZBUILD_script} || { echo "Error: Missing ZBUILD_script."; exit 2; }
 exit_code=$?
 
 if [[ exit_code -ne 0 ]]; then
-    echo "___ Error Code: $exit_code"
+    zprint " Error Code: ${exit_code} "
 else
-    echo "*** Success ***"
-    unset -f Src_package
+    zprint " Success "
     unset -f Src_prepare
     unset -f Src_configure
     unset -f Src_compile
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive
-    unset extract delete patch
-    unset prefix disable docdir with 
+    unset package packagedir archive delete patch prefix disable docdir with
 fi
-

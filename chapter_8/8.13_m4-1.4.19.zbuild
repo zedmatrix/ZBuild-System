@@ -2,7 +2,6 @@
 #   8.13 - M4-1.4.19
 #   unset functions
 #
-unset -f Src_package
 unset -f Src_prepare
 unset -f Src_configure
 unset -f Src_compile
@@ -10,62 +9,53 @@ unset -f Src_check
 unset -f Src_install
 unset -f Src_post
 #
-#   Define Global options
+# Global Settings
 #
-BUILD_SOURCE=/opt/source
-BUILD_ROOT=/BUILD
+[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
+ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
+ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
 package=m4-1.4.19
-archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
-extract="true"
+packagedir=${package}
+archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
-
+prefix="--prefix=/usr"
 #
 #   Build Functions
 # 
-Src_package() {
-    packagedir=${archive%.tar.*}
-    package=${packagedir%-*}
-    pkgver=${packagedir##*-}
+Src_Extract() {
+    zprint "Extracting: ${archive}"
+    mkdir -v "${ZBUILD_root}/${packagedir}"
+    tar -xf "${ZBUILD_sources}/${archive}" -C "${ZBUILD_root}/${packagedir}" --strip-components=1
 }
-# Executed after pushd
-Src_prepare () {
-   echo "*** Preparing ${package} ***"
-
+# Executed After pushd into $ZBUILD_root/packagedir
+Src_prepare() {
+    zprint " Preparing ${packagedir} "
 }
-
-Src_configure () {
-   echo "*** Configuring ${package} ***"
-   ./configure ${prefix} || exit 88
+Src_configure() {
+    zprint " Configuring ${packagedir} "
+    ./configure ${prefix} || exit 88
 }
-Src_compile () {
-   echo "*** Compiling ${package} ***"
-   make || exit 77
+Src_compile() {
+    zprint " Compiling ${packagedir} "
+    make || exit 77
 }
-Src_check () {
-   echo "*** Checking ${package} ***"
-   make check || exit 66
+Src_check() {
+    zprint " Checking ${packagedir} "
+    make check 2>&1 | tee "${ZBUILD_log}/${packagedir}-check.log"
 }
-Src_install () {
-   echo "*** Installing ${package} ***"
-   make install || exit 55
+Src_install() {
+    zprint " Installing ${packagedir} "
+    make install || exit 55
 }
 # Executed after popd
-Src_post () {
-   echo "*** Finalizing ${package} ***"
-
+Src_post() {
+    zprint " Finalizing ${packagedir} "
 }
-#
-# Start defining package specific options
-# 
-prefix="--prefix=/usr"
 
-# Extract the base package name and version
-Src_package
-
-export package packagedir archive prefix extract delete patch
-export BUILD_SOURCE BUILD_ROOT
+export package packagedir archive delete patch prefix
+export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
 export -f Src_compile
@@ -73,21 +63,19 @@ export -f Src_check
 export -f Src_install
 export -f Src_post
 
-$BUILD_ROOT/zbuild.sh
+${ZBUILD_script} || { echo "Error: Missing ZBUILD_script."; exit 2; }
 exit_code=$?
 
 if [[ exit_code -ne 0 ]]; then
-    echo "___ Error Code: $exit_code"
+    zprint " Error Code: ${exit_code} "
 else
-    echo "*** Success ***"
-    unset -f Src_package
+    zprint " Success "
     unset -f Src_prepare
     unset -f Src_configure
     unset -f Src_compile
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive
-    unset prefix extract delete patch
+    unset package packagedir archive delete patch prefix
 fi
 
