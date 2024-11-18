@@ -1,14 +1,14 @@
 #!/bin/bash
 # zbuild cross compile environment
 LFS="/mnt/lfs"
-ZBUILD_root="$LFS/BUILD"
-ZBUILD_sources="$LFS/opt/source"
+ZBUILD_root="$LFS/zbuild"
+ZBUILD_sources="$LFS/sources"
 ZBUILD_log="$ZBUILD_root/Zbuild_Log"
 ZBUILD_script="$ZBUILD_root/zbuild2.sh"
 
 # change your ROOT and SWAP devices
-ROOT=sdb3
-SWAP=sdb2
+ROOT=sda3
+SWAP=sda2
 
 echo "* Mounting $LFS to /dev/$ROOT *"
 if [ -d $LFS ]; then

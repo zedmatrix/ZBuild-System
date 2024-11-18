@@ -10,8 +10,8 @@ NORMAL="${NORMAL:-\033[0m}"
 LFS=/mnt/lfs
 LC_ALL=POSIX
 LFS_TGT=$(uname -m)-lfs-linux-gnu
-ZBUILD_root="${LFS}/BUILD"
-ZBUILD_sources="${LFS}/opt/source"
+ZBUILD_root="${LFS}/zbuild"
+ZBUILD_sources="${LFS}/sources"
 ZBUILD_log="${ZBUILD_root}/Zbuild_Log"
 ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 

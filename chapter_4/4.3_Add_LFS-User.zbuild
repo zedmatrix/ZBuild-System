@@ -8,7 +8,7 @@ if [ -v LFS ] && [ -n "$LFS" ]; then
    echo "* Setting {lfs} user {lfs} passwd *"
    echo "lfs:lfs" | chpasswd
 
-   chown -v lfs $LFS/{usr{,/*},lib,var,etc,bin,sbin,tools,BUILD}
+   chown -v lfs $LFS/{usr{,/*},lib,var,etc,bin,sbin,tools,zbuild}
    case $(uname -m) in
      x86_64) chown -v lfs $LFS/lib64 ;;
    esac
