@@ -2,7 +2,6 @@
 #   8.05 - Glibc-2.40
 #   unset functions
 #
-unset -f Src_package
 unset -f Src_prepare
 unset -f Src_configure
 unset -f Src_compile
@@ -12,69 +11,60 @@ unset -f Src_post
 #
 # Global Settings
 #
-BUILD_SOURCE=/opt/source
-BUILD_ROOT=/BUILD
+[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
+ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
+ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
 package=glibc-2.40
-archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
-extract="true"
+packagedir=${package}
+archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="glibc-2.40-fhs-1.patch"
-
-#
-#   Build Functions
-# 
-Src_package() {
-    packagedir=${archive%.tar.*}
-    package=${packagedir%-*}
-    pkgver=${packagedir##*-}
-}
-
-Src_prepare () {
-   echo "*** Preparing ${package} ***"
-   mkdir -v build
-   cd build
-}
-
-Src_configure () {
-   echo "*** Configuring ${package} ***"
-   echo "rootsbindir=/usr/sbin" > configparms
-   ../configure ${prefix} ${disable} ${enable} libc_cv_slibdir=/usr/lib
-}
-Src_compile () {
-   echo "*** Compiling ${package} ***"
-   make || exit 77
-}
-Src_check () {
-   echo "*** Checking ${package} ***"
-   make check
-   grep "Timed out" $(find -name \*.out)
-}
-Src_install () {
-   echo "*** Installing ${package} ***"
-   touch /etc/ld.so.conf
-   sed '/test-installation/s@$(PERL)@echo not running@' -i ../Makefile
-   make install || exit 55
-
-}
-Src_post () {
-   echo "*** Finalizing ${package} ***"
-   sed '/RTLDLIST=/s@/usr@@g' -i /usr/bin/ldd
-}
-
-#
-#   Define configure options
-#
 prefix="--prefix=/usr"
 disable="--disable-werror --disable-nscd"
 enable="--enable-kernel=4.19 --enable-stack-protector=strong"
 
-# Extract the base package name and version
-Src_package
+#
+#   Build Functions
+# 
+Src_Extract() {
+    zprint "Extracting: ${archive}"
+    mkdir -v "${ZBUILD_root}/${packagedir}"
+    tar -xf "${ZBUILD_sources}/${archive}" -C "${ZBUILD_root}/${packagedir}" --strip-components=1
+}
+# Executed After pushd into $ZBUILD_root/packagedir
+Src_prepare() {
+    zprint " Preparing ${packagedir} "
+    mkdir -v build
+    cd build
+}
+Src_configure() {
+    zprint " Configuring ${packagedir} "
+    echo "rootsbindir=/usr/sbin" > configparms
+    ../configure ${prefix} ${disable} ${enable} libc_cv_slibdir=/usr/lib
+}
+Src_compile() {
+    zprint " Compiling ${packagedir} "
+    make || exit 77
+}
+Src_check() {
+    zprint " Checking ${packagedir} "
+    make check
+    grep "Timed out" $(find -name \*.out)
+}
+Src_install() {
+    zprint " Installing ${packagedir} "
+    touch /etc/ld.so.conf
+    sed '/test-installation/s@$(PERL)@echo not running@' -i ../Makefile
+    make install || exit 55
+}
+Src_post() {
+    zprint " Finalizing ${package} "
+    sed '/RTLDLIST=/s@/usr@@g' -i /usr/bin/ldd
+}
 
-export package packagedir archive extract delete patch
-export prefix disable enable
-export BUILD_SOURCE BUILD_ROOT
+export package packagedir archive delete patch prefix disable enable
+export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
 export -f Src_compile
@@ -82,22 +72,19 @@ export -f Src_check
 export -f Src_install
 export -f Src_post
 
-$BUILD_ROOT/zbuild.sh
+${ZBUILD_script} || { echo "Error: Missing ZBUILD_script."; exit 2; }
 exit_code=$?
 
 if [[ exit_code -ne 0 ]]; then
-    echo "___ Error Code: $exit_code"
+    zprint " Error Code: ${exit_code} "
 else
-    echo "*** Success ***"
-    unset -f Src_package
+    zprint " Success "
     unset -f Src_prepare
     unset -f Src_configure
     unset -f Src_compile
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive
-    unset extract delete patch
-    unset prefix disable enable
+    unset package packagedir archive delete patch prefix disable enable
 fi
 

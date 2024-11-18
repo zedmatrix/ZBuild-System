@@ -1,8 +1,9 @@
 #!/bin/bash
-timezonedir=$BUILD_ROOT/timezone
+timezonedir=${ZBUILD_root}/timezone
+
 mkdir -v $timezonedir
 
-tar -xf $BUILD_SOURCE/tzdata2024b.tar.gz -C $timezonedir
+tar -xf ${ZBUILD_sources}/tzdata2024b.tar.gz -C $timezonedir
 pushd $timezonedir
 
 ZONEINFO=/usr/share/zoneinfo
@@ -20,5 +21,5 @@ zic -d $ZONEINFO -p America/New_York
 unset ZONEINFO
 
 popd
-echo "* Cleaning Up $timezonedir *"
+zprint "* Cleaning Up $timezonedir *"
 rm -rf $timezonedir

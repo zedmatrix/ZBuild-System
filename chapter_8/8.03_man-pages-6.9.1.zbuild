@@ -2,7 +2,6 @@
 #   8.03 - Man-Pages-6.9.1
 #   unset functions
 #
-unset -f Src_package
 unset -f Src_prepare
 unset -f Src_configure
 unset -f Src_compile
@@ -12,9 +11,13 @@ unset -f Src_post
 #
 # Global Settings
 #
+[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
+ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
+ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
+
 package=man-pages-6.9.1
 packagedir=${package}
-archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
+archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
 prefix="prefix=/usr"
@@ -23,31 +26,31 @@ prefix="prefix=/usr"
 #   Build Functions
 #
 Src_Extract() {
-    print "Extracting: ${archive}"
-    mkdir -v "${BUILD_ROOT}/${packagedir}"
-    tar -xf "${BUILD_SOURCE}/${archive}" -C "${BUILD_ROOT}/${packagedir}" --strip-components=1
+    zprint "Extracting: ${archive}"
+    mkdir -v "${ZBUILD_root}/${packagedir}"
+    tar -xf "${ZBUILD_sources}/${archive}" -C "${ZBUILD_root}/${packagedir}" --strip-components=1
 }
-# Executed after pushd
+# Executed After pushd into $ZBUILD_root/packagedir
 Src_prepare() {
-    print "Preparing ${package}"
+    zprint "Preparing ${package}"
     rm -v man3/crypt*
 }
 Src_configure() {
-    print "No Configure ${package}"
+    zprint "No Configure ${package}"
 }
 Src_compile() {
-    print "No Compile ${package}"
+    zprint "No Compile ${package}"
 }
 Src_check() {
-    print "No Check ${package}"
+    zprint "No Check ${package}"
 }
 Src_install() {
-    print "Installing ${package}"
+    zprint "Installing ${package}"
     make ${prefix} install
 }
-# Executed after popd
-Src_post () {
-    print "Finalizing ${package}"
+# Executed After popd into $ZBUILD_root
+Src_post() {
+    zprint "Finalizing ${package}"
 }
 
 export package packagedir archive delete patch prefix
@@ -59,13 +62,13 @@ export -f Src_check
 export -f Src_install
 export -f Src_post
 
-${BUILD_CMD}
+${ZBUILD_script} || { echo "Error: Missing ZBUILD_script."; exit 2; }
 exit_code=$?
 
 if [[ exit_code -ne 0 ]]; then
-    print " Error Code: $exit_code "
+    zprint " Error Code: $exit_code "
 else
-    print " Success "
+    zprint " Success "
     unset -f Src_prepare
     unset -f Src_configure
     unset -f Src_compile

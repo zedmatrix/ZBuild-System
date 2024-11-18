@@ -1,4 +1,5 @@
 #!/bin/bash
+zprint "Creating /etc/nsswitch.conf"
 cat > /etc/nsswitch.conf << "EOF"
 # Begin /etc/nsswitch.conf
 
@@ -16,4 +17,4 @@ rpc: files
 
 # End /etc/nsswitch.conf
 EOF
-echo "* done *"
+zprint "* done *"

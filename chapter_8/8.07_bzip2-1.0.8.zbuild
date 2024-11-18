@@ -2,7 +2,6 @@
 #   8.07 - Bzip2-1.0.8
 #   unset functions
 #
-unset -f Src_package
 unset -f Src_prepare
 unset -f Src_configure
 unset -f Src_compile
@@ -12,69 +11,60 @@ unset -f Src_post
 #
 # Global Settings
 #
-BUILD_SOURCE=/opt/source
-BUILD_ROOT=/BUILD
+[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
+ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
+ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
 package=bzip2-1.0.8
-archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
-extract="true"
+packagedir=${package}
+archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="bzip2-1.0.8-install_docs-1.patch"
-
+prefix="PREFIX=/usr"
 #
 #   Build Functions
 # 
-Src_package() {
-    packagedir=${archive%.tar.*}
-    package=${packagedir%-*}
-    pkgver=${packagedir##*-}
+Src_Extract() {
+    zprint "Extracting: ${archive}"
+    mkdir -v "${ZBUILD_root}/${packagedir}"
+    tar -xf "${ZBUILD_sources}/${archive}" -C "${ZBUILD_root}/${packagedir}" --strip-components=1
 }
-
-Src_prepare () {
-   echo "*** Preparing ${package} ***"
-   sed -i 's@\(ln -s -f \)$(PREFIX)/bin/@\1@' Makefile
-   sed -i "s@(PREFIX)/man@(PREFIX)/share/man@g" Makefile
-
+# Executed After pushd into $ZBUILD_root/packagedir
+Src_prepare() {
+    zprint " Preparing ${packagedir} "
+    sed -i 's@\(ln -s -f \)$(PREFIX)/bin/@\1@' Makefile
+    sed -i "s@(PREFIX)/man@(PREFIX)/share/man@g" Makefile
 }
-
-Src_configure () {
-   echo "*** Configuring ${package} ***"
-   make -f Makefile-libbz2_so || exit 88
-   make clean
+Src_configure() {
+    zprint " Configuring ${packagedir} "
+    make -f Makefile-libbz2_so || exit 88
+    make clean
 }
-Src_compile () {
-   echo "*** Compiling ${package} ***"
-   make || exit 77
+Src_compile() {
+    zprint " Compiling ${packagedir} "
+    make || exit 77
 }
-Src_check () {
-   echo "*** Checking ${package} ***"
+Src_check() {
+    zprint " Testsuite is in the Compile Phase ${packagedir} "
 
 }
 Src_install () {
-   echo "*** Installing ${package} ***"
-   make ${prefix} install || exit 55
-   cp -av libbz2.so.* /usr/lib
-   ln -sv libbz2.so.1.0.8 /usr/lib/libbz2.so
-   cp -v bzip2-shared /usr/bin/bzip2
-   for i in /usr/bin/{bzcat,bunzip2}; do
-     ln -sfv bzip2 $i
-   done
+    zprint " Installing ${packagedir} "
+    make ${prefix} install || exit 55
+    cp -av libbz2.so.* /usr/lib
+    ln -sv libbz2.so.1.0.8 /usr/lib/libbz2.so
+    cp -v bzip2-shared /usr/bin/bzip2
+    for i in /usr/bin/{bzcat,bunzip2}; do
+        ln -sfv bzip2 $i
+    done
 }
-Src_post () {
-   echo "*** Finalizing ${package} ***"
-   rm -fv /usr/lib/libbz2.a
+Src_post() {
+    zprint " Finalizing ${packagedir} "
+    rm -fv /usr/lib/libbz2.a
 }
 
-#
-#   Define configure options
-#
-prefix="PREFIX=/usr"
-
-# Extract the base package name and version
-Src_package
-
-export package packagedir archive prefix extract delete patch
-export BUILD_SOURCE BUILD_ROOT
+export package packagedir archive prefix delete patch
+export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
 export -f Src_compile
@@ -82,21 +72,19 @@ export -f Src_check
 export -f Src_install
 export -f Src_post
 
-$BUILD_ROOT/zbuild.sh
+${ZBUILD_script} || { echo "Error: Missing ZBUILD_script."; exit 2; }
 exit_code=$?
 
 if [[ exit_code -ne 0 ]]; then
-    echo "___ Error Code: $exit_code"
+    zprint " Error Code: ${exit_code} "
 else
-    echo "*** Success ***"
-    unset -f Src_package
+    zprint " Success "
     unset -f Src_prepare
     unset -f Src_configure
     unset -f Src_compile
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive
-    unset prefix extract delete patch
+    unset package packagedir archive delete patch prefix
 fi
 
