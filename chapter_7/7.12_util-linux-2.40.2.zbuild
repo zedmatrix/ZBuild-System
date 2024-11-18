@@ -11,8 +11,7 @@ unset -f Src_post
 #
 #  Global
 #
-ZBUILD_root="/BUILD"
-ZBUILD_sources="/opt/source"
+[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
 ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
 ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 #

@@ -8,8 +8,8 @@ GREEN="${GREEN:-\033[1;32m}"
 YELLOW="${YELLOW:-\033[1;33m}"
 NORMAL="${NORMAL:-\033[0m}"
 
-ZBUILD_root="/BUILD"
-ZBUILD_sources="/opt/source"
+ZBUILD_root="/zbuild"
+ZBUILD_sources="/sources"
 ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
 ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 

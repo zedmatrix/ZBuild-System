@@ -7,8 +7,8 @@ NORMAL="\e[0m"
 LFS=/mnt/lfs
 LFS_TGT=$(uname -m)-lfs-linux-gnu
 # Possible breakage in the yasm/nasm building of libvpx-1.15.0
-ZBUILD_root="${LFS}/BUILD"
-ZBUILD_sources="${LFS}/opt/source"
+ZBUILD_root="${LFS}/zbuild"
+ZBUILD_sources="${LFS}/sources"
 ZBUILD_log="${ZBUILD_root}/Zbuild_Log"
 ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 

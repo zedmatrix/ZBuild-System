@@ -2,7 +2,7 @@
 if [ -v LFS ] && [ -n "$LFS" ]; then
 
   echo "* Changing Ownership from lfs to root *"
-  chown --from lfs -vR root:root $LFS/{usr,lib,var,etc,bin,sbin,tools,BUILD}
+  chown --from lfs -vR root:root $LFS/{usr,lib,var,etc,bin,sbin,tools,zbuild}
   
   case $(uname -m) in
     x86_64) chown --from lfs -vR root:root $LFS/lib64 ;;
