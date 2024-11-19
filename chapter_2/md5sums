@@ -56,7 +56,7 @@ c8469a3713cbbe04d955d4ae4be23eeb  make-4.4.1.tar.gz
 97ab5f9f32914eef2062d867381d8cee  man-db-2.13.0.tar.xz
 4d56775b6cce4edf1e496249e7c01c1a  man-pages-6.9.1.tar.xz
 #8fe7227653f2fb9b1ffe7f9f2058998a  MarkupSafe-2.1.5.tar.gz
-cb0071711b573b155cc8f86e1de72167  MarkupSafe-3.0.2.tar.gz
+cb0071711b573b155cc8f86e1de72167  markupsafe-3.0.2.tar.gz
 #682f75ef96c2e7542b0148e70068ea09  meson-1.5.2.tar.gz
 0031ea392f8ef97eeadfe1906c5cc5b4  meson-1.6.0.tar.gz
 5c9bc658c9fd0f940e8e3e0f09530c62  mpc-1.3.1.tar.gz
@@ -92,7 +92,7 @@ e1d010b46844502f12dcff298c1b7154  tzdata2024b.tar.gz
 #acd4360d8a5c3ef320b9db88d275dae6  udev-lfs-20230818.tar.xz
 88faefc8fefced097e58142077a3d14e  util-linux-2.40.2.tar.xz
 #afe52ff64b0a3dd3644ba4aecc48737c  vim-9.1.0738.tar.gz
-88faefc8fefced097e58142077a3d14e  vim-9.1.0866.tar.gz
+389418fb5820c7bce4cd62e929daf541  vim-9.1.0866.tar.gz
 #440ff4fe51579b7ed16f02af8f8d9494  wheel-0.44.0.tar.gz
 3d1f79ff04a1252fa709dec58aa7249b  wheel-0.45.0.tar.gz
 89a8e82cfd2ad948b349c0a69c494463  XML-Parser-2.47.tar.gz
