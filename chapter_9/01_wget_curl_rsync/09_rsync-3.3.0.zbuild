@@ -1,6 +1,6 @@
 #!/bin/bash
 #       Install Zbuild v2.0 - Master - Includes CMake and Meson/Ninja
-#       BLANK
+#       rsync-3.3.0
 #
 #       DEPENDS ()
 #
@@ -19,9 +19,9 @@ unset -f Src_post
 ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
 ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
-package=
+package=rsync-3.3.0
 packagedir=${package}
-archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)  #adjust as some may be *.tgz
+archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
 #
@@ -29,15 +29,7 @@ patch="false"
 #
 #   Configure
 prefix="--prefix=/usr"
-enable="--enable-shared"
-disable="--disable-static"
-docdir="--docdir=/usr/share/doc/${packagedir}"
-#   Meson/Ninja
-prefix="--prefix=/usr"
-build="--buildtype=release"
-#   CMake
-prefix="-D CMAKE_INSTALL_PREFIX=/usr"
-build="-D CMAKE_INSTALL_BUILDTYPE=Release"
+disable="--disable-xxhash --without-included-zlib"
 #
 #   Build Functions
 # 
@@ -49,38 +41,31 @@ Src_Extract() {
 # Executed After pushd into $ZBUILD_root/packagedir - optional just warns
 Src_prepare() {
     zprint " Preparing ${packagedir} "
-    #mkdir -v build && cd build
+    groupadd -g 48 rsyncd
+    useradd -c "rsyncd Daemon" -m -d /home/rsync -g rsyncd -s /bin/false -u 48 rsyncd
 }
 Src_configure() {
     zprint " Configuring ${packagedir} "
-    #./configure ${prefix} ${enable} ${disable} ${docdir} || exit 88
-    #cmake .. ${prefix} ${build}  || exit 88
-    #meson setup .. ${prefix} ${build}  || exit 88
+    ./configure ${prefix} ${disable} || exit 88
 }
 Src_compile() {
     zprint " Compiling ${package} "
-    #make || exit 77  # 2>&1 | tee $ZBUILD_log/${package}-make.log || exit 77  #Optional Logging for Make phase
-    #ninja || exit 77  # 2>&1 | tee $ZBUILD_log/${package}-ninja.log || exit 77  #Optional Logging for Make phase
+    make || exit 77
 }
 Src_check() {
     zprint " Checking ${packagedir} "
-    #make check 2>&1 | tee "${ZBUILD_log}/${packagedir}-check.log"
-    #ninja test 2>&1 | tee "${ZBUILD_log}/${packagedir}-check.log"
+    make check 2>&1 | tee "${ZBUILD_log}/${packagedir}-check.log"
 }
 Src_install() {
     zprint " Installing ${packagedir} "
-    #sudo make install || exit 55
-    #sudo ninja install || exit 55
+    make install || exit 55
 }
 Src_post() {
     zprint " Finalizing ${packagedir} "
-
     /usr/sbin/ldconfig
 }
 
-export package packagedir archive delete patch
-#export prefix enable disable docdir
-#export prefix build
+export package packagedir archive delete patch prefix disable
 export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
@@ -103,7 +88,5 @@ else
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive extract delete patch
-    unset prefix enable disable docdir
-    unset prefix build
+    unset package packagedir archive extract delete patch prefix disable
 fi

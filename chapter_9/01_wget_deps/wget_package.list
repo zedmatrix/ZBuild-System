@@ -1,8 +1,0 @@
-libunistring
-libidn2
-libpsl
-libtasn1
-p11-kit
-add_trust
-make-ca
-wget

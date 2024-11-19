@@ -1,6 +1,8 @@
 #!/bin/bash
+#		Zbuild 2.0 - Install File
 #
 #	p11-kit-0.25.5
+#
 #   unset functions
 unset -f Src_prepare
 unset -f Src_configure
@@ -9,15 +11,19 @@ unset -f Src_check
 unset -f Src_install
 unset -f Src_post
 #
-#  Global
+# Global Settings
 #
+[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
+ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
+ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
+
 package=p11-kit-0.25.5
 packagedir=${package}
-archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
+archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
-zbuild="${PWD}"
 
+zbuild="${PWD}"
 prefix="--prefix=/usr"
 build="--buildtype=release"
 trust="-D trust_paths=/etc/pki/anchors"
@@ -25,40 +31,40 @@ trust="-D trust_paths=/etc/pki/anchors"
 #   Build Functions
 #
 Src_Extract() {
-	print "Extracting: ${archive}"
-	mkdir -v "$BUILD_ROOT/${packagedir}"
-	tar -xf "$BUILD_SOURCE/${archive}" -C "$BUILD_ROOT/${packagedir}" --strip-components=1
+    zprint "Extracting: ${archive}"
+    mkdir -v "${ZBUILD_root}/${packagedir}"
+    tar -xf "${ZBUILD_sources}/${archive}" -C "${ZBUILD_root}/${packagedir}" --strip-components=1
 }
-# Executed After pushd
+# Executed After pushd into $ZBUILD_root/packagedir
 Src_prepare() {
-	print "Preparing ${packagedir}"
+	zprint "Preparing ${packagedir}"
 	sed '20,$ d' -i trust/trust-extract-compat
 	cat "${zbuild}/15_add_trust.zbuild" >> trust/trust-extract-compat
 	mkdir -v p11-build
 	cd p11-build
 }
 Src_configure() {
-	print "Configuring ${package}"
+	zprint " Configuring ${packagedir} "
 	meson setup .. ${prefix} ${build} ${trust} || exit 88
 }
 Src_compile() {
-	print "Compiling ${package}"
+	zprint " Compiling ${packagedir} "
 	ninja || exit 77
 }
 Src_check() {
-	print "Checking ${package}"
+	zprint " Checking ${packagedir} "
 	LC_ALL=C \
-	ninja test 2>&1 | tee $BUILD_LOG/${packagedir}-test.log
+	ninja test 2>&1 | tee "${ZBUILD_log}/${packagedir}-test.log"
 }
 Src_install() {
-	print "Installing ${package}"
+	zprint " Installing ${packagedir} "
 	ninja install || exit 55
 	ln -sfv /usr/libexec/p11-kit/trust-extract-compat /usr/bin/update-ca-certificates
 	ln -sfv ./pkcs11/p11-kit-trust.so /usr/lib/libnssckbi.so
 }
 # Executed After popd
 Src_post() {
-	print "Finalizing ${packagedir}"
+	zprint " Finalizing ${packagedir} "
 	/usr/sbin/ldconfig
 }
 
@@ -71,13 +77,13 @@ export -f Src_check
 export -f Src_install
 export -f Src_post
 
-${BUILD_CMD}
+${ZBUILD_script} || { echo "Error: Missing ZBUILD_script."; exit 2; }
 exit_code=$?
 
-if [{ exit_code -ne 0 ]]; then
-    print " Error Code: $exit_code "
+if [[ exit_code -ne 0 ]]; then
+    zprint " Error Code: $exit_code "
 else
-    print " Success "
+    zprint " Success "
     unset -f Src_prepare
     unset -f Src_configure
     unset -f Src_compile
