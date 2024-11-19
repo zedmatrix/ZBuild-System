@@ -34,3 +34,16 @@
    Disconnecting the Device: `sudo qemu-nbd --disconnect /dev/nbd0`
 
    Using it in qemu: `qemu-system-x86_64 -drive file=mydisk.qcow2,format=qcow2`
+
+   
+### Other Options of Creating Disk Images
+    ```
+    dd if=/dev/zero of=mydisk.img bs=1M count=10240
+
+    fallocate -l 10G mydisk.img
+
+    truncate -s 10G mydisk.img
+    ```
+    
+   Then you well need to convert it to sometime qemu can use:
+    `qemu-img convert -f raw -O qcow2 mydisk.img mydisk.qcow2`
