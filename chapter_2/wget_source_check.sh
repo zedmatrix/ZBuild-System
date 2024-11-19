@@ -5,8 +5,8 @@ usage() {
 	bail "Missing WGET list"
 }
 
-_wgetfile="${PWD}/${1}"
-_md5file="${PWD}/${2}"
+_wgetfile="${SOURCE}/wget-list"
+_md5file="${SOURCE}/md5sums"
 
 [ ! -f "$_wgetfile" ] && usage
 [ ! -f "$_md5file" ] && usage

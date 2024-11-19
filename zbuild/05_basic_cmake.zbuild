@@ -1,6 +1,7 @@
 #!/bin/bash
-#   CMake Basic Install zbuild2
-#    Blank
+#       CMake/Ninja Basic Install Zbuild 2.0
+#   BLANK
+#
 #   unset functions
 unset -f Src_prepare
 unset -f Src_configure
@@ -9,13 +10,19 @@ unset -f Src_check
 unset -f Src_install
 unset -f Src_post
 #
-#   Global
+# Global Settings
 #
+[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
+ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
+ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
+
 package=
 packagedir=${package}
-archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
+archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
+#   Package Specific
+#
 prefix="-D CMAKE_INSTALL_PREFIX=/usr"
 build="-D CMAKE_BUILD_TYPE=Release"
 disable="-W no-dev"
@@ -25,40 +32,39 @@ ninja="-G Ninja .."
 #   Build Functions
 # 
 Src_Extract() {
-    print "Extracting: ${archive}"
-    mkdir -v "${BUILD_ROOT}/${packagedir}"
-    tar -xf "${BUILD_SOURCE}/${archive}" -C "${BUILD_ROOT}/${packagedir}" --strip-components=1 || exit 99
+    zprint "Extracting: ${archive}"
+    mkdir -v "${ZBUILD_root}/${packagedir}"
+    tar -xf "${ZBUILD_sources}/${archive}" -C "${ZBUILD_root}/${packagedir}" --strip-components=1
 }
-# executed after pushd
+# Executed After pushd into $ZBUILD_root/packagedir
 Src_prepare () {
-    print "Preparing ${package}"
+    zprint " Preparing ${packagedir} "
     mkdir -v build
     cd build
 }
 Src_configure() {
-    print "Configuring ${package}"
-    cmake ${prefix} ${build} || exit 88
+    zprint " Configuring ${packagedir} "
+    cmake ${prefix} ${build} ${disable} ${ninja} || exit 88
 }
 Src_compile() {
-    print "Compiling ${package}"
+    zprint " Compiling ${packagedir} "
     ninja || exit 77
-    make || exit 77
+    #make || exit 77
 }
 Src_check() {
-    print "No Testsuite ${package}"
+    zprint " No Testsuite ${packagedir} "
 }
 Src_install() {
-    print "Installing ${package}"
-    ninja install || exit 55
-    make install || exit 55
+    zprint " Installing ${packagedir} "
+    sudo ninja install || exit 55
+    #sudo make install || exit 55
 }
-# executed after popd
 Src_post() {
-    print "Finalizing ${package}"
+    zprint " Finalizing ${package} "
     /usr/sbin/ldconfig
 }
 
-export package packagedir archive delete patch prefix build disable
+export package packagedir archive delete patch prefix build disable ninja
 export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
@@ -67,19 +73,18 @@ export -f Src_check
 export -f Src_install
 export -f Src_post
 
-${BUILD_CMD}
+${ZBUILD_script} || { echo "Error: Missing ZBUILD_script."; exit 2; }
 exit_code=$?
 
 if [[ exit_code -ne 0 ]]; then
-    print " Error Code: $exit_code "
+    zprint " Error Code: $exit_code "
 else
-    print " Success "
+    zprint " Success "
     unset -f Src_prepare
     unset -f Src_configure
     unset -f Src_compile
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive delete patch prefix build disable
+    unset package packagedir archive delete patch prefix build disable ninja
 fi
-

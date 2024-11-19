@@ -1,7 +1,8 @@
 #!/bin/bash
+#       Install Zbuild v2.0 - Master - Includes CMake and Meson/Ninja
+#       BLANK
 #
-#    Blank Install Zbuild v2.0
-#    DEPENDS ()
+#       DEPENDS ()
 #
 #    unset functions
 unset -f Src_Extract
@@ -12,61 +13,74 @@ unset -f Src_check
 unset -f Src_install
 unset -f Src_post
 #
-# Start defining package specific options
+# Global Settings
 #
-#BUILD_SOURCE=/opt/source    #* moved to zbuild_env.sh
-#BUILD_ROOT=/BUILD
-#BUILD_LOG=$BUILD_ROOT/Zbuild_Logs
+[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
+ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
+ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
 package=
 packagedir=${package}
-archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)     #adjust as some may be *.tgz
+archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)  #adjust as some may be *.tgz
 delete="true"
 patch="false"
+#
+#   Package Definitions
+#
+#   Configure
 prefix="--prefix=/usr"
 enable="--enable-shared"
 disable="--disable-static"
 docdir="--docdir=/usr/share/doc/${packagedir}"
-
+#   Meson/Ninja
+prefix="--prefix=/usr"
+build="--buildtype=release"
+#   CMake
+prefix="-D CMAKE_INSTALL_PREFIX=/usr"
+build="-D CMAKE_INSTALL_BUILDTYPE=Release"
 #
 #   Build Functions
 # 
 Src_Extract() {
-    print "Extracting: ${archive}"
-    mkdir -v "${BUILD_ROOT}/${packagedir}"
-    tar -xf "${BUILD_SOURCE/${archive}" -C "${BUILD_ROOT}/${packagedir}" --strip-components=1
-
+    zprint "Extracting: ${archive}"
+    mkdir -v "${ZBUILD_root}/${packagedir}"
+    tar -xf "${ZBUILD_sources}/${archive}" -C "${ZBUILD_root}/${packagedir}" --strip-components=1
 }
-# Executed After pushd    this is optional just warns
+# Executed After pushd into $ZBUILD_root/packagedir - optional just warns
 Src_prepare() {
-    print "Preparing ${packagedir}"
-
+    zprint " Preparing ${packagedir} "
+    #mkdir -v build && cd build
 }
 Src_configure() {
-    print "Configuring ${packagedir}"
-    ./configure ${prefix} ${enable} ${disable} ${docdir} || exit 88
+    zprint " Configuring ${packagedir} "
+    #./configure ${prefix} ${enable} ${disable} ${docdir} || exit 88
+    #cmake .. ${prefix} ${build}  || exit 88
+    #meson setup .. ${prefix} ${build}  || exit 88
 }
 Src_compile() {
-    print "Compiling ${package}"
-    make || exit 77  # 2>&1 | tee $BUILD_LOG/${package}-make.log || exit 77  #Optional Logging for Make phase
+    zprint " Compiling ${package} "
+    #make || exit 77  # 2>&1 | tee $ZBUILD_log/${package}-make.log || exit 77  #Optional Logging for Make phase
+    #ninja || exit 77  # 2>&1 | tee $ZBUILD_log/${package}-ninja.log || exit 77  #Optional Logging for Make phase
 }
 Src_check() {
-    print "Checking ${packagedir}"
-    make check 2>&1 | tee $BUILD_LOG/${packagedir}-check.log
+    zprint " Checking ${packagedir} "
+    #make check 2>&1 | tee "${ZBUILD_log}/${packagedir}-check.log"
+    #ninja test 2>&1 | tee "${ZBUILD_log}/${packagedir}-check.log"
 }
 Src_install() {
-    print "Installing ${packagedir}"
-    make install || exit 55
+    zprint " Installing ${packagedir} "
+    #sudo make install || exit 55
+    #sudo ninja install || exit 55
 }
-# Executed After popd    this is optional just warns
 Src_post() {
-    print "Finalizing ${packagedir}"
+    zprint " Finalizing ${packagedir} "
 
     /usr/sbin/ldconfig
 }
 
 export package packagedir archive delete patch
-export prefix enable disable docdir
+#export prefix enable disable docdir
+#export prefix build
 export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
@@ -76,13 +90,13 @@ export -f Src_install
 export -f Src_post
 
 # setup in zbuild_env.sh
-${BUILD_CMD}
+${ZBUILD_script} || { echo "Error: Missing ZBUILD_script."; exit 2; }
 exit_code=$?
 
 if [[ exit_code -ne 0 ]]; then
-    print " Error Code: $exit_code"
+    zprint " Error Code: ${exit_code} "
 else
-    print " Success "
+    zprint " Success "
     unset -f Src_prepare
     unset -f Src_configure
     unset -f Src_compile
@@ -91,4 +105,5 @@ else
     unset -f Src_post
     unset package packagedir archive extract delete patch
     unset prefix enable disable docdir
+    unset prefix build
 fi

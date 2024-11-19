@@ -9,3 +9,5 @@ Adding `zbuild_env.sh` to your `/etc/profile.d` directory or `. zbuild_env.sh` w
 `zbuild2.sh` script the functions and definitions needed... as well as adjusting them for the initial<br>
 LFS chapters 5 to 7 environment.
 
+## Testing
+I have tested all of the scripts and go through updating them to the latest Linux From Scratch Development Release.<br>

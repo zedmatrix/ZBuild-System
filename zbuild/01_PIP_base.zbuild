@@ -1,8 +1,9 @@
 #!/bin/bash
-#   PIP Install zbuild2
-#    Blank
+#   PIP Install Zbuild 2.0
+#   BLANK
 #   unset functions
 #
+unset -f Src_Extract
 unset -f Src_prepare
 unset -f Src_configure
 unset -f Src_compile
@@ -10,46 +11,48 @@ unset -f Src_check
 unset -f Src_install
 unset -f Src_post
 #
-#   Global
+# Global Settings
+#
+[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
+ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
+ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 #
 pkg=
 package=
 packagedir=${package}
-archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
+archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
 
 #
 #   Build Functions
 # 
-# First Remove the .tar.* and Second Get Package Name
 Src_Extract() {
-    print "Extracting: ${archive}"
-    mkdir -v "${BUILD_ROOT}/${packagedir}"
-    tar -xf "${BUILD_SOURCE}/${archive}" -C "${BUILD_ROOT}/${packagedir}" --strip-components=1 || exit 99
+    zprint "Extracting: ${archive}"
+    mkdir -v "${ZBUILD_root}/${packagedir}"
+    tar -xf "${ZBUILD_sources}/${archive}" -C "${ZBUILD_root}/${packagedir}" --strip-components=1
 }
-# executed after pushd
+# Executed After pushd into $ZBUILD_root/packagedir
 Src_prepare() {
-    print "No Prepare"
+    zprint "No Prepare"
 }
 Src_configure() {
-    print "No Configure"
+    zprint "No Configure"
 }
 Src_compile () {
-    print "Building ${package}"
+    zprint "Building ${package}"
     pip3 wheel -w dist --no-cache-dir --no-build-isolation --no-deps $PWD
 }
 Src_check () {
-    print "No Testsuite"
-
+    zprint "No Testsuite"
 }
 Src_install () {
-    print "Installing ${pkg}"
+    zprint "Installing ${pkg}"
     pip3 install --no-index --no-user --find-links dist ${pkg}
 }
 # executed after popd
 Src_post () {
-    print "Finalizing ${package}"
+    zprint "Finalizing ${package}"
 }
 
 export package packagedir archive patch delete
@@ -61,13 +64,13 @@ export -f Src_check
 export -f Src_install
 export -f Src_post
 
-${BUILD_CMD}
+${ZBUILD_script} || { echo "Error: Missing ZBUILD_script."; exit 2; }
 exit_code=$?
 
 if [[ exit_code -ne 0 ]]; then
-    print " Error Code: $exit_code "
+    zprint " Error Code: ${exit_code} "
 else
-    print " Success "
+    zprint " Success "
     unset -f Src_prepare
     unset -f Src_configure
     unset -f Src_compile
