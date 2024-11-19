@@ -1,6 +1,7 @@
 # Chapter 9
 
 <p> General Network Configuration</p>
+
 ```
 cat > /etc/systemd/network/10-ethernet-dhcp.network << "EOF"
 [Match]
@@ -13,6 +14,7 @@ DHCP=ipv4
 UseDomains=true
 EOF
 ```
+
 Setting Hostname `echo "<lfs>" > /etc/hostname`
 
 <br>Customizing the /etc/hosts File
