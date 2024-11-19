@@ -1,5 +1,5 @@
 #!/bin/bash
-#   8.31 - Sed-4.9
+#   8.48 - OpenSSH-9.9p1
 #   unset functions
 #
 unset -f Src_prepare
@@ -15,12 +15,14 @@ unset -f Src_post
 ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
 ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
-package=sed-4.9
+package=openssh-9.9p1
 packagedir=${package}
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
 prefix="--prefix=/usr"
+sysconfdir="--sysconfdir=/etc/ssh"
+with="--with-privsep-path=/var/lib/sshd --with-default-path=/usr/bin --with-superuser-path=/usr/sbin:/usr/bin --with-pid-dir=/run"
 docdir="/usr/share/doc/${packagedir}"
 #
 #   Build Functions
@@ -33,32 +35,35 @@ Src_Extract() {
 # Executed After pushd into $ZBUILD_root/packagedir
 Src_prepare() {
     zprint " Preparing ${packagedir} "
+    install -vg sys -m700 -d /var/lib/sshd
+    groupadd -g 50 sshd
+    useradd -c 'sshd PrivSep' -d /var/lib/sshd -g sshd -s /bin/false -u 50 sshd
 }
 Src_configure() {
     zprint " Configuring ${packagedir} "
-    ./configure ${prefix} || exit 88
+    ./configure ${prefix} ${sysconfdir} ${with} || exit 88
 }
 Src_compile() {
     zprint " Compiling ${packagedir} "
     make || exit 77
-    make html
 }
 Src_check() {
     zprint " Checking ${packagedir} "
-    chown -R tester .
-    su tester -c "PATH=$PATH make check 2>&1 | tee ${ZBUILD_log}/${packagedir}-check.log"
+    make -j1 tests 2>&1 | tee "${ZBUILD_log}/${packagedir}-check.log"
 }
-Src_install () {
+Src_install() {
     zprint " Installing ${packagedir} "
     make install || exit 55
-    install -vdm755 ${docdir}
-    install -vm644 doc/sed.html ${docdir}
+    install -vm755 contrib/ssh-copy-id /usr/bin
+    install -vm644 contrib/ssh-copy-id.1 /usr/share/man/man1
+    install -vm755 -d ${docdir}
+    install -vm644 INSTALL LICENCE OVERVIEW README* ${docdir}
 }
 Src_post() {
     zprint " Finalizing ${packagedir} "
 }
 
-export package packagedir archive patch delete prefix docdir
+export package packagedir archive patch delete prefix sysconfdir with docdir
 export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
@@ -80,6 +85,6 @@ else
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive patch delete prefix docdir
+    unset package packagedir archive patch delete prefix sysconfdir with docdir
 fi
 

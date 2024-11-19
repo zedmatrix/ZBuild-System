@@ -2,7 +2,6 @@
 #   8.28 - GCC-14.2.0
 #   unset functions
 #
-unset -f Src_package
 unset -f Src_prepare
 unset -f Src_configure
 unset -f Src_compile
@@ -10,95 +9,86 @@ unset -f Src_check
 unset -f Src_install
 unset -f Src_post
 #
-#  Global
+# Global Settings
 #
-BUILD_SOURCE=/opt/source
-BUILD_ROOT=/BUILD
-BUILD_LOG=$BUILD_ROOT/zbuild_logs
+[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
+ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
+ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
+
 package=gcc-14.2.0
-archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
-extract="true"
+packagedir=${package}
+archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
-
-#
-#   Build Functions
-# 
-Src_package() {
-    packagedir=${archive%.tar.*}       # Remove the .tar.gz (or .tar.bz2, etc.) part
-    package=${packagedir%-*}               # Extracts the package name (everything before the last hyphe>
-    pkgver=${packagedir##*-}           # Extracts the version (everything after the last hyphen)
-}
-# Executed After pushd
-Src_prepare () {
-   echo "*** Preparing ${package} ***"
-  case $(uname -m) in
-    x86_64)
-      sed -e '/m64=/s/lib64/lib/' -i.orig gcc/config/i386/t-linux64
-    ;;
-  esac
-  mkdir -v build
-  cd build
-}
-
-Src_configure () {
-   echo "*** Configuring ${package} ***"
-   ../configure ${prefix} LD=ld ${enable} ${disable} ${with} || exit 88
-}
-Src_compile () {
-   echo "*** Compiling ${package} ***"
-   make || exit 77
-}
-Src_check () {
-   echo "*** Checking ${package} ***"
-   ulimit -s -H unlimited
-   sed -e '/cpython/d' -i ../gcc/testsuite/gcc.dg/plugin/plugin.exp
-   sed -e 's/no-pic /&-no-pie /' -i ../gcc/testsuite/gcc.target/i386/pr113689-1.c
-   sed -e 's/300000/(1|300000)/' -i ../libgomp/testsuite/libgomp.c-c++-common/pr109062.c
-   sed -e 's/{ target nonpic } //' -e '/GOTPCREL/d' -i ../gcc/testsuite/gcc.target/i386/fentryname3.c
-   chown -R tester .
-   su tester -c "PATH=$PATH make -k check" || exit 66
-   ../contrib/test_summary
-}
-Src_install () {
-   echo "*** Installing ${package} ***"
-   make install || exit 55
-   chown -vR root:root /usr/lib/gcc/$(gcc -dumpmachine)/14.2.0/include{,-fixed}
-   ln -svr /usr/bin/cpp /usr/lib
-   ln -sv gcc.1 /usr/share/man/man1/cc.1
-   ln -sfv ../../libexec/gcc/$(gcc -dumpmachine)/14.2.0/liblto_plugin.so /usr/lib/bfd-plugins 
-}
-# Executed After popd
-Src_post () {
-   echo "*** Finalizing ${package} ***"
-  echo "** test program **"
-   echo 'int main(){}' > dummy.c
-   cc dummy.c -v -Wl,--verbose &> dummy.log
-   readelf -l a.out | grep ': /lib'
-   grep -E -o '/usr/lib.*/S?crt[1in].*succeeded' dummy.log
-   grep -B4 '^ /usr/include' dummy.log
-   grep 'SEARCH.*/usr/lib' dummy.log | sed 's|; |\n|g'
-   grep "/lib.*/libc.so.6 " dummy.log
-   grep found dummy.log
-   mkdir -pv /usr/share/gdb/auto-load/usr/lib
-   mv -v /usr/lib/*gdb.py /usr/share/gdb/auto-load/usr/lib
-
-}
-
-#
-# Start defining package specific options
-# 
 prefix="--prefix=/usr"
 enable="--enable-languages=c,c++ --enable-default-pie --enable-default-ssp --enable-host-pie"
 disable="--disable-multilib --disable-bootstrap --disable-fixincludes"
 with="--with-system-zlib"
 
-# Extract the base package name and version
-Src_package
+#
+#   Build Functions
+# 
+Src_Extract() {
+    zprint "Extracting: ${archive}"
+    mkdir -v "${ZBUILD_root}/${packagedir}"
+    tar -xf "${ZBUILD_sources}/${archive}" -C "${ZBUILD_root}/${packagedir}" --strip-components=1
+}
+# Executed After pushd into $ZBUILD_root/packagedir
+Src_prepare() {
+    zprint " Preparing ${package} "
+    case $(uname -m) in
+      x86_64)
+        sed -e '/m64=/s/lib64/lib/' -i.orig gcc/config/i386/t-linux64
+      ;;
+    esac
+    mkdir -v build
+    cd build
+}
+Src_configure() {
+    zprint " Configuring ${packagedir} "
+    ../configure ${prefix} LD=ld ${enable} ${disable} ${with} || exit 88
+}
+Src_compile() {
+    zprint " Compiling ${packagedir} "
+    make || exit 77
+}
+Src_check () {
+    zprint " Checking ${packagedir} "
+    ulimit -s -H unlimited
+    sed -e '/cpython/d' -i ../gcc/testsuite/gcc.dg/plugin/plugin.exp
+    sed -e 's/no-pic /&-no-pie /' -i ../gcc/testsuite/gcc.target/i386/pr113689-1.c
+    sed -e 's/300000/(1|300000)/' -i ../libgomp/testsuite/libgomp.c-c++-common/pr109062.c
+    sed -e 's/{ target nonpic } //' -e '/GOTPCREL/d' -i ../gcc/testsuite/gcc.target/i386/fentryname3.c
+    chown -R tester .
+    su tester -c "PATH=$PATH make -k check 2>&1 | tee ${ZBUILD_log}/${packagedir}-check.log" || exit 66
+    ../contrib/test_summary
+}
+Src_install() {
+    zprint " Installing ${packagedir} "
+    make install || exit 55
+    chown -vR root:root /usr/lib/gcc/$(gcc -dumpmachine)/14.2.0/include{,-fixed}
+    ln -svr /usr/bin/cpp /usr/lib
+    ln -sv gcc.1 /usr/share/man/man1/cc.1
+    ln -sfv ../../libexec/gcc/$(gcc -dumpmachine)/14.2.0/liblto_plugin.so /usr/lib/bfd-plugins
+}
+# Executed After popd
+Src_post() {
+    zprint " Finalizing ${packagedir} "
+    zprint "test program"
+    echo 'int main(){}' > dummy.c
+    cc dummy.c -v -Wl,--verbose &> dummy.log
+    readelf -l a.out | grep ': /lib'
+    grep -E -o '/usr/lib.*/S?crt[1in].*succeeded' dummy.log
+    grep -B4 '^ /usr/include' dummy.log
+    grep 'SEARCH.*/usr/lib' dummy.log | sed 's|; |\n|g'
+    grep "/lib.*/libc.so.6 " dummy.log
+    grep found dummy.log
+    mkdir -pv /usr/share/gdb/auto-load/usr/lib
+    mv -v /usr/lib/*gdb.py /usr/share/gdb/auto-load/usr/lib
+}
 
-export package packagedir archive extract patch delete
-export prefix disable enable with
-export BUILD_SOURCE BUILD_ROOT BUILD_LOG
+export package packagedir archive patch delete prefix disable enable with
+export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
 export -f Src_compile
@@ -106,21 +96,19 @@ export -f Src_check
 export -f Src_install
 export -f Src_post
 
-$BUILD_ROOT/zbuild.sh
+${ZBUILD_script} || { echo "Error: Missing ZBUILD_script."; exit 2; }
 exit_code=$?
 
 if [[ exit_code -ne 0 ]]; then
-    echo "___ Error Code: $exit_code"
+    zprint " Error Code: ${exit_code} "
 else
-    echo "*** Success ***"
-    unset -f Src_package
+    zprint " Success "
     unset -f Src_prepare
     unset -f Src_configure
     unset -f Src_compile
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive extract patch delete
-    unset prefix disable enable with
+    unset package packagedir archive patch delete prefix disable enable with
 fi
 

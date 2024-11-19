@@ -2,7 +2,6 @@
 #   8.58 - Coreutils-9.5
 #   unset functions
 #
-unset -f Src_package
 unset -f Src_prepare
 unset -f Src_configure
 unset -f Src_compile
@@ -10,70 +9,62 @@ unset -f Src_check
 unset -f Src_install
 unset -f Src_post
 #
-#  Global
+# Global Settings
 #
-BUILD_SOURCE=/opt/source
-BUILD_ROOT=/BUILD
-BUILD_LOG=$BUILD_ROOT/zbuild_logs
+[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
+ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
+ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
 package=coreutils-9.5
-archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
-extract="true"
+packagedir=${package}
+archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="coreutils-9.5-i18n-2.patch"
-
+prefix="--prefix=/usr"
+enable="--enable-no-install-program=kill,uptime"
 #
 #   Build Functions
 # 
-Src_package() {
-    packagedir=${archive%.tar.*}
-    package=${packagedir%-*}
-    pkgver=${packagedir##*-}
+Src_Extract() {
+    zprint "Extracting: ${archive}"
+    mkdir -v "${ZBUILD_root}/${packagedir}"
+    tar -xf "${ZBUILD_sources}/${archive}" -C "${ZBUILD_root}/${packagedir}" --strip-components=1
 }
-# Executed After pushd
-Src_prepare () {
-   echo "*** Preparing ${package} ***"
-   autoreconf -fiv
+# Executed After pushd into $ZBUILD_root/packagedir
+Src_prepare() {
+    zprint " Preparing ${packagedir} "
+    autoreconf -fiv
 }
-Src_configure () {
-   echo "*** Configuring ${package} ***"
-   FORCE_UNSAFE_CONFIGURE=1 \
-   ./configure ${prefix} ${enable} || exit 88
+Src_configure() {
+    zprint " Configuring ${packagedir} "
+    FORCE_UNSAFE_CONFIGURE=1 \
+    ./configure ${prefix} ${enable} || exit 88
 }
-Src_compile () {
-   echo "*** Compiling ${package} ***"
-   make || exit 77
+Src_compile() {
+    zprint " Compiling ${packagedir} "
+    make || exit 77
 }
-Src_check () {
-   echo "*** Checking ${package} ***"
-   make NON_ROOT_USERNAME=tester check-root || exit 66
-   groupadd -g 102 dummy -U tester
-   chown -R .
-   su tester -c "PATH=$PATH make -k RUN_EXPENSIVE_TESTS=yes check" < /dev/null
-   groupdel dummy
+Src_check() {
+    zprint " Checking ${packagedir} "
+    make NON_ROOT_USERNAME=tester check-root 2>&1 | tee "${ZBUILD_log}/${packagedir}-check.log"
+    groupadd -g 102 dummy -U tester
+    chown -R .
+    su tester -c "PATH=$PATH make -k RUN_EXPENSIVE_TESTS=yes " < /dev/null
+    groupdel dummy
 }
-Src_install () {
-   echo "*** Installing ${package} ***"
-   make install || exit 55
+Src_install() {
+    zprint " Installing ${packagedir} "
+    make install || exit 55
 }
-# Executed After popd
-Src_post () {
-   echo "*** Finalizing ${package} ***"
-   mv -v /usr/bin/chroot /usr/sbin
-   mv -v /usr/share/man/man1/chroot.1 /usr/share/man/man8/chroot.8
-   sed -i 's/"1"/"8"/' /usr/share/man/man8/chroot.8
+Src_post() {
+    zprint " Finalizing ${packagedir} "
+    mv -v /usr/bin/chroot /usr/sbin
+    mv -v /usr/share/man/man1/chroot.1 /usr/share/man/man8/chroot.8
+    sed -i 's/"1"/"8"/' /usr/share/man/man8/chroot.8
 }
-#
-# Start defining package specific options
-# 
-prefix="--prefix=/usr"
-enable="--enable-no-install-program=kill,uptime"
 
-# Extract the base package name and version
-Src_package
-
-export package packagedir archive extract patch delete prefix enable
-export BUILD_SOURCE BUILD_ROOT BUILD_LOG
+export package packagedir archive patch delete prefix enable
+export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
 export -f Src_compile
@@ -81,21 +72,19 @@ export -f Src_check
 export -f Src_install
 export -f Src_post
 
-$BUILD_ROOT/zbuild.sh
+${ZBUILD_script} || { echo "Error: Missing ZBUILD_script."; exit 2; }
 exit_code=$?
 
 if [[ exit_code -ne 0 ]]; then
-    echo "___ Error Code: $exit_code"
+    zprint " Error Code: ${exit_code} "
 else
-    echo "*** Success ***"
-    unset -f Src_package
+    zprint " Success "
     unset -f Src_prepare
     unset -f Src_configure
     unset -f Src_compile
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive extract patch delete
-    unset prefix enable
+    unset package packagedir archive patch delete prefix enable
 fi
 

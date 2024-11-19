@@ -1,5 +1,6 @@
 #!/bin/bash
-#   8.31 - Sed-4.9
+#   8.56 - Ninja-1.12.1
+#   DEPENDS (re2c-3.1)
 #   unset functions
 #
 unset -f Src_prepare
@@ -15,13 +16,12 @@ unset -f Src_post
 ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
 ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
-package=sed-4.9
+package=ninja-1.12.1
 packagedir=${package}
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
-prefix="--prefix=/usr"
-docdir="/usr/share/doc/${packagedir}"
+
 #
 #   Build Functions
 # 
@@ -33,32 +33,35 @@ Src_Extract() {
 # Executed After pushd into $ZBUILD_root/packagedir
 Src_prepare() {
     zprint " Preparing ${packagedir} "
+    export NINJAJOBS=4
 }
 Src_configure() {
     zprint " Configuring ${packagedir} "
-    ./configure ${prefix} || exit 88
+    sed -i '/int Guess/a \
+    int   j = 0;\
+    char* jobs = getenv( "NINJAJOBS" );\
+    if ( jobs != NULL ) j = atoi( jobs );\
+    if ( j > 0 ) return j;\
+    ' src/ninja.cc
 }
 Src_compile() {
     zprint " Compiling ${packagedir} "
-    make || exit 77
-    make html
+    python3 configure.py --bootstrap || exit 77
 }
 Src_check() {
-    zprint " Checking ${packagedir} "
-    chown -R tester .
-    su tester -c "PATH=$PATH make check 2>&1 | tee ${ZBUILD_log}/${packagedir}-check.log"
+    zprint " Tests Can't Be Run in the chroot. Requires cmake. "
 }
 Src_install () {
     zprint " Installing ${packagedir} "
-    make install || exit 55
-    install -vdm755 ${docdir}
-    install -vm644 doc/sed.html ${docdir}
+    install -vm755 ninja /usr/bin/
+    install -vDm644 misc/bash-completion /usr/share/bash-completion/completions/ninja
+    install -vDm644 misc/zsh-completion  /usr/share/zsh/site-functions/_ninja
 }
 Src_post() {
     zprint " Finalizing ${packagedir} "
 }
 
-export package packagedir archive patch delete prefix docdir
+export package packagedir archive patch delete
 export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
@@ -80,6 +83,6 @@ else
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive patch delete prefix docdir
+    unset package packagedir archive patch delete
 fi
 

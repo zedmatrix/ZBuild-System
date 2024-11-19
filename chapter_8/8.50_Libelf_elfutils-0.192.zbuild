@@ -1,5 +1,5 @@
 #!/bin/bash
-#   8.31 - Sed-4.9
+#   8.50 - Libelf from ElfUtils-0.192
 #   unset functions
 #
 unset -f Src_prepare
@@ -15,13 +15,15 @@ unset -f Src_post
 ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
 ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
-package=sed-4.9
+package=elfutils-0.192
 packagedir=${package}
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
 prefix="--prefix=/usr"
-docdir="/usr/share/doc/${packagedir}"
+enable="--enable-libdebuginfod=dummy"
+disable="--disable-debuginfod"
+
 #
 #   Build Functions
 # 
@@ -36,29 +38,28 @@ Src_prepare() {
 }
 Src_configure() {
     zprint " Configuring ${packagedir} "
-    ./configure ${prefix} || exit 88
+    ./configure ${prefix} ${disable} ${enable} || exit 88
 }
 Src_compile() {
     zprint " Compiling ${packagedir} "
     make || exit 77
-    make html
 }
 Src_check() {
     zprint " Checking ${packagedir} "
-    chown -R tester .
-    su tester -c "PATH=$PATH make check 2>&1 | tee ${ZBUILD_log}/${packagedir}-check.log"
+    make check 2>&1 | tee "${ZBUILD_log}/${packagedir}-check.log"
 }
-Src_install () {
+Src_install() {
     zprint " Installing ${packagedir} "
-    make install || exit 55
-    install -vdm755 ${docdir}
-    install -vm644 doc/sed.html ${docdir}
+    make -C libelf install || exit 55
+    install -vm644 config/libelf.pc /usr/lib/pkgconfig
+    rm -v /usr/lib/libelf.a
 }
 Src_post() {
     zprint " Finalizing ${packagedir} "
+
 }
 
-export package packagedir archive patch delete prefix docdir
+export package packagedir archive patch delete prefix disable enable
 export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
@@ -80,6 +81,6 @@ else
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive patch delete prefix docdir
+    unset package packagedir archive patch delete prefix disable enable
 fi
 

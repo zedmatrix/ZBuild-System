@@ -1,4 +1,5 @@
 #!/bin/bash
+zprint "Creating /etc/vimrc"
 cat > /etc/vimrc << "EOF"
 " Begin /etc/vimrc
 
@@ -16,4 +17,5 @@ endif
 
 " End /etc/vimrc
 EOF
-echo "* DONE *"
+ls -l /etc/vimrc
+zprint "Finished"

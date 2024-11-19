@@ -1,5 +1,5 @@
 #!/bin/bash
-#   8.31 - Sed-4.9
+#   8.52 - Python-3.13.0
 #   unset functions
 #
 unset -f Src_prepare
@@ -15,13 +15,18 @@ unset -f Src_post
 ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
 ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
-package=sed-4.9
-packagedir=${package}
+zbuild_pwd=$PWD
+package=Python-3.13.0
+packagedir=python-3.13.0
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
 prefix="--prefix=/usr"
+enable="--enable-shared --enable-optimizations"
+with="--with-system-expat"
 docdir="/usr/share/doc/${packagedir}"
+extradoc="${packagedir}-docs-html"
+
 #
 #   Build Functions
 # 
@@ -34,31 +39,32 @@ Src_Extract() {
 Src_prepare() {
     zprint " Preparing ${packagedir} "
 }
-Src_configure() {
+Src_configure () {
     zprint " Configuring ${packagedir} "
-    ./configure ${prefix} || exit 88
+    ./configure ${prefix} ${enable} ${with} || exit 88
 }
 Src_compile() {
     zprint " Compiling ${packagedir} "
     make || exit 77
-    make html
 }
 Src_check() {
     zprint " Checking ${packagedir} "
-    chown -R tester .
-    su tester -c "PATH=$PATH make check 2>&1 | tee ${ZBUILD_log}/${packagedir}-check.log"
+    make test TESTOPTS="--timeout 120"
 }
-Src_install () {
+Src_install() {
     zprint " Installing ${packagedir} "
     make install || exit 55
-    install -vdm755 ${docdir}
-    install -vm644 doc/sed.html ${docdir}
+    install -vdm755 ${docdir}/html
+    tar --no-same-owner -xf "$ZBUILD_sources/${extradoc}.tar.bz2"
+    cp -vR --no-preserve=mode ${extradoc}/* ${docdir}/html
 }
 Src_post() {
-    zprint " Finalizing ${packagedir} "
+    zprint " Finalizing ${package} "
+    cp -v ${zbuild_pwd}/8.52_pip.conf.zbuild /etc/pip.conf
+
 }
 
-export package packagedir archive patch delete prefix docdir
+export package packagedir archive patch delete prefix with enable docdir extradoc zbuild_pwd
 export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
@@ -80,6 +86,6 @@ else
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive patch delete prefix docdir
+    unset package packagedir archive patch delete prefix with enable docdir extradoc zbuild_pwd
 fi
 

@@ -2,7 +2,6 @@
 #   8.49 - Kmod-33
 #   unset functions
 #
-unset -f Src_package
 unset -f Src_prepare
 unset -f Src_configure
 unset -f Src_compile
@@ -10,68 +9,59 @@ unset -f Src_check
 unset -f Src_install
 unset -f Src_post
 #
-#  Global
+# Global Settings
 #
-BUILD_SOURCE=/opt/source
-BUILD_ROOT=/BUILD
-BUILD_LOG=$BUILD_ROOT/zbuild_logs
+[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
+ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
+ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
 package=kmod-33
-archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
-extract="true"
+packagedir=${package}
+archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
-#
-#   Build Functions
-# 
-Src_package() {
-    packagedir=${archive%.tar.*}
-    package=${packagedir%-*}
-    pkgver=${packagedir##*-}
-}
-# Executed After pushd
-Src_prepare () {
-   echo "*** Preparing ${package} ***"
-
-}
-Src_configure () {
-   echo "*** Configuring ${package} ***"
-   ./configure ${prefix} ${sysconfdir} ${with} ${disable} || exit 88
-}
-Src_compile () {
-   echo "*** Compiling ${package} ***"
-   make || exit 77
-}
-Src_check () {
-   echo "*** Checking ${package} ***"
-
-}
-Src_install () {
-   echo "*** Installing ${package} ***"
-   make install || exit 55
-}
-# Executed After popd
-Src_post () {
-   echo "*** Finalizing ${package} ***"
-  for target in depmod insmod modinfo modprobe rmmod; do
-    ln -sfv ../bin/kmod /usr/sbin/$target
-    rm -fv /usr/bin/$target
-  done
-}
-#
-# Start defining package specific options
-# 
 prefix="--prefix=/usr"
 sysconfdir="--sysconfdir=/etc"
 with="--with-openssl --with-xz --with-zstd --with-zlib"
 disable="--disable-manpages"
 
-# Extract the base package name and version
-Src_package
+#
+#   Build Functions
+# 
+Src_Extract() {
+    zprint "Extracting: ${archive}"
+    mkdir -v "${ZBUILD_root}/${packagedir}"
+    tar -xf "${ZBUILD_sources}/${archive}" -C "${ZBUILD_root}/${packagedir}" --strip-components=1
+}
+# Executed After pushd into $ZBUILD_root/packagedir
+Src_prepare() {
+    zprint " Preparing ${packagedir} "
+}
+Src_configure() {
+    zprint " Configuring ${packagedir} "
+    ./configure ${prefix} ${sysconfdir} ${with} ${disable} || exit 88
+}
+Src_compile() {
+    zprint " Compiling ${packagedir} "
+    make || exit 77
+}
+Src_check() {
+    zprint " No Testsuite ${packagedir} "
+}
+Src_install() {
+    zprint " Installing ${packagedir} "
+    make install || exit 55
+}
+Src_post() {
+    zprint " Finalizing ${package} "
+    for target in depmod insmod modinfo modprobe rmmod; do
+      ln -sfv ../bin/kmod /usr/sbin/$target
+      rm -fv /usr/bin/$target
+    done
+}
 
-export package packagedir archive extract patch delete
-export prefix disable sysconfdir with
-export BUILD_SOURCE BUILD_ROOT BUILD_LOG
+export package packagedir archive patch delete prefix disable sysconfdir with
+export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
 export -f Src_compile
@@ -79,21 +69,19 @@ export -f Src_check
 export -f Src_install
 export -f Src_post
 
-$BUILD_ROOT/zbuild.sh
+make check 2>&1 | tee "${ZBUILD_log}/${packagedir}-check.log"
 exit_code=$?
 
 if [[ exit_code -ne 0 ]]; then
-    echo "___ Error Code: $exit_code"
+    zprint " Error Code: ${exit_code} "
 else
-    echo "*** Success ***"
-    unset -f Src_package
+    zprint " Success "
     unset -f Src_prepare
     unset -f Src_configure
     unset -f Src_compile
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive extract patch delete
-    unset prefix disable sysconfdir with
+    unset package packagedir archive patch delete prefix disable sysconfdir with
 fi
 

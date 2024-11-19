@@ -5,6 +5,7 @@
 # REQUIRES: ZBUILD_root, ZBUILD_sources, ZBUILD_log, zprint function
 #
 # To-Do: ZBUILD_user, ZBUILD_group
+#   rename patch and delete to prepend ZBUILD_
 #
 #   All Functions Should Be Defined even if just with an echo statement
 #
@@ -46,51 +47,51 @@ pushd $ZBUILD_root
             zprint "Skipping Patch"
         fi
 
-# Src_prepare or just warning
+# Src_prepare function (sed, mkdir/cd)
         type -t Src_prepare &>/dev/null && Src_prepare || warn "Src_prepare not set."
 
-# Src_configure
+# Src_configure (configure/meson/cmake)
         if declare -f Src_configure > /dev/null; then
             Src_configure || bail "Configure: $?"
         else
             fail "Src_configure not set. Exiting." 88
         fi
 
-# Src_compile
+# Src_compile (make/ninja)
         if declare -f Src_compile > /dev/null; then
             Src_compile || bail "Compile: $?"
         else
             fail "Src_compile not set. Exiting." 77
         fi
 
-# Src_Check
+# Src_check (make/ninja)
         if declare -f Src_check > /dev/null; then
-            Src_check
+            Src_check || warn "Warning: $?"
         else
             fail "Src_check not set. Exiting." 66
         fi
 
-# Src_install
+# Src_install (make/ninja)
         if declare -f Src_install > /dev/null; then
             Src_install || bail "Install Failure ${package}: $?"
         else
             fail "Src_install not set. Exiting." 55
         fi
 
+# Src_post function (document intalls)
+        type -t Src_post &>/dev/null && Src_post || warn "Src_post not set."
+
 # back to ZBUILD_root
         popd
-
-# Src_post function
-    type -t Src_post &>/dev/null && Src_post || warn "Src_post not set."
 
     if [ "$delete" = "true" ]; then
         zprint "Cleaning Up ${ZBUILD_root}/${packagedir}"
         rm -rf ${ZBUILD_root}/${packagedir}
     else
-        print "Not Removing Source Folder"
+        zprint "Not Removing Source Folder"
     fi
 
-popd # pop the BUILD_ROOT
+popd # backto PWD
 zprint "Zbuild Finished."
 stars
 # The End
