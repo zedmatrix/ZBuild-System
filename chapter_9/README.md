@@ -1,6 +1,6 @@
 # Chapter 9
 
-<p> General Network Configuration
+<p> General Network Configuration</p>
 ```
 cat > /etc/systemd/network/10-ethernet-dhcp.network << "EOF"
 [Match]
@@ -13,8 +13,7 @@ DHCP=ipv4
 UseDomains=true
 EOF
 ```
-<br>Setting Hostname
-`echo "<lfs>" > /etc/hostname`
+Setting Hostname `echo "<lfs>" > /etc/hostname`
 
 <br>Customizing the /etc/hosts File
 ```
@@ -29,11 +28,8 @@ ff02::2   ip6-allrouters
 # End /etc/hosts
 EOF
 ```
-</p>
 
 ## Installs Before Kernel Install
 <p> Install the WGET / CURL / RSYNC as some packages are required for GRUB FOR UEFI<br>
     The GRUB FOR UEFI Installs everything necessary to setup for UEFI Boot from the chroot environment <br>
-    as long as the system has been booted with UEFI and the /sys/efivars are available to mount.
-
-
+    as long as the system has been booted with UEFI and the /sys/efivars are available to mount.</p>
