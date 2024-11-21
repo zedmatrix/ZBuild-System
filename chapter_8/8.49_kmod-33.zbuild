@@ -69,7 +69,7 @@ export -f Src_check
 export -f Src_install
 export -f Src_post
 
-make check 2>&1 | tee "${ZBUILD_log}/${packagedir}-check.log"
+${ZBUILD_script} || { echo "Error: Missing ZBUILD_script."; exit 2; }
 exit_code=$?
 
 if [[ exit_code -ne 0 ]]; then
@@ -84,4 +84,3 @@ else
     unset -f Src_post
     unset package packagedir archive patch delete prefix disable sysconfdir with
 fi
-
