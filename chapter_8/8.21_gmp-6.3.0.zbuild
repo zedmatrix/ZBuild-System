@@ -11,8 +11,8 @@ unset -f Src_post
 #
 # Global Settings
 #
-[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
-ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
+[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; return 2; }
+ZBUILD_log="${ZBUILD_root}/Zbuild_Log"
 ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
 package=gmp-6.3.0
@@ -39,11 +39,11 @@ Src_prepare() {
 }
 Src_configure() {
     zprint " Configuring ${packagedir} "
-    ./configure ${prefix} ${enable} ${disable} ${docdir} || exit 88
+    ./configure ${prefix} ${enable} ${disable} ${docdir} || return 88
 }
 Src_compile() {
     zprint " Compiling ${packagedir} "
-    make || exit 77
+    make || return 77
     make html
 }
 Src_check() {
@@ -52,7 +52,7 @@ Src_check() {
 }
 Src_install() {
     zprint " Installing ${packagedir} "
-    make install || exit 55
+    make install || return 55
     make install-html
 }
 # Executed after popd
@@ -70,7 +70,7 @@ export -f Src_check
 export -f Src_install
 export -f Src_post
 
-${ZBUILD_script} || { echo "Error: Missing ZBUILD_script."; exit 2; }
+${ZBUILD_script} || { echo "Error: Missing ZBUILD_script."; return 2; }
 exit_code=$?
 
 if [[ exit_code -ne 0 ]]; then
@@ -84,6 +84,4 @@ else
     unset -f Src_install
     unset -f Src_post
     unset package packagedir archive delete patch prefix enable disable docdir
-
 fi
-

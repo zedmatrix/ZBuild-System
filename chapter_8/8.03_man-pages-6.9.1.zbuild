@@ -11,9 +11,9 @@ unset -f Src_post
 #
 # Global Settings
 #
-[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
-ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
-ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
+[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; return 2; }
+ZBUILD_log=${ZBUILD_log:-"${ZBUILD_root}/Zbuild_Log"}
+ZBUILD_script=${ZBUILD_script:-"${ZBUILD_root}/zbuild2.sh"}
 
 package=man-pages-6.9.1
 packagedir=${package}
@@ -62,7 +62,7 @@ export -f Src_check
 export -f Src_install
 export -f Src_post
 
-${ZBUILD_script} || { echo "Error: Missing ZBUILD_script."; exit 2; }
+${ZBUILD_script} || { echo "Error: Missing ZBUILD_script."; return 2; }
 exit_code=$?
 
 if [[ exit_code -ne 0 ]]; then

@@ -10,20 +10,29 @@ NORMAL="${NORMAL:-\033[0m}"
 
 ZBUILD_root="/zbuild"
 ZBUILD_sources="/sources"
-ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
+ZBUILD_log="${ZBUILD_root}/Zbuild_Log"
 ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
-zprint() { printf "${YELLOW}*** %s ***${NORMAL}\n" "$*"; }
+zprint() { printf "${RED}***${YELLOW} %s ${RED}***${NORMAL}\n" "$@"; }
+
 Src_Extract() {
 	zprint "Extracting: ${archive}"
 	mkdir -v "${ZBUILD_root}/${packagedir}"
 	tar -xf "${ZBUILD_sources}/${archive}" -C "${ZBUILD_root}/${packagedir}" --strip-components=1
 }
 
+Source_wget() {
+	if [ -z $1 ]; then
+		 echo "Atleast one argument is needed"
+	else
+		wget $1 --no-clobber --rejected-log=${ZBUILD_log}/wget_rejects.log -P ${ZBUILD_sources}
+	fi
+}
+
 PS1="${RED}(lfs chroot) \u [ ${GREEN}\w ${RED}]# ${NORMAL}"
 
 export RED GREEN YELLOW NORMAL PS1 LANG LC_ALL
 export ZBUILD_script ZBUILD_log ZBUILD_root ZBUILD_sources
-export -f Src_Extract zprint
+export -f Src_Extract zprint Source_wget
 
 # End of /etc/profile
