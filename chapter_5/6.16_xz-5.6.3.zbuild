@@ -1,5 +1,5 @@
 #!/bin/bash
-#   6.16 - Xz-5.6.2 - temporary
+#   6.16 - Xz-5.6.3 - temporary
 #   unset functions
 #
 unset -f Src_prepare
@@ -11,7 +11,7 @@ unset -f Src_post
 # 
 #  Global
 #
-package=xz-5.6.2
+package=xz-5.6.3
 packagedir=${package}
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -n 1 | xargs basename)
 delete="true"
@@ -62,7 +62,7 @@ export -f Src_check
 export -f Src_install
 export -f Src_post
 
-${ZBUILD_script} || { echo "Error: Missing ZBUILD_script."; exit 2; }
+${ZBUILD_script} || { echo "Error: Missing ZBUILD_script."; return 2; }
 exit_code=$?
 
 if [[ exit_code -ne 0 ]]; then

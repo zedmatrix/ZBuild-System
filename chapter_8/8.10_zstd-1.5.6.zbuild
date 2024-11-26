@@ -48,7 +48,7 @@ Src_install() {
     zprint " Installing ${packagedir} "
     make ${prefix} install || exit 55
 }
-Src_post()) {
+Src_post() {
     zprint " Finalizing ${packagedir} "
     rm -v /usr/lib/libzstd.a
 }
@@ -62,7 +62,7 @@ export -f Src_check
 export -f Src_install
 export -f Src_post
 
-${ZBUILD_script} || { echo "Error: Missing ZBUILD_script."; exit 2; }
+${ZBUILD_script} || { echo "Error: Missing ZBUILD_script."; return 2; }
 exit_code=$?
 
 if [[ exit_code -ne 0 ]]; then

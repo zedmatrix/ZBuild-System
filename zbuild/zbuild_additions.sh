@@ -21,3 +21,5 @@ Src_Extract() {
 make check 2>&1 | tee "${ZBUILD_log}/${packagedir}-check.log"
 
 ${ZBUILD_script} || { echo "Error: Missing ZBUILD_script."; exit 2; }
+
+#grep -v '^#' ../lib-7.md5 | awk '{print $2}' | wget - -c -P /mnt/lfs/sources
