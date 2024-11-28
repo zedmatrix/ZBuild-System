@@ -1,4 +1,9 @@
 #!/bin/bash
+declare -A error_messages=(
+    [2]="Missing ZBUILD script"
+    [127]="Command not found"
+    [1]="General error"
+)
 #   8.48 - OpenSSH-9.9p1
 #   unset functions
 #
@@ -11,8 +16,8 @@ unset -f Src_post
 #
 # Global Settings
 #
-[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
-ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
+[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; return 2; }
+ZBUILD_log="${ZBUILD_root}/Zbuild_Log"
 ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
 package=openssh-9.9p1
@@ -41,11 +46,11 @@ Src_prepare() {
 }
 Src_configure() {
     zprint " Configuring ${packagedir} "
-    ./configure ${prefix} ${sysconfdir} ${with} || exit 88
+    ./configure ${prefix} ${sysconfdir} ${with} || return 88
 }
 Src_compile() {
     zprint " Compiling ${packagedir} "
-    make || exit 77
+    make || return 77
 }
 Src_check() {
     zprint " Checking ${packagedir} "
@@ -53,7 +58,7 @@ Src_check() {
 }
 Src_install() {
     zprint " Installing ${packagedir} "
-    make install || exit 55
+    make install || return 55
     install -vm755 contrib/ssh-copy-id /usr/bin
     install -vm644 contrib/ssh-copy-id.1 /usr/share/man/man1
     install -vm755 -d ${docdir}
@@ -72,19 +77,25 @@ export -f Src_check
 export -f Src_install
 export -f Src_post
 
-${ZBUILD_script} || { echo "Error: Missing ZBUILD_script."; exit 2; }
-exit_code=$?
-
-if [[ exit_code -ne 0 ]]; then
-    zprint " Error Code: ${exit_code} "
+if [[ -f "${ZBUILD_script}" ]]; then
+    ${ZBUILD_script}
+    exit_code=$?
+    if [[ $exit_code -ne 0 ]]; then
+        error_message=${error_messages[$exit_code]:-"Unknown error"}
+        zprint "Error: ${error_message} (Exit Code: $exit_code)"
+        return $exit_code
+    else
+        zprint " Success "
+        unset -f Src_Extract
+        unset -f Src_prepare
+        unset -f Src_configure
+        unset -f Src_compile
+        unset -f Src_check
+        unset -f Src_install
+        unset -f Src_post
+        unset package packagedir archive patch delete prefix sysconfdir with docdir
+    fi
 else
-    zprint " Success "
-    unset -f Src_prepare
-    unset -f Src_configure
-    unset -f Src_compile
-    unset -f Src_check
-    unset -f Src_install
-    unset -f Src_post
-    unset package packagedir archive patch delete prefix sysconfdir with docdir
+    zprint "Error: ${error_messages[2]} (Exit Code: 2)"
+    return 2
 fi
-

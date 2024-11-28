@@ -5,6 +5,9 @@ https://ftp.gnu.org/gnu/libtasn1/libtasn1-4.19.0.tar.gz
 https://github.com/p11-glue/p11-kit/releases/download/0.25.5/p11-kit-0.25.5.tar.xz
 https://github.com/lfs-book/make-ca/archive/v1.14/make-ca-1.14.tar.gz
 https://ftp.gnu.org/gnu/wget/wget-1.25.0.tar.gz
+https://ftp.osuosl.org/pub/rpm/popt/releases/popt-1.x/popt-1.19.tar.gz
+https://curl.se/download/curl-8.11.0.tar.xz
+https://www.samba.org/ftp/rsync/src/rsync-.tar.gz
 https://mandoc.bsd.lv/snapshots/mandoc-1.14.6.tar.gz
 https://github.com/rhboot/efivar/archive/39/efivar-39.tar.gz
 https://github.com/rhboot/efibootmgr/archive/18/efibootmgr-18.tar.gz
@@ -13,3 +16,5 @@ https://downloads.sourceforge.net/libpng/libpng-1.6.44.tar.xz
 https://downloads.sourceforge.net/freetype/freetype-2.13.3.tar.xz
 https://downloads.sourceforge.net/freetype/freetype-doc-2.13.3.tar.xz
 https://github.com/dosfstools/dosfstools/releases/download/v4.2/dosfstools-4.2.tar.gz
+https://github.com/libfuse/libfuse/releases/download/fuse-3.16.2/fuse-3.16.2.tar.gz
+https://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-9.9p1.tar.gz

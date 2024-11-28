@@ -1,3 +1,4 @@
+zprint "Creating etc/systemd/network File"
 cat > /etc/systemd/network/10-ethernet-dhcp.network << "EOF"
 [Match]
 Name=enp*
@@ -9,6 +10,7 @@ DHCP=ipv4
 UseDomains=true
 EOF
 
+zprint "Creating /etc/hosts and /etc/hostname"
 echo "**EDITME**" > /etc/hostname
 
 cat > /etc/hosts << "EOF"
@@ -22,3 +24,17 @@ ff02::2   ip6-allrouters
 
 # End /etc/hosts
 EOF
+
+zprint "Creating Simple /etc/resolv.conf"
+cat > /etc/resolv.conf
+# Begin /etc/resolv.conf
+
+domain localdomain
+nameserver 8.8.8.8
+nameserver 8.8.4.4
+
+search localdomain
+
+# End /etc/resolv.conf
+
+zprint "Done"
