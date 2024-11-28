@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 #   8.03 - Man-Pages-6.9.1
 #   unset functions
 #
@@ -62,7 +63,13 @@ export -f Src_check
 export -f Src_install
 export -f Src_post
 
-${ZBUILD_script} || { echo "Error: Missing ZBUILD_script."; return 2; }
+if [ ! -f ${ZBUILD_script} ];
+    echo "Error: Missing ZBUILD_script."
+    return 2
+else
+    ${ZBUILD_script}
+fi
+
 exit_code=$?
 
 if [[ exit_code -ne 0 ]]; then

@@ -10,7 +10,7 @@ NORMAL="${NORMAL:-\033[0m}"
 
 ZBUILD_root="/zbuild"
 ZBUILD_sources="/sources"
-ZBUILD_log="${ZBUILD_root}/Zbuild_Log"
+ZBUILD_log="${ZBUILD_root}/Zbuild_log"
 ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
 zprint() { printf "${RED}***${YELLOW} %s ${RED}***${NORMAL}\n" "$@"; }

@@ -39,7 +39,7 @@ Src_Extract() {
 Src_prepare() {
 	zprint "Preparing ${packagedir}"
 	sed '20,$ d' -i trust/trust-extract-compat
-	cat "${zbuild}/15_add_trust.zbuild" >> trust/trust-extract-compat
+	cat "${zbuild}/05_add_trust.zbuild" >> trust/trust-extract-compat
 	mkdir -v p11-build
 	cd p11-build
 }
