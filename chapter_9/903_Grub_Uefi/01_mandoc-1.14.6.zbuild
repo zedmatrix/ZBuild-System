@@ -2,7 +2,6 @@
 #   BLFS Mandoc-1.14.6
 #   unset functions
 #
-unset -f Src_package
 unset -f Src_prepare
 unset -f Src_configure
 unset -f Src_compile
@@ -10,62 +9,52 @@ unset -f Src_check
 unset -f Src_install
 unset -f Src_post
 #
-#  Global
+# Global Settings
 #
-BUILD_SOURCE=/opt/source
-BUILD_ROOT=/BUILD
-BUILD_LOG=$BUILD_ROOT/zbuild_logs
+[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; return 2; }
+ZBUILD_log=${ZBUILD_log:-"${ZBUILD_root}/Zbuild_log"}
+ZBUILD_script=${ZBUILD_script:-"${ZBUILD_root}/zbuild2.sh"}
 
 package=mandoc-1.14.6
-archive=$(find $BUILD_SOURCE -name "${package}*.tar.*" | head -n 1 | xargs basename)
-extract="true"
+packagedir=${package}
+archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
 
-#
-#   Build Functions
-# 
-Src_package() {
-    packagedir=${archive%.tar.*}
-    package=${packagedir%-*}
-    pkgver=${packagedir##*-}
+Src_Extract() {
+    zprint "Extracting: ${archive}"
+    mkdir -v "${ZBUILD_root}/${packagedir}"
+    tar -xf "${ZBUILD_sources}/${archive}" -C "${ZBUILD_root}/${packagedir}" --strip-components=1
 }
-# Executed After pushd
-Src_prepare () {
-   echo "*** Preparing ${package} ***"
-
+# Executed After pushd into $ZBUILD_root/packagedir
+Src_prepare() {
+    zprint " Preparing ${package} "
 }
-
-Src_configure () {
-   echo "*** Configuring ${package} ***"
-   ./configure || exit 88
+Src_configure() {
+    zprint " Configuring ${package} "
+    ./configure || return 88
 }
-Src_compile () {
-   echo "*** Compiling mandoc only ***"
-   make mandoc || exit 77
+Src_compile() {
+    zprint " Compiling mandoc only "
+    make mandoc || return 77
 }
-Src_check () {
-   echo "*** Checking ${package} ***"
-   make regress || exit 66
+Src_check() {
+    zprint "*** Checking ${package} ***"
+    make regress || return 66
 }
-Src_install () {
-   echo "*** Installing ${package} ***"
-   install -vm755 mandoc /usr/bin
-   install -vm644 mandoc.1 /usr/share/man/man1
+Src_install() {
+    zprint " Installing ${package} "
+    install -vm755 mandoc /usr/bin
+    install -vm644 mandoc.1 /usr/share/man/man1
 }
 # Executed After popd
-Src_post () {
-   echo "*** Finalizing ${package} ***"
-
+Src_post() {
+    zprint " Finalizing ${package} "
+    /sbin/ldconfig
 }
-#
-# Start defining package specific options
-# 
-# Extract the base package name and version
-Src_package
 
-export package packagedir archive extract patch delete
-export BUILD_SOURCE BUILD_ROOT BUILD_LOG
+export package packagedir archive patch delete
+export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
 export -f Src_compile
@@ -73,20 +62,23 @@ export -f Src_check
 export -f Src_install
 export -f Src_post
 
-$BUILD_ROOT/zbuild.sh
+if [ -f ${ZBUILD_script} ]; then
+    ${ZBUILD_script}
+else
+    zprint "Error: Missing ZBUILD_script."
+    return 2
+fi
 exit_code=$?
 
-if [[ exit_code -ne 0 ]]; then
-    echo "___ Error Code: $exit_code"
+if [[ $exit_code -ne 0 ]]; then
+    zprint " Error Code: ${exit_code} "
 else
-    echo "*** Success ***"
-    unset -f Src_package
+    zprint " Success "
     unset -f Src_prepare
     unset -f Src_configure
     unset -f Src_compile
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive extract patch delete
+    unset package packagedir archive patch delete
 fi
-

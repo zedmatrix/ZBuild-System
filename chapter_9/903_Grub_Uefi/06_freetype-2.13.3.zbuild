@@ -1,5 +1,5 @@
 #!/bin/bash
-#   BLFS Efivar-39
+#   BLFS Freetype-2.13.3
 #   unset functions
 #
 unset -f Src_prepare
@@ -11,16 +11,19 @@ unset -f Src_post
 #
 # Global Settings
 #
-[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; return 3; }
+[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; return 2; }
 ZBUILD_log=${ZBUILD_log:-"${ZBUILD_root}/Zbuild_log"}
 ZBUILD_script=${ZBUILD_script:-"${ZBUILD_root}/zbuild2.sh"}
 
-package=efivar-39
+package=freetype-2.13.3
 packagedir=${package}
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
-
+prefix="--prefix=/usr"
+enable="--enable-freetype-config"
+disable="--disable-static"
+docdir="/usr/share/doc/${packagedir}"
 #
 #   Build Functions
 # 
@@ -32,9 +35,13 @@ Src_Extract() {
 # Executed After pushd into $ZBUILD_root/packagedir
 Src_prepare() {
     zprint " Preparing ${package} "
+    tar xf "${ZBUILD_sources}/freetype-doc-2.13.3.tar.xz" --strip-components=2 -C docs
+    sed -ri "s:.*(AUX_MODULES.*valid):\1:" modules.cfg
+    sed -r "s:.*(#.SUBPIXEL_RENDERING) .*:\1:" -i include/freetype/config/ftoption.h
 }
 Src_configure() {
     zprint " Configuring ${package} "
+    ./configure ${prefix} ${disable} ${enable} || return 88
 }
 Src_compile() {
     zprint " Compiling ${package} "
@@ -45,14 +52,15 @@ Src_check() {
 }
 Src_install() {
     zprint " Installing ${package} "
-    make install LIBDIR=/usr/lib || return 55
+    make install || return 55
+    cp -vR docs -T ${docdir}
+    rm -v ${docdir}/freetype-config.1
 }
-# Executed After popd
 Src_post() {
     zprint " Finalizing ${package} "
 }
 
-export package packagedir archive delete patch
+export package packagedir archive patch delete prefix disable docdir enable
 export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
@@ -70,7 +78,7 @@ fi
 exit_code=$?
 
 if [[ $exit_code -ne 0 ]]; then
-    zprint " Error Code: $exit_code "
+    zprint " Error Code: ${exit_code} "
 else
     zprint " Success "
     unset -f Src_prepare
@@ -79,5 +87,5 @@ else
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive delete patch
+    unset package packagedir archive patch delete prefix disable docdir enable
 fi

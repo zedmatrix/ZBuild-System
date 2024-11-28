@@ -1,5 +1,5 @@
 #!/bin/bash
-#   BLFS Efivar-39
+#   BLFS Which-2.21
 #   unset functions
 #
 unset -f Src_prepare
@@ -11,16 +11,16 @@ unset -f Src_post
 #
 # Global Settings
 #
-[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; return 3; }
+[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; return 2; }
 ZBUILD_log=${ZBUILD_log:-"${ZBUILD_root}/Zbuild_log"}
 ZBUILD_script=${ZBUILD_script:-"${ZBUILD_root}/zbuild2.sh"}
 
-package=efivar-39
+package=which-2.21
 packagedir=${package}
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
-
+prefix="--prefix=/usr"
 #
 #   Build Functions
 # 
@@ -31,10 +31,11 @@ Src_Extract() {
 }
 # Executed After pushd into $ZBUILD_root/packagedir
 Src_prepare() {
-    zprint " Preparing ${package} "
+    zprint " No Prepare ${package} "
 }
 Src_configure() {
     zprint " Configuring ${package} "
+    ./configure ${prefix} || return 88
 }
 Src_compile() {
     zprint " Compiling ${package} "
@@ -45,14 +46,14 @@ Src_check() {
 }
 Src_install() {
     zprint " Installing ${package} "
-    make install LIBDIR=/usr/lib || return 55
+    make install || return 55
 }
-# Executed After popd
 Src_post() {
     zprint " Finalizing ${package} "
+    /sbin/ldconfig
 }
 
-export package packagedir archive delete patch
+export package packagedir archive patch delete prefix
 export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
@@ -70,14 +71,14 @@ fi
 exit_code=$?
 
 if [[ $exit_code -ne 0 ]]; then
-    zprint " Error Code: $exit_code "
+    zprint " Error Code: ${exit_code} "
 else
-    zprint " Success "
+    zprint "*** Success ***"
     unset -f Src_prepare
     unset -f Src_configure
     unset -f Src_compile
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive delete patch
+    unset package packagedir archive extract patch delete prefix
 fi

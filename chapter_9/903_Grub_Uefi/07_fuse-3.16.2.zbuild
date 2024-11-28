@@ -1,5 +1,5 @@
 #!/bin/bash
-#   BLFS Efivar-39
+#   BLFS - Fuse-3.16.2
 #   unset functions
 #
 unset -f Src_prepare
@@ -11,16 +11,17 @@ unset -f Src_post
 #
 # Global Settings
 #
-[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; return 3; }
+[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; return 2; }
 ZBUILD_log=${ZBUILD_log:-"${ZBUILD_root}/Zbuild_log"}
 ZBUILD_script=${ZBUILD_script:-"${ZBUILD_root}/zbuild2.sh"}
 
-package=efivar-39
+package=fuse-3.16.2
 packagedir=${package}
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
-
+prefix="--prefix=/usr"
+build="--buildtype=release"
 #
 #   Build Functions
 # 
@@ -32,27 +33,32 @@ Src_Extract() {
 # Executed After pushd into $ZBUILD_root/packagedir
 Src_prepare() {
     zprint " Preparing ${package} "
+    sed -i '/^udev/,$ s/^/#/' util/meson.build
+    mkdir -v build
+    cd build
 }
 Src_configure() {
     zprint " Configuring ${package} "
+    meson setup .. ${prefix} ${build} || return 88
 }
 Src_compile() {
     zprint " Compiling ${package} "
-    make || return 77
+    ninja || return 77
 }
 Src_check() {
     zprint " No Testsuite ${package} "
 }
 Src_install() {
     zprint " Installing ${package} "
-    make install LIBDIR=/usr/lib || return 55
+    ninja install || return 55
+    chmod u+s /usr/bin/fusermount3
 }
-# Executed After popd
 Src_post() {
     zprint " Finalizing ${package} "
+    /sbin/ldconfig
 }
 
-export package packagedir archive delete patch
+export package packagedir archive patch delete prefix build
 export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
@@ -70,7 +76,7 @@ fi
 exit_code=$?
 
 if [[ $exit_code -ne 0 ]]; then
-    zprint " Error Code: $exit_code "
+    zprint " Error Code: ${exit_code} "
 else
     zprint " Success "
     unset -f Src_prepare
@@ -79,5 +85,5 @@ else
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive delete patch
+    unset package packagedir archive extract patch delete prefix build
 fi

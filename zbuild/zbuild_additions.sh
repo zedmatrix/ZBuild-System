@@ -20,7 +20,12 @@ Src_Extract() {
 
 make check 2>&1 | tee "${ZBUILD_log}/${packagedir}-check.log"
 
-${ZBUILD_script} || { echo "Error: Missing ZBUILD_script."; return 2; }
+if [ -f ${ZBUILD_script} ]; then
+    ${ZBUILD_script}
+else
+    zprint "Error: Missing ZBUILD_script."
+    return 2
+fi
 
 #grep -v '^#' ../lib-7.md5 | awk '{print $2}' | wget - -c -P /mnt/lfs/sources
 Source_wget() {
