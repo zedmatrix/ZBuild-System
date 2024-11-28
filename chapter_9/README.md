@@ -31,6 +31,19 @@ ff02::2   ip6-allrouters
 EOF
 ```
 
+```
+cat > /etc/resolv.conf
+# Begin /etc/resolv.conf
+
+domain localdomain
+nameserver 8.8.8.8
+nameserver 8.8.4.4
+
+search localdomain
+
+# End /etc/resolv.conf
+```
+
 ## Installs Before Kernel Install
 <p> Install the WGET / CURL / RSYNC as some packages are required for GRUB FOR UEFI<br>
     The GRUB FOR UEFI Installs everything necessary to setup for UEFI Boot from the chroot environment <br>

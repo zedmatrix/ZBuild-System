@@ -13,7 +13,7 @@ unset -f Src_post
 #
 # Global Settings
 #
-[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
+[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; return 2; }
 ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
 ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
@@ -34,7 +34,7 @@ Src_Extract() {
 # Executed After pushd into $ZBUILD_root/packagedir
 Src_configure() {
 	zprint " Installing ${packagedir} "
-	make install || exit 55
+	make install || return 55
 	install -vdm755 /etc/ssl/local
 }
 Src_compile() {
@@ -65,7 +65,7 @@ export -f Src_check
 export -f Src_install
 export -f Src_post
 
-${ZBUILD_script} || { echo "Error: Missing ZBUILD_script."; exit 2; }
+${ZBUILD_script} || { echo "Error: Missing ZBUILD_script."; return 2; }
 exit_code=$?
 
 if [[ exit_code -ne 0 ]]; then
