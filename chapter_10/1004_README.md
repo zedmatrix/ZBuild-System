@@ -11,7 +11,6 @@ Install the GRUB files into /boot/grub and set up the boot track: `grub-install 
 
 <br>Create the `/boot/grub/grub.cfg` for the partition `/dev/sda3` GRUB Configuration file:
 
-    ```
     cat > /boot/grub/grub.cfg << "EOF"
     # Begin /boot/grub/grub.cfg
     set default=0
@@ -25,8 +24,7 @@ Install the GRUB files into /boot/grub and set up the boot track: `grub-install 
         linux   /boot/vmlinuz-6.11.9 root=/dev/sda3 ro
     }
     EOF
-    ```
-    
+        
 <p>GRUB is an extremely powerful program and it provides a tremendous number of options for booting from a wide variety of devices, operating systems, and partition types. There are also many options for customization such as graphical splash screens, playing sounds, mouse input, etc. The details of these options are beyond the scope of this introduction.</p>
 
 ## UEFI Version
