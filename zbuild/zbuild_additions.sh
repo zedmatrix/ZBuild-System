@@ -4,7 +4,7 @@
 #
 # Global Settings
 #
-[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; return 2; }
+[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
 ZBUILD_log=${ZBUILD_log:-"${ZBUILD_root}/Zbuild_log"}
 ZBUILD_script=${ZBUILD_script:-"${ZBUILD_root}/zbuild2.sh"}
 
@@ -24,7 +24,7 @@ if [ -f ${ZBUILD_script} ]; then
     ${ZBUILD_script}
 else
     zprint "Error: Missing ZBUILD_script."
-    return 2
+    exit 1
 fi
 
 #grep -v '^#' ../lib-7.md5 | awk '{print $2}' | wget - -c -P /mnt/lfs/sources

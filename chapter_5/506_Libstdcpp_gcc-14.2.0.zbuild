@@ -1,5 +1,5 @@
 #!/bin/bash
-#   5.04 - Linux-6.11.9 - Headers
+#   5.06 - Libstdc++ from GCC-14.2.0
 #   unset functions
 #
 unset -f Src_prepare
@@ -11,11 +11,19 @@ unset -f Src_post
 # 
 #  Global
 #
-package=linux-6.11.9
+[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
+ZBUILD_log=${ZBUILD_log:-"${ZBUILD_root}/Zbuild_log"}
+ZBUILD_script=${ZBUILD_script:-"${ZBUILD_root}/zbuild2.sh"}
+
+package=gcc-14.2.0
 packagedir=${package}
-archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort | head -1 | xargs basename)
+archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
+host="--host=${LFS_TGT}"
+prefix="--prefix=/usr"
+disable="--disable-multilib --disable-nls --disable-libstdcxx-pch"
+with="--with-gxx-include-dir=/tools/${LFS_TGT}/include/c++/14.2.0"
 
 #
 #   Build Functions
@@ -27,29 +35,32 @@ Src_Extract() {
 }
 Src_prepare() {
     zprint " Preparing ${package} "
+    mkdir -v build
+    cd build
 }
 Src_configure() {
     zprint " Configuring ${package} "
-    make mrproper
+    build="--build=$(../config.guess)"
+    ../libstdc++-v3/configure ${host} ${build} ${prefix} ${disable} ${with} || exit 88
 }
 Src_compile() {
     zprint " Compiling ${package} "
-    make headers || exit 77
+    make || exit 77
 }
 Src_check() {
-    zprint " Removing Non Header Files from ${package} "
-    find usr/include -type f ! -name '*.h' -delete
+    zprint " No Testsuite ${package} "
 }
 Src_install() {
-    zprint " Installing Header Files ${package} "
-    cp -rv usr/include $LFS/usr
+    zprint " Installing ${package} "
+    make DESTDIR=${LFS} install || exit 55
 }
-Src_post () {
+Src_post() {
     zprint " Finalizing ${package} "
-
+    rm -v ${LFS}/usr/lib/lib{stdc++{,exp,fs},supc++}.la
 }
 
 export package packagedir archive delete patch
+export host build prefix disable with
 export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
@@ -58,7 +69,12 @@ export -f Src_check
 export -f Src_install
 export -f Src_post
 
-${ZBUILD_script} || { echo "Error: Missing ZBUILD_script."; exit 2; }
+if [ -f ${ZBUILD_script} ]; then
+    ${ZBUILD_script}
+else
+    zprint "Error: Missing ZBUILD_script."
+    exit 1
+fi
 exit_code=$?
 
 if [[ exit_code -ne 0 ]]; then
@@ -72,4 +88,6 @@ else
     unset -f Src_install
     unset -f Src_post
     unset package packagedir archive delete patch
+    unset host build prefix disable with
 fi
+

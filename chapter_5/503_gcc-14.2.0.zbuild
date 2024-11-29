@@ -11,6 +11,10 @@ unset -f Src_post
 # 
 #  Global
 #
+[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
+ZBUILD_log=${ZBUILD_log:-"${ZBUILD_root}/Zbuild_log"}
+ZBUILD_script=${ZBUILD_script:-"${ZBUILD_root}/zbuild2.sh"}
+
 package=gcc-14.2.0
 packagedir=${package}
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
@@ -20,7 +24,8 @@ target="--target=${LFS_TGT}"
 prefix="--prefix=${LFS}/tools"
 with="--with-glibc-version=2.40 --with-sysroot=${LFS} --with-newlib --without-headers"
 enable="--enable-default-pie --enable-default-ssp --enable-languages=c,c++"
-disable="--disable-nls --disable-shared --disable-multilib --disable-threads --disable-libatomic --disable-libgomp --disable-libquadmath --disable-libssp --disable-libvtv --disable-libstdcxx"
+disable="--disable-nls --disable-shared --disable-multilib --disable-threads --disable-libatomic"
+disable="${disable} --disable-libgomp --disable-libquadmath --disable-libssp --disable-libvtv --disable-libstdcxx"
 
 #
 #   Build Functions
@@ -86,7 +91,12 @@ export -f Src_check
 export -f Src_install
 export -f Src_post
 
-${ZBUILD_script} || { echo "Error: Missing ZBUILD_script."; exit 2; }
+if [ -f ${ZBUILD_script} ]; then
+    ${ZBUILD_script}
+else
+    zprint "Error: Missing ZBUILD_script."
+    exit 1
+fi
 exit_code=$?
 
 if [[ exit_code -ne 0 ]]; then

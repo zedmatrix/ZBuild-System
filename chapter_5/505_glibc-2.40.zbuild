@@ -11,6 +11,10 @@ unset -f Src_post
 # 
 #  Global
 #
+[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
+ZBUILD_log=${ZBUILD_log:-"${ZBUILD_root}/Zbuild_log"}
+ZBUILD_script=${ZBUILD_script:-"${ZBUILD_root}/zbuild2.sh"}
+
 package=glibc-2.40
 packagedir=${package}
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
@@ -48,7 +52,7 @@ Src_configure() {
     zprint " Configuring ${package} "
     echo "rootsbindir=/usr/sbin" > configparms
     build="--build=$(../scripts/config.guess)"
-    ../configure ${prefix} ${host} ${build} ${enable} ${disable} libc_cv_slibdir=/usr/lib
+    ../configure ${prefix} ${host} ${build} ${enable} ${disable} libc_cv_slibdir=/usr/lib || exit 88
 }
 Src_compile() {
     zprint " Compiling ${package} "
@@ -60,7 +64,7 @@ Src_check() {
 }
 Src_install() {
     zprint " Installing ${package} "
-    make DESTDIR=$LFS install
+    make DESTDIR=$LFS install || exit 55
     sed '/RTLDLIST=/s@/usr@@g' -i $LFS/usr/bin/ldd
 }
 # executes after popd
@@ -81,7 +85,12 @@ export -f Src_check
 export -f Src_install
 export -f Src_post
 
-${ZBUILD_script} || { echo "Error: Missing ZBUILD_script."; exit 2; }
+if [ -f ${ZBUILD_script} ]; then
+    ${ZBUILD_script}
+else
+    zprint "Error: Missing ZBUILD_script."
+    exit 1
+fi
 exit_code=$?
 
 if [[ exit_code -ne 0 ]]; then
