@@ -39,7 +39,7 @@ Src_prepare() {
 }
 Src_configure() {
     zprint "Configuring"
-    cp -v ${zbuild}/1001_config_zbuild .config
+    cp -v ${zbuild}/1002_config_zbuild .config
     make oldconfig
 }
 Src_compile () {
