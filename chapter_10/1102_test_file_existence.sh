@@ -1,0 +1,15 @@
+zprint "Testing Existence of System Files"
+
+[ -f /etc/bashrc ] && echo "True: /etc/bashrc" || echo "False: Missing: /etc/bashrc"
+[ -f /etc/dircolors ] && echo "True: /etc/dircolors" || echo "False: Missing: /etc/dircolors"
+[ -f /etc/fstab ] && echo "True: /etc/fstab" || echo "False: Missing: /etc/fstab"
+[ -f /etc/hosts ] && echo "True: /etc/hosts" || echo "False: Missing: /etc/hosts"
+[ -f /etc/inputrc ] && echo "True: /etc/inputrc" || echo "False: Missing: /etc/inputrc"
+[ -f /etc/profile ] && echo "True: /etc/profile" || echo "False: Missing: /etc/profile"
+[ -f /etc/resolv.conf ] && echo "True: /etc/resolv.conf" || echo "False: Missing: /etc/resolv.conf"
+[ -f /etc/vimrc ] && echo "True: /etc/vimrc" || echo "False: Missing: /etc/vimrc"
+[ -f /root/.bash_profile ] && echo "True: /root/.bash_profile" || echo "False: Missing: /root/.bash_profile"
+[ -f /root/.bashrc ] && echo "True: /root/.bashrc" || echo "False: Missing: /root/.bashrc"
+
+zprint " If good next logout "
+zprint " Done "
