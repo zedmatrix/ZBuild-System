@@ -1,5 +1,5 @@
 #!/bin/bash
-#   6.04 - Bash-5.2.37 - temporary
+#   6.05 - Coreutils-9.5 - temporary
 #   unset functions
 #
 unset -f Src_prepare
@@ -11,14 +11,18 @@ unset -f Src_post
 # 
 #  Global
 #
-package=bash-5.2.37
+[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
+ZBUILD_log=${ZBUILD_log:-"${ZBUILD_root}/Zbuild_log"}
+ZBUILD_script=${ZBUILD_script:-"${ZBUILD_root}/zbuild2.sh"}
+
+package=coreutils-9.5
 packagedir=${package}
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
 prefix="--prefix=/usr"
-host="--host=$LFS_TGT"
-disable="--without-bash-malloc bash_cv_strtold_broken=no"
+host="--host=${LFS_TGT}"
+enable="--enable-install-program=hostname --enable-no-install-program=kill,uptime"
 
 #
 #   Build Functions
@@ -34,8 +38,8 @@ Src_prepare() {
 }
 Src_configure() {
     zprint " Configuring ${package} "
-    build="--build=$(sh support/config.guess)"
-    ./configure ${prefix} ${host} ${build} ${disable}
+    build="--build=$(build-aux/config.guess)"
+    ./configure ${prefix} ${host} ${build} ${enable}
 }
 Src_compile() {
     zprint " Compiling ${package} "
@@ -51,10 +55,13 @@ Src_install() {
 # executed after popd
 Src_post() {
     zprint " Finalizing ${package} "
-    ln -sv bash $LFS/bin/sh
+    mv -v $LFS/usr/bin/chroot $LFS/usr/sbin
+    mkdir -pv $LFS/usr/share/man/man8
+    mv -v $LFS/usr/share/man/man1/chroot.1 $LFS/usr/share/man/man8/chroot.8
+    sed -i 's/"1"/"8"/' $LFS/usr/share/man/man8/chroot.8
 }
 
-export package packagedir archive delete patch prefix host build disable
+export package packagedir archive delete patch prefix host build enable
 export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
@@ -63,19 +70,24 @@ export -f Src_check
 export -f Src_install
 export -f Src_post
 
-${ZBUILD_script} || { echo "Error: Missing ZBUILD_script."; exit 2; }
+if [ -f ${ZBUILD_script} ]; then
+    ${ZBUILD_script}
+else
+    zprint "Error: Missing ZBUILD_script."
+    exit 1
+fi
 exit_code=$?
 
-if [[ exit_code -ne 0 ]]; then
-    print " Error Code: ${exit_code} "
+if [[ $exit_code -ne 0 ]]; then
+    zprint " Error Code: ${exit_code} "
 else
-    print " Success "
+    zprint " Success "
     unset -f Src_prepare
     unset -f Src_configure
     unset -f Src_compile
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive delete patch prefix host build disable
+    unset package packagedir archive delete patch prefix host build enable
 fi
 

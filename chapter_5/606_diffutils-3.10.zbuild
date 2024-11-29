@@ -1,5 +1,5 @@
 #!/bin/bash
-#   6.14 - Sed-4.9 - temporary
+#   6.06 - Diffutils-3.10 - temporary
 #   unset functions
 #
 unset -f Src_prepare
@@ -11,8 +11,11 @@ unset -f Src_post
 # 
 #  Global
 #
+[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
+ZBUILD_log=${ZBUILD_log:-"${ZBUILD_root}/Zbuild_log"}
+ZBUILD_script=${ZBUILD_script:-"${ZBUILD_root}/zbuild2.sh"}
 
-package=sed-4.9
+package=diffutils-3.10
 packagedir=${package}
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
@@ -28,6 +31,7 @@ Src_Extract() {
 	mkdir -v "${ZBUILD_root}/${packagedir}"
 	tar -xf "${ZBUILD_sources}/${archive}" -C "${ZBUILD_root}/${packagedir}" --strip-components=1
 }
+# executed after pushd
 Src_prepare() {
     zprint " Preparing ${package} "
 }
@@ -41,17 +45,18 @@ Src_compile() {
     make || exit 77
 }
 Src_check() {
-    zprint " Checking ${package} "
+    zprint " No Testsuite ${package} "
 }
 Src_install() {
     zprint " Installing ${package} "
     make DESTDIR=$LFS install
 }
+# executed after popd
 Src_post() {
     zprint " Finalizing ${package} "
 }
 
-export package packagedir archive delete patch prefix host build
+export package packagedir archive extract delete patch prefix host build
 export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
@@ -60,10 +65,15 @@ export -f Src_check
 export -f Src_install
 export -f Src_post
 
-${ZBUILD_script} || { echo "Error: Missing ZBUILD_script."; exit 2; }
+if [ -f ${ZBUILD_script} ]; then
+    ${ZBUILD_script}
+else
+    zprint "Error: Missing ZBUILD_script."
+    exit 1
+fi
 exit_code=$?
 
-if [[ exit_code -ne 0 ]]; then
+if [[ $exit_code -ne 0 ]]; then
     zprint " Error Code: ${exit_code} "
 else
     zprint " Success "

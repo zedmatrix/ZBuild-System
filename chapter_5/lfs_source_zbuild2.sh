@@ -1,25 +1,29 @@
 #!/bin/bash
-RED="\e[1;31m"
-GREEN="\e[1;32"
-YELLOW="\e[1;33m"
-NORMAL="\e[0m"
+RED="${RED:-\033[1;31m}"
+GREEN="${GREEN:-\033[1;32m}"
+YELLOW="${YELLOW:-\033[1;33m}"
+NORMAL="${NORMAL:-\033[0m}"
 
 LFS=/mnt/lfs
 LFS_TGT=$(uname -m)-lfs-linux-gnu
-# Possible breakage in the yasm/nasm building of libvpx-1.15.0
+LC_ALL=POSIX
+LANG=C.UTF-8
+
 ZBUILD_root="${LFS}/zbuild"
 ZBUILD_sources="${LFS}/sources"
-ZBUILD_log="${ZBUILD_root}/Zbuild_Log"
+ZBUILD_log="${ZBUILD_root}/Zbuild_log"
 ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
-Src_Extract() {
-	print "Extracting: ${archive}"
-	mkdir -v "${ZBUILD_root}/${packagedir}"
-	tar -xf "${ZBUILD_sources}/${archive}" -C "${ZBUILD_root}/${packagedir}" --strip-components=1
-}
+zprint() { printf "${YELLOW}*** %s ***${NORMAL}\n" "$*"; }
 
-print() { printf "${YELLOW}*** %s ***${NORMAL}\n" "$*"; }
+Source_wget() {
+        if [ -z $1 ]; then
+                echo "Atleast one argument is needed"
+        else
+                wget $1 --no-clobber --rejected-log=${ZBUILD_log}/wget_rejects.log -P ${ZBUILD_sources}
+        fi
+}
 
 export RED GREEN YELLOW NORMAL
 export ZBUILD_root ZBUILD_sources ZBUILD_log ZBUILD_script LFS LFS_TGT
-export -f Src_Extract print
+export -f zprint Source_wget
