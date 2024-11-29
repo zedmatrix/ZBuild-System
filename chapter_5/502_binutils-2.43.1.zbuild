@@ -11,6 +11,10 @@ unset -f Src_post
 # 
 #  Global
 #
+[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
+ZBUILD_log=${ZBUILD_log:-"${ZBUILD_root}/Zbuild_log"}
+ZBUILD_script=${ZBUILD_script:-"${ZBUILD_root}/zbuild2.sh"}
+
 package=binutils-2.43.1
 packagedir=${package}
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
@@ -20,7 +24,6 @@ prefix="--prefix=${LFS}/tools"
 target="--with-sysroot=${LFS} --target=${LFS_TGT}"
 enable="--enable-gprofng=no --enable-new-dtags --enable-default-hash-style=gnu"
 disable="--disable-nls --disable-werror"
-
 #
 #   Build Functions
 #
@@ -65,10 +68,15 @@ export -f Src_check
 export -f Src_install
 export -f Src_post
 
-${ZBUILD_script} || { echo "Error: Missing ZBUILD_script."; exit 2; }
+if [ -f ${ZBUILD_script} ]; then
+    ${ZBUILD_script}
+else
+    zprint "Error: Missing ZBUILD_script."
+    return 2
+fi
 exit_code=$?
 
-if [[ exit_code -ne 0 ]]; then
+if [[ $exit_code -ne 0 ]]; then
     zprint " Error Code: ${exit_code} "
 else
     zprint " Success "
@@ -81,4 +89,3 @@ else
     unset package packagedir archive delete patch
     unset prefix enable disable target
 fi
-

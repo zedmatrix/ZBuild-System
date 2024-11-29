@@ -1,0 +1,11 @@
+#!/bin/bash
+echo "*** Creating user {lfs} bash_profile "
+
+[ ! -f "404-bash_profile" ] && { echo "*** Error: missing {404-bash_profile}"; exit 1; }
+[ ! -f "404-bashrc" ] && { echo "*** Error: missing {404-bashrc}"; exit 1; }
+
+cp -v 404-bash_profile ~/.bash_profile
+cp -v 404-bashrc ~/.bashrc
+
+source ~/.bash_profile
+echo "*** Done"

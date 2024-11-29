@@ -12,7 +12,7 @@ LC_ALL=POSIX
 LFS_TGT=$(uname -m)-lfs-linux-gnu
 ZBUILD_root="${LFS}/zbuild"
 ZBUILD_sources="${LFS}/sources"
-ZBUILD_log="${ZBUILD_root}/Zbuild_Log"
+ZBUILD_log="${ZBUILD_root}/Zbuild_log"
 ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
 PATH=/usr/bin
@@ -20,19 +20,15 @@ PATH=/usr/bin
 if [ ! -L /bin ]; then PATH=/bin:$PATH; fi
 PATH=$LFS/tools/bin:$PATH
 CONFIG_SITE=$LFS/usr/share/config.site
-Src_Extract() {
-	print "Extracting: ${archive}"
-	mkdir -v "${ZBUILD_root}/${packagedir}"
-	tar -xf "${ZBUILD_sources}/${archive}" -C "${ZBUILD_root}/${packagedir}" --strip-components=1
-}
 
 # Print a message in yellow with surrounding asterisks
 zprint() { printf "${YELLOW}*** %s ***${NORMAL}\n" "$@"; }
 
+PS1="(lfs)\[${RED}\] \u \[${GREEN}\] \w \]\$\[${NORMAL}\]"
 export MAKEFLAGS=-j$(nproc)
 export LFS LC_ALL LFS_TGT PATH CONFIG_SITE
 export ZBUILD_root ZBUILD_sources ZBUILD_log ZBUILD_script
-export RED GREEN YELLOW NORMAL
-export -f Src_Extract zprint
+export RED GREEN YELLOW NORMAL PS1
+export -f zprint
 
 # End of Temporary Build Environment Setup
