@@ -1,5 +1,8 @@
 #!/bin/bash
 # Start of /etc/profile
+set +h
+set -e
+
 LC_ALL=POSIX
 LANG=C.UTF-8
 
@@ -13,13 +16,7 @@ ZBUILD_sources="/sources"
 ZBUILD_log="${ZBUILD_root}/Zbuild_log"
 ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
-zprint() { printf "${RED}***${YELLOW} %s ${RED}***${NORMAL}\n" "$@"; }
-
-Src_Extract() {
-	zprint "Extracting: ${archive}"
-	mkdir -v "${ZBUILD_root}/${packagedir}"
-	tar -xf "${ZBUILD_sources}/${archive}" -C "${ZBUILD_root}/${packagedir}" --strip-components=1
-}
+zprint() { printf "${YELLOW}*** %s ***${NORMAL}\n" "$*"; }
 
 Source_wget() {
 	if [ -z $1 ]; then
@@ -33,6 +30,6 @@ PS1="${RED}(lfs chroot) \u [ ${GREEN}\w ${RED}]# ${NORMAL}"
 
 export RED GREEN YELLOW NORMAL PS1 LANG LC_ALL
 export ZBUILD_script ZBUILD_log ZBUILD_root ZBUILD_sources
-export -f Src_Extract zprint Source_wget
+export -f zprint Source_wget
 
 # End of /etc/profile

@@ -1,5 +1,5 @@
 #!/bin/bash
-#   7.07 - Gettext-0.22.5
+#   7.12 - Util-Linux-2.40.2 - Temporary Tool Set
 #   unset functions
 #
 unset -f Src_prepare
@@ -9,23 +9,27 @@ unset -f Src_check
 unset -f Src_install
 unset -f Src_post
 #
-#   Global
+#  Global
 #
 [ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
-ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
-ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
+ZBUILD_log=${ZBUILD_log:-"${ZBUILD_root}/Zbuild_log"}
+ZBUILD_script=${ZBUILD_script:-"${ZBUILD_root}/zbuild2.sh"}
 #
-#   Package Specific
-#
-package=gettext-0.22.5
+package=util-linux-2.40.2
 packagedir=${package}
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
-disable="--disable-shared"
+libdir="--libdir=/usr/lib"
+runstatedir="--runstatedir=/run"
+disable="--disable-chfn-chsh --disable-login --disable-nologin --disable-su --disable-setpriv"
+disable="${disable} --disable-runuser --disable-pylibmount --disable-static --disable-liblastlog2"
+without="--without-python ADJTIME_PATH=/var/lib/hwclock/adjtime"
+docdir="--docdir=/usr/share/doc/${packagedir}"
+
 #
 #   Build Functions
-# 
+#
 Src_Extract() {
 	zprint "Extracting: ${archive}"
 	mkdir -v "${ZBUILD_root}/${packagedir}"
@@ -34,30 +38,29 @@ Src_Extract() {
 # Executed After pushd into $ZBUILD_root/packagedir
 Src_prepare() {
     zprint " Preparing ${packagedir} "
+    mkdir -pv /var/lib/hwclock
 }
 Src_configure() {
     zprint " Configuring ${packagedir} "
-    ./configure ${disable}
+    ./configure ${libdir} ${runstatedir} ${disable} ${without} ${docdir}
 }
 Src_compile() {
     zprint " Compiling ${packagedir} "
-    make || exit 77
+   make || exit 77
 }
 Src_check() {
     zprint " No Testsuite ${packagedir} "
-
 }
 Src_install() {
     zprint " Installing ${packagedir} "
-    cp -v gettext-tools/src/{msgfmt,msgmerge,xgettext} /usr/bin
+    make install
 }
 # Executed After popd
 Src_post() {
-    zprint " Finalizing ${packagedir} "
-
+    zprint " Finalizing ${package} "
 }
 
-export package packagedir archive delete patch disable
+export package packagedir archive delete patch libdir runstatedir disable without docdir
 export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
@@ -66,10 +69,15 @@ export -f Src_check
 export -f Src_install
 export -f Src_post
 
-${ZBUILD_script} || { echo "Error: Missing ZBUILD_script."; exit 2; }
+if [ -f ${ZBUILD_script} ]; then
+    ${ZBUILD_script}
+else
+    zprint "Error: Missing ZBUILD_script."
+    exit 1
+fi
 exit_code=$?
 
-if [[ exit_code -ne 0 ]]; then
+if [[ $exit_code -ne 0 ]]; then
     zprint " Error Code: ${exit_code} "
 else
     zprint " Success "
@@ -79,6 +87,6 @@ else
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive delete patch disable
+    unset package packagedir archive delete patch libdir runstatedir disable without docdir
 fi
 

@@ -1,5 +1,5 @@
 #!/bin/bash
-#   7.08 - Bison-3.82
+#   7.11 - Texinfo-7.1.1 - Temporary
 #   unset functions
 #
 unset -f Src_prepare
@@ -12,18 +12,14 @@ unset -f Src_post
 #  Global
 #
 [ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
-ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
-ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
-#
-#   Package Specific
-#
-package=bison-3.8.2
+ZBUILD_log=${ZBUILD_log:-"${ZBUILD_root}/Zbuild_log"}
+ZBUILD_script=${ZBUILD_script:-"${ZBUILD_root}/zbuild2.sh"}
+
+package=texinfo-7.1.1
 packagedir=${package}
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
-prefix="--prefix=/usr"
-docdir="--docdir=/usr/share/doc/${packagedir}"
 #
 #   Build Functions
 #
@@ -35,11 +31,10 @@ Src_Extract() {
 # Executed After pushd into $ZBUILD_root/packagedir
 Src_prepare() {
     zprint " Preparing ${packagedir} "
-
 }
 Src_configure() {
     zprint " Configuring ${packagedir} "
-    ./configure ${prefix} ${docdir}
+    ./configure --prefix=/usr
 }
 Src_compile() {
     zprint " Compiling ${packagedir} "
@@ -48,17 +43,16 @@ Src_compile() {
 Src_check() {
     zprint " No Testsuite ${packagedir} "
 }
-Src_install() {
+Src_install () {
     zprint " Installing ${packagedir} "
     make install
 }
 # Executed After popd
 Src_post() {
     zprint " Finalizing ${packagedir} "
-
 }
 
-export package packagedir archive delete patch prefix docdir
+export package packagedir archive delete patch
 export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
@@ -67,10 +61,15 @@ export -f Src_check
 export -f Src_install
 export -f Src_post
 
-${ZBUILD_script} || { echo "Error: Missing ZBUILD_script."; exit 2; }
+if [ -f ${ZBUILD_script} ]; then
+    ${ZBUILD_script}
+else
+    zprint "Error: Missing ZBUILD_script."
+    exit 1
+fi
 exit_code=$?
 
-if [[ exit_code -ne 0 ]]; then
+if [[ $exit_code -ne 0 ]]; then
     zprint " Error Code: ${exit_code} "
 else
     zprint " Success "
@@ -80,6 +79,5 @@ else
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive delete patch prefix docdir
+    unset package packagedir archive delete patch
 fi
-
