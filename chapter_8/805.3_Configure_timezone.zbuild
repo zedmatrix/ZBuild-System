@@ -21,5 +21,8 @@ zic -d $ZONEINFO -p America/New_York
 unset ZONEINFO
 
 popd
-zprint "* Cleaning Up $timezonedir *"
+zprint " Cleaning Up $timezonedir "
 rm -rf $timezonedir
+
+tzselect
+ln -sfv /usr/share/zoneinfo/America/Vancouver /etc/localtime
