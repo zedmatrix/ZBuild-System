@@ -1,4 +1,4 @@
-# 11.3 Rebooting
+# 11 Rebooting
 
 Install any firmware needed if the kernel driver for your hardware requires some firmware files to function properly.
 
@@ -53,3 +53,7 @@ Also unmount the Host Build System:
     umount -R $gentoo
     
 Now, reboot the system.
+
+# 11 Firmware
+
+Extra Scripts to install firmware
