@@ -1,0 +1,7 @@
+zprint "Configuring wifi"
+SSID="Antares"
+PASSWORD="z13dm4tx"
+
+install -v -dm755 /etc/wpa_supplicant
+wpa_passphrase ${SSID} ${PASSWORD} > /etc/wpa_supplicant/wpa_supplicant-wifi0.conf
+zprint "Done"

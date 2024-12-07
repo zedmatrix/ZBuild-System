@@ -1,0 +1,17 @@
+#!/bin/bash
+zprint "Downloading Xorg Applications"
+wgetmd5=00-xorgapps-wget-md5.list
+
+if [ ! -z ${ZBUILD_sources} ] && [ -d ${ZBUILD_sources} ]; then
+    grep -v '^#' ${wgetmd5} | awk '{print $2}' | wget -i- -c -nc \
+        -B https://www.x.org/pub/individual/app/ \
+        -P ${ZBUILD_sources}
+
+    zprint "Checking Xorg Apps"
+    local dir=${PWD}
+    pushd ${ZBUILD_sources}
+        md5sum -c ${dir}/${wgetmd5}
+    popd
+else
+    zprint "Check ZBUILD_sources"
+fi

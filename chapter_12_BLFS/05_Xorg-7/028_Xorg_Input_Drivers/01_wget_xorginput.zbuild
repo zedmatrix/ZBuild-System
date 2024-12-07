@@ -1,0 +1,14 @@
+#!/bin/bash
+zprint "Downloading Xorg Input Drivers"
+wget=00-xorginput-wget.list
+if [ ! -z ${ZBUILD_sources} ] && [ -d ${ZBUILD_sources} ]; then
+    grep -v '^#' ${wget} | wget -i- -c -nc -P ${ZBUILD_sources}
+
+#     zprint "Checking Xorg Input Drivers"
+#     dir=${PWD}
+#     pushd ${ZBUILD_sources}
+#         md5sum -c ${dir}/${wget}
+#     popd
+else
+    zprint "Check ZBUILD_sources"
+fi

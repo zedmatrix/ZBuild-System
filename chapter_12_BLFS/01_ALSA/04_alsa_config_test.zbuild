@@ -1,0 +1,18 @@
+#!/bin/bash
+zprint "Initializing Sound Card"
+alsactl init || { zprint "Failed"; exit 1; }
+
+zprint "Storing the ALSA State"
+alsactl -L store
+
+zprint "Creating Basic asound.conf"
+cat > /etc/asound.conf << "EOF"
+# Begin /etc/asound.conf
+
+defaults.pcm.card 1
+defaults.ctl.card 1
+
+# End /etc/asound.conf
+EOF
+
+zprint "Done"

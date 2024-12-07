@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=DOSBox
+Type=Application
+Comment=DOS emulator
+Exec=dosbox
+TryExec=dosbox
+Icon=/usr/share/pixmaps/dosbox.ico
+Categories=Game;Emulator;

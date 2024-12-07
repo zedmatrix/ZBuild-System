@@ -1,0 +1,11 @@
+https://github.com/nghttp2/nghttp2/releases/download/v1.64.0/nghttp2-1.64.0.tar.xz
+https://dist.libuv.org/dist/v1.49.2/libuv-v1.49.2.tar.gz
+https://cmake.org/files/v3.31/cmake-3.31.1.tar.gz
+https://www.libssh2.org/download/libssh2-1.11.1.tar.gz
+https://github.com/llvm/llvm-project/releases/download/llvmorg-19.1.0/llvm-19.1.0.src.tar.xz
+https://anduin.linuxfromscratch.org/BLFS/llvm/llvm-cmake-19.src.tar.xz
+https://anduin.linuxfromscratch.org/BLFS/llvm/llvm-third-party-19.src.tar.xz
+https://github.com/llvm/llvm-project/releases/download/llvmorg-19.1.0/clang-19.1.0.src.tar.xz
+https://github.com/llvm/llvm-project/releases/download/llvmorg-19.1.0/compiler-rt-19.1.0.src.tar.xz
+https://static.rust-lang.org/dist/rustc-1.83.0-src.tar.xz
+https://pagure.io/xmlto/archive/0.0.29/xmlto-0.0.29.tar.gz

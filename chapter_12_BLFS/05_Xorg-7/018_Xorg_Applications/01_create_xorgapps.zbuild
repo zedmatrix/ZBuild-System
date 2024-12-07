@@ -1,0 +1,15 @@
+#!/bin/bash
+zprint "Creating Xorg Applications zbuild files"
+wgetmd5=00-xorgapps-wget-md5.list
+counter=2
+
+grep -v '^#' "$wgetmd5" | awk '{print $2}' | while read -r pkgname; do
+    base_name="${pkgname%.tar.xz}"
+    prefix=$(printf "%02d" "$counter")
+    target_name="${prefix}-${base_name}.zbuild"
+    cp -v 00_Config_Base.zbuild "$target_name"
+    sed -i "s/BLANKBUILD/${base_name}/g" "$target_name"
+    counter=$((counter + 1))
+done
+
+

@@ -1,0 +1,134 @@
+#!/bin/bash
+#   docbook-xml-4.5
+#   unset functions
+#
+unset -f Src_prepare
+unset -f Src_configure
+unset -f Src_compile
+unset -f Src_check
+unset -f Src_install
+unset -f Src_post
+#
+#  Global
+#
+[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
+ZBUILD_log=${ZBUILD_log:-"${ZBUILD_root}/Zbuild_log"}
+ZBUILD_script=${ZBUILD_script:-"${ZBUILD_root}/zbuild2.sh"}
+
+package=docbook-xml-4.5
+packagedir=${package}
+archive=$(find ${ZBUILD_sources} -name "${package}*.zip" | sort -V | head -1 | xargs basename)
+delete="false"
+patch="false"
+#
+#   Build Functions
+#
+Src_Extract() {
+    zprint "Extracting: ${archive}"
+    mkdir -v "${ZBUILD_root}/${packagedir}"
+	unzip "${ZBUILD_sources}/${archive}" -d "${ZBUILD_root}/${packagedir}"
+}
+# Executed After pushd
+Src_configure() {
+    zprint " Installing ${package} "
+    install -v -d -m755 /usr/share/xml/docbook/xml-dtd-4.5
+    install -v -d -m755 /etc/xml
+    cp -v -af --no-preserve=ownership docbook.cat *.dtd ent/ *.mod /usr/share/xml/docbook/xml-dtd-4.5
+}
+Src_compile () {
+    zprint "Create or Update and Populate the /etc/xml/docbook catalog file"
+    if [ ! -e /etc/xml/docbook ]; then
+        xmlcatalog --noout --create /etc/xml/docbook
+    fi
+
+    xmlcatalog --noout --add "public" "-//OASIS//DTD DocBook XML V4.5//EN" \
+    "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" /etc/xml/docbook
+    xmlcatalog --noout --add "public" "-//OASIS//DTD DocBook XML CALS Table Model V4.5//EN" \
+    "file:///usr/share/xml/docbook/xml-dtd-4.5/calstblx.dtd" /etc/xml/docbook
+    xmlcatalog --noout --add "public" "-//OASIS//DTD XML Exchange Table Model 19990315//EN" \
+    "file:///usr/share/xml/docbook/xml-dtd-4.5/soextblx.dtd" /etc/xml/docbook
+    xmlcatalog --noout --add "public" "-//OASIS//ELEMENTS DocBook XML Information Pool V4.5//EN" \
+    "file:///usr/share/xml/docbook/xml-dtd-4.5/dbpoolx.mod" /etc/xml/docbook
+    xmlcatalog --noout --add "public" "-//OASIS//ELEMENTS DocBook XML Document Hierarchy V4.5//EN" \
+    "file:///usr/share/xml/docbook/xml-dtd-4.5/dbhierx.mod" /etc/xml/docbook
+    xmlcatalog --noout --add "public" "-//OASIS//ELEMENTS DocBook XML HTML Tables V4.5//EN" \
+    "file:///usr/share/xml/docbook/xml-dtd-4.5/htmltblx.mod" /etc/xml/docbook
+    xmlcatalog --noout --add "public" "-//OASIS//ENTITIES DocBook XML Notations V4.5//EN" \
+    "file:///usr/share/xml/docbook/xml-dtd-4.5/dbnotnx.mod" /etc/xml/docbook
+    xmlcatalog --noout --add "public" "-//OASIS//ENTITIES DocBook XML Character Entities V4.5//EN" \
+    "file:///usr/share/xml/docbook/xml-dtd-4.5/dbcentx.mod" /etc/xml/docbook
+    xmlcatalog --noout --add "public" "-//OASIS//ENTITIES DocBook XML Additional General Entities V4.5//EN" \
+    "file:///usr/share/xml/docbook/xml-dtd-4.5/dbgenent.mod" /etc/xml/docbook
+    xmlcatalog --noout --add "rewriteSystem" "http://www.oasis-open.org/docbook/xml/4.5" \
+    "file:///usr/share/xml/docbook/xml-dtd-4.5" /etc/xml/docbook
+    xmlcatalog --noout --add "rewriteURI" "http://www.oasis-open.org/docbook/xml/4.5" \
+    "file:///usr/share/xml/docbook/xml-dtd-4.5" /etc/xml/docbook
+}
+Src_check() {
+    zprint " Create (or update) and populate the /etc/xml/catalog catalog file"
+    if [ ! -e /etc/xml/catalog ]; then
+        xmlcatalog --noout --create /etc/xml/catalog
+    fi
+
+    xmlcatalog --noout --add "delegatePublic" "-//OASIS//ENTITIES DocBook XML" \
+    "file:///etc/xml/docbook" /etc/xml/catalog
+
+    xmlcatalog --noout --add "delegatePublic" "-//OASIS//DTD DocBook XML" \
+    "file:///etc/xml/docbook" /etc/xml/catalog
+
+    xmlcatalog --noout --add "delegateSystem" "http://www.oasis-open.org/docbook/" \
+    "file:///etc/xml/docbook" /etc/xml/catalog
+
+    xmlcatalog --noout --add "delegateURI" "http://www.oasis-open.org/docbook/" \
+    "file:///etc/xml/docbook" /etc/xml/catalog
+}
+Src_install () {
+    print " Generate previous versions of xmlcatalog "
+    for DTDVERSION in 4.1.2 4.2 4.3 4.4
+    do
+        xmlcatalog --noout --add "public" "-//OASIS//DTD DocBook XML V$DTDVERSION//EN" \
+    "http://www.oasis-open.org/docbook/xml/$DTDVERSION/docbookx.dtd" /etc/xml/docbook
+
+        xmlcatalog --noout --add "rewriteSystem" "http://www.oasis-open.org/docbook/xml/$DTDVERSION" \
+    "file:///usr/share/xml/docbook/xml-dtd-4.5" /etc/xml/docbook
+
+        xmlcatalog --noout --add "rewriteURI" "http://www.oasis-open.org/docbook/xml/$DTDVERSION" \
+    "file:///usr/share/xml/docbook/xml-dtd-4.5" /etc/xml/docbook
+
+        xmlcatalog --noout --add "delegateSystem" "http://www.oasis-open.org/docbook/xml/$DTDVERSION/" \
+    "file:///etc/xml/docbook" /etc/xml/catalog
+
+        xmlcatalog --noout --add "delegateURI" "http://www.oasis-open.org/docbook/xml/$DTDVERSION/" \
+    "file:///etc/xml/docbook" /etc/xml/catalog
+    done
+}
+
+export package packagedir archive delete patch
+
+export -f Src_Extract
+export -f Src_configure
+export -f Src_compile
+export -f Src_check
+export -f Src_install
+export -f Src_post
+
+if [ -f ${ZBUILD_script} ]; then
+    ${ZBUILD_script}
+else
+    zprint "Error: Missing ZBUILD_script."
+    exit 1
+fi
+exit_code=$?
+
+if [[ $exit_code -ne 0 ]]; then
+    zprint " Error Code: ${exit_code} "
+else
+    zprint " Success "
+    unset -f Src_prepare
+    unset -f Src_configure
+    unset -f Src_compile
+    unset -f Src_check
+    unset -f Src_install
+    unset -f Src_post
+    unset package packagedir archive delete patch
+fi

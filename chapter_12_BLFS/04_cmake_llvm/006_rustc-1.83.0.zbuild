@@ -1,0 +1,104 @@
+#!/bin/bash
+#
+#	Rustc-1.82.0 Install zbuild
+#
+#	DEPENDS (CMake-3.31.1 cURL-8.11.0)
+#	REC (libssh2-1.11.1 LLVM-19.1.0 SQLite-3.47.1)
+#   unset functions
+unset -f Src_prepare
+unset -f Src_configure
+unset -f Src_compile
+unset -f Src_check
+unset -f Src_install
+unset -f Src_post
+#
+# Global Settings
+#
+[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
+ZBUILD_log=${ZBUILD_log:-"${ZBUILD_root}/Zbuild_log"}
+ZBUILD_script=${ZBUILD_script:-"${ZBUILD_root}/zbuild2.sh"}
+
+package=rustc-1.83.0-src
+packagedir=rustc-1.83.0
+archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
+delete="true"
+patch="false"
+config="${PWD}/006-rustc_config.toml"
+#
+#   Build Functions
+#
+Src_Extract() {
+    zprint "Extracting: ${archive}"
+    mkdir -v "${ZBUILD_root}/${packagedir}"
+    tar -xf "${ZBUILD_sources}/${archive}" -C "${ZBUILD_root}/${packagedir}" --strip-components=1
+}
+# Executed After pushd into $ZBUILD_root/packagedir
+Src_prepare() {
+	zprint " Preparing ${packagedir} "
+	mkdir -pv /opt/${packagedir}
+	ln -svfn ${packagedir} /opt/rustc
+}
+Src_configure() {
+	zprint " Configuring ${package} "
+	cp -v ${config} config.toml || exit 88
+	sed '/MirOpt/d' -i src/bootstrap/src/core/builder.rs
+}
+Src_compile() {
+	zprint " Compiling ${package} "
+	[ ! -e /usr/include/libssh2.h ] || export LIBSSH2_SYS_USE_PKG_CONFIG=1
+	[ ! -e /usr/include/sqlite3.h ] || export LIBSQLITE3_SYS_USE_PKG_CONFIG=1
+	./x.py build || exit 77
+}
+Src_check() {
+	zprint " Checking ${package} "
+	./x.py test --verbose --no-fail-fast | tee "${ZBUILD_log}/${packagedir}-check.log"
+}
+Src_install() {
+	zprint " Installing ${package} "
+	./x.py install rustc std
+	./x.py install --stage=1 cargo clippy rustfmt || exit 55
+	rm -fv /opt/rustc-1.83.0/share/doc/rustc-1.83.0/*.old
+	install -vm644 README.md /opt/rustc-1.83.0/share/doc/rustc-1.83.0
+	install -vdm755 /usr/share/zsh/site-functions
+	ln -sfv /opt/rustc/share/zsh/site-functions/_cargo /usr/share/zsh/site-functions
+	mv -v /etc/bash_completion.d/cargo /usr/share/bash-completion/completions
+}
+# Executed After popd
+Src_post() {
+	zprint " Finalizing ${packagedir} "
+	grep '^test result:' "${ZBUILD_log}/${packagedir}-check.log" |
+ awk '{sum1 += $4; sum2 += $6} END { print sum1 " passed; " sum2 " failed" }'
+
+	/usr/sbin/ldconfig
+	unset LIB{SSH2,SQLITE3}_SYS_USE_PKG_CONFIG
+}
+
+export package packagedir archive delete patch config
+export -f Src_Extract
+export -f Src_prepare
+export -f Src_configure
+export -f Src_compile
+export -f Src_check
+export -f Src_install
+export -f Src_post
+
+if [ -f ${ZBUILD_script} ]; then
+    ${ZBUILD_script}
+else
+    zprint "Error: Missing ZBUILD_script."
+    exit 1
+fi
+exit_code=$?
+
+if [[ $exit_code -ne 0 ]]; then
+    zprint " Error Code: ${exit_code} "
+else
+    zprint " Success "
+    unset -f Src_prepare
+    unset -f Src_configure
+    unset -f Src_compile
+    unset -f Src_check
+    unset -f Src_install
+    unset -f Src_post
+    unset package packagedir archive delete patch config
+fi

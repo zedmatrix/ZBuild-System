@@ -1,0 +1,26 @@
+#!/bin/bash
+
+Source_url="https://sourceforge.net/projects/dejavu/files/dejavu/2.37"
+archive="dejavu-fonts-ttf-2.37.tar.bz2"
+packagedir=${package%*.tar.*}
+
+if [ ! -f ${ZBUILD_sources}/${archive} ]; then
+    zprint "Downloading ${package}"
+    wget -P ${ZBUILD_sources} "${Source_url}/${archive}"
+fi
+
+if [ -d ${ZBUILD_root} ]; then
+    zprint "Installing ${package}"
+    pushd $ZBUILD_root
+        tar -xvf ${ZBUILD_sources}/${archive} > unpacked
+        unpackdir=`grep '[^./]\+' unpacked | head -n1 | sed 's@^\./@@;s@/.*@@'`
+        cd $unpackdir
+            install -v -d -m755 /usr/share/fonts/dejavu
+            install -v -m644 ttf/*.ttf /usr/share/fonts/dejavu
+            fc-cache -v /usr/share/fonts/dejavu
+        cd ..
+        rm -rf $unpackdir
+    popd
+else
+    zprint "ZBUILD_root doesn't exist"
+fi

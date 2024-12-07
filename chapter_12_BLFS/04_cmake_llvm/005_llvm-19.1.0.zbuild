@@ -1,0 +1,109 @@
+#!/bin/bash
+#
+#	Blank Install zbuild
+#
+#	DEPENDS ( )
+#   unset functions
+unset -f Src_package
+unset -f Src_prepare
+unset -f Src_configure
+unset -f Src_compile
+unset -f Src_check
+unset -f Src_install
+unset -f Src_post
+#
+#  Global
+#
+
+package=llvm-19.1.0.src
+packagedir=llvm-19.1.0
+archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
+delete="true"
+patch="false"
+#
+prefix="-D CMAKE_INSTALL_PREFIX=/usr -D CMAKE_SKIP_INSTALL_RPATH=ON"
+build="-D CMAKE_BUILD_TYPE=Release"
+enable="-D LLVM_ENABLE_FFI=ON -D LLVM_BUILD_LLVM_DYLIB=ON -D LLVM_LINK_LLVM_DYLIB=ON -D LLVM_ENABLE_RTTI=ON"
+include="-D LLVM_BINUTILS_INCDIR=/usr/include -D LLVM_INCLUDE_BENCHMARKS=OFF -D CLANG_DEFAULT_PIE_ON_LINUX=ON"
+config="-D CLANG_CONFIG_FILE_SYSTEM_DIR=/etc/clang -W no-dev -G Ninja .."
+#
+#   Build Functions
+#
+Src_Extract() {
+    zprint " Extracting: ${archive} "
+    mkdir -v "${ZBUILD_root}/${packagedir}"
+    tar -xf "${ZBUILD_sources}/${archive}" -C "${ZBUILD_root}/${packagedir}" --strip-components=1
+}
+# Executed After pushd into $ZBUILD_root/packagedir
+Src_prepare() {
+	zprint " Preparing ${packagedir} "
+	tar -xf "${ZBUILD_sources}/llvm-cmake-19.src.tar.xz" || exit 99
+	tar -xf "${ZBUILD_sources}/llvm-third-party-19.src.tar.xz" || exit 99
+	sed '/LLVM_COMMON_CMAKE_UTILS/s@../cmake@llvm-cmake-19.src@' -i CMakeLists.txt
+	sed '/LLVM_THIRD_PARTY_DIR/s@../third-party@llvm-third-party-19.src@' -i cmake/modules/HandleLLVMOptions.cmake
+	tar -xf "${ZBUILD_sources}/clang-19.1.0.src.tar.xz" -C tools || exit 99
+	mv -v tools/clang-19.1.0.src tools/clang
+	tar -xf "${ZBUILD_sources}/compiler-rt-19.1.0.src.tar.xz" -C projects || exit 99
+	mv -v projects/compiler-rt-19.1.0.src projects/compiler-rt
+	grep -rl '#!.*python' | xargs sed -i '1s/python$/python3/'
+	sed 's/utility/tool/' -i utils/FileCheck/CMakeLists.txt
+}
+Src_configure() {
+	zprint " Configuring ${package} "
+	mkdir -v build
+	cd build
+	CC=gcc CXX=g++ \
+	cmake ${prefix} ${build} ${enable} -D LLVM_TARGETS_TO_BUILD="host;AMDGPU" ${include} ${config} || exit 88
+}
+Src_compile() {
+	zprint " Compiling ${package} "
+	ninja || exit 77
+}
+Src_check() {
+	zprint " Checking ${package} "
+	rm -f ../projects/compiler-rt/test/tsan/getline_nohang.cpp
+	ninja check-all 2>&1 | tee "${ZBUILD_log}/${packagedir}-check.log"
+}
+Src_install() {
+	zprint " Installing ${package} "
+	ninja install || exit 55
+	mkdir -pv /etc/clang &&
+	for i in clang clang++; do
+	  echo -fstack-protector-strong > /etc/clang/$i.cfg
+	done
+}
+# Executed After popd
+Src_post() {
+	zprint " Finalizing ${packagedir} "
+	/usr/sbin/ldconfig
+}
+
+export package packagedir archive delete patch prefix build enable include config
+export -f Src_Extract
+export -f Src_prepare
+export -f Src_configure
+export -f Src_compile
+export -f Src_check
+export -f Src_install
+export -f Src_post
+
+if [ -f ${ZBUILD_script} ]; then
+    ${ZBUILD_script}
+else
+    zprint "Error: Missing ZBUILD_script."
+    exit 1
+fi
+exit_code=$?
+
+if [[ $exit_code -ne 0 ]]; then
+    zprint " Error Code: ${exit_code} "
+else
+    zprint " Success "
+    unset -f Src_prepare
+    unset -f Src_configure
+    unset -f Src_compile
+    unset -f Src_check
+    unset -f Src_install
+    unset -f Src_post
+    unset package packagedir archive delete patch prefix build enable include config
+fi

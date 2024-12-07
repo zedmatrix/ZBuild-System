@@ -1,0 +1,5 @@
+#!/bin/bash
+zprint "Speaker Test"
+speaker-test -c 2 -l 2 -t wav
+speaker-test -c 2 -l 2 -t pink
+zprint "Done"

@@ -1,0 +1,14 @@
+#!/bin/bash
+zprint "Downloading Xorg Libs"
+if [ ! -z ${ZBUILD_sources} ] && [ -d ${ZBUILD_sources} ]; then
+    grep -v '^#' 00-xorglib-wget-md5.list | awk '{print $2}' | wget -i- -c -nc \
+        -B https://www.x.org/pub/individual/lib/ \
+        -P ${ZBUILD_sources}
+
+    zprint "Checking Xorg Libs"
+    pushd ${ZBUILD_sources}
+        md5sum -c ../lib-7.md5
+    popd
+else
+    zprint "Check ZBUILD_sources"
+fi

@@ -1,0 +1,2 @@
+zprint "Prepare X for Test"
+echo 4 > /proc/sys/kernel/sysrq

@@ -1,0 +1,8 @@
+https://www.kernel.org/pub/linux/bluetooth/bluez-5.79.tar.xz
+https://github.com/libical/libical/releases/download/v3.0.18/libical-3.0.18.tar.gz
+https://github.com/thom311/libnl/releases/download/libnl3_11_0/libnl-3.11.0.tar.gz
+https://github.com/thom311/libnl/releases/download/libnl3_11_0/libnl-doc-3.11.0.tar.gz
+https://www.kernel.org/pub/software/network/iw/iw-6.9.tar.xz
+https://hewlettpackard.github.io/wireless-tools/wireless_tools.29.tar.gz
+https://www.linuxfromscratch.org/patches/blfs/svn/wireless_tools-29-fix_iwlist_scanning-1.patch
+https://w1.fi/releases/wpa_supplicant-2.11.tar.gz

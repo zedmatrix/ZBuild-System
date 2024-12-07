@@ -1,0 +1,103 @@
+#!/bin/bash
+#
+#	Linux-PAM-1.7.0  Install zbuild
+#
+#   unset functions
+unset -f Src_prepare
+unset -f Src_configure
+unset -f Src_compile
+unset -f Src_check
+unset -f Src_install
+unset -f Src_post
+#
+#  Global
+#
+[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
+ZBUILD_log=${ZBUILD_log:-"${ZBUILD_root}/Zbuild_log"}
+ZBUILD_script=${ZBUILD_script:-"${ZBUILD_root}/zbuild2.sh"}
+
+package=Linux-PAM-1.7.0
+packagedir=${package}
+archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
+delete="false"
+patch="false"
+#
+prefix="--prefix=/usr"
+build="--buildtype=release"
+docdir="-D docdir=/usr/share/doc/${packagedir}"
+#
+#   Build Functions
+#
+Src_Extract() {
+    zprint "Extracting: ${archive}"
+    mkdir -v "${ZBUILD_root}/${packagedir}"
+    tar -xf "${ZBUILD_sources}/${archive}" -C "${ZBUILD_root}/${packagedir}" --strip-components=1
+}
+# Executed After pushd into $ZBUILD_root/packagedir
+Src_prepare() {
+	zprint " Preparing ${package} "
+	sed -e "s/'elinks'/'lynx'/" -e "s/'-no-numbering', '-no-references'/ \
+	'-force-html', '-nonumbers', '-stdin'/" -i meson.build
+	mkdir -v build
+	cd build
+}
+Src_configure() {
+	zprint " Configuring ${package} "
+	meson setup .. ${prefix} ${build} ${docdir} || exit 88
+}
+Src_compile() {
+	zprint " Compiling ${package} "
+	ninja || exit 77
+}
+Src_check() {
+	zprint " Testing ${package} "
+	install -v -m755 -d /etc/pam.d
+	cat > /etc/pam.d/other << "EOF"
+auth     required       pam_deny.so
+account  required       pam_deny.so
+password required       pam_deny.so
+session  required       pam_deny.so
+EOF
+	ninja test 2>&1 | tee "${ZBUILD_log}/${packagedir}-test.log"
+	rm -fv /etc/pam.d/other
+}
+Src_install() {
+	zprint " Installing ${package} "
+	ninja install || exit 55
+	chmod -v 4755 /usr/sbin/unix_chkpwd
+}
+# Executed After popd
+Src_post() {
+	print "Finalizing ${packagedir}"
+	/usr/sbin/ldconfig
+}
+
+export package packagedir archive delete patch prefix build docdir
+export -f Src_Extract
+export -f Src_prepare
+export -f Src_configure
+export -f Src_compile
+export -f Src_check
+export -f Src_install
+export -f Src_post
+
+if [ -f ${ZBUILD_script} ]; then
+    ${ZBUILD_script}
+else
+    zprint "Error: Missing ZBUILD_script."
+    exit 1
+fi
+exit_code=$?
+
+if [[ $exit_code -ne 0 ]]; then
+    zprint " Error Code: ${exit_code} "
+else
+    zprint " Success "
+    unset -f Src_prepare
+    unset -f Src_configure
+    unset -f Src_compile
+    unset -f Src_check
+    unset -f Src_install
+    unset -f Src_post
+    unset package packagedir archive delete patch prefix build docdir
+fi

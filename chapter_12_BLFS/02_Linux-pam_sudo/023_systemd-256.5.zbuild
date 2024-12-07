@@ -1,0 +1,101 @@
+#!/bin/bash
+#
+#	Systemd-256.5 Re-Install zbuild
+#
+#	DEPENDS (Linux-PAM | Polkit-125 )
+#   unset functions
+unset -f Src_prepare
+unset -f Src_configure
+unset -f Src_compile
+unset -f Src_check
+unset -f Src_install
+unset -f Src_post
+#
+#  Global
+#
+[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
+ZBUILD_log=${ZBUILD_log:-"${ZBUILD_root}/Zbuild_log"}
+ZBUILD_script=${ZBUILD_script:-"${ZBUILD_root}/zbuild2.sh"}
+
+package=systemd-256.5
+packagedir=${package}
+archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
+delete="true"
+patch="false"
+#
+prefix="--prefix=/usr"
+build="--buildtype=release"
+docdir="-D docdir=/usr/share/doc/${packagedir}"
+default="-D default-dnssec=no -D mode=release -D nobody-group=nogroup"
+firstboot="-D firstboot=false -D install-tests=false "
+disable="-D homed=disabled -D man=auto -D sysupdate=disabled -D ukify=disabled"
+system="-D ldconfig=false -D sysusers=false -D dev-kvm-mode=0660"
+security="-D rpmmacrosdir=no -D userdb=false -D pam=enabled -D pamconfdir=/etc/pam.d "
+#
+#   Build Functions
+#
+Src_Extract() {
+    zprint "Extracting: ${archive}"
+    mkdir -v "${ZBUILD_root}/${packagedir}"
+    tar -xf "${ZBUILD_sources}/${archive}" -C "${ZBUILD_root}/${packagedir}" --strip-components=1
+}
+# Executed After pushd into $ZBUILD_root/packagedir
+Src_prepare() {
+	zprint " Preparing ${package} "
+	sed -i -e 's/GROUP="render"/GROUP="video"/' -e 's/GROUP="sgx", //' rules.d/50-udev-default.rules.in
+	mkdir -v build
+	cd build
+}
+Src_configure() {
+	zprint " Configuring ${package} "
+	meson setup .. ${prefix} ${build} ${default} ${firstboot} ${disable} ${system} ${security} ${docdir} || exit 88
+}
+Src_compile() {
+	zprint " Compiling ${package} "
+	ninja || exit 77
+}
+Src_check() {
+	zprint " Checking ${package} "
+	ninja test 2>&1 | tee "${ZBUILD_log}/${packagedir}-test.log"
+}
+Src_install() {
+	zprint " Installing ${package} "
+	ninja install || exit 55
+}
+# Executed After popd
+Src_post() {
+	zprint " Finalizing ${package} "
+	/usr/sbin/ldconfig
+}
+export package packagedir archive patch delete prefix build
+export default firstboot disable system security docdir
+
+export -f Src_Extract
+export -f Src_prepare
+export -f Src_configure
+export -f Src_compile
+export -f Src_check
+export -f Src_install
+export -f Src_post
+
+if [ -f ${ZBUILD_script} ]; then
+    ${ZBUILD_script}
+else
+    zprint "Error: Missing ZBUILD_script."
+    exit 1
+fi
+exit_code=$?
+
+if [[ $exit_code -ne 0 ]]; then
+    zprint " Error Code: ${exit_code} "
+else
+    zprint " Success "
+    unset -f Src_prepare
+    unset -f Src_configure
+    unset -f Src_compile
+    unset -f Src_check
+    unset -f Src_install
+    unset -f Src_post
+    unset package packagedir archive patch delete prefix build
+    unset default firstboot disable system security docdir
+fi
