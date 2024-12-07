@@ -26,6 +26,8 @@ ff02::2   ip6-allrouters
 EOF
 
 zprint "Creating Simple /etc/resolv.conf"
+#systemctl enable systemd-networkd
+#systemctl enable systemd-resolved
 cat > /etc/resolv.conf
 # Begin /etc/resolv.conf
 
