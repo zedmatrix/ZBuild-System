@@ -5,25 +5,33 @@
 <br>
 
 Sets up network block 2 devices 4 partitions <br>
-`sudo modprobe nbd nbds_max=2 max_part=4` <br>
+```
+sudo modprobe nbd nbds_max=2 max_part=4
+lsblk
+```
 
 Connect your qemu image to a network block device <br>
-`sudo qemu-nbd --connect=/dev/nbd0 qemu-image-file` <br>
-example: `sudo qemu-nbd --connect=/dev/nbd0 lfs_12_uefi.img` <br>
-<br>
-Check the partitions available <br>
 
-`sudo fdisk -l /dev/nbd0` <br>
+`sudo qemu-nbd --connect=/dev/nbd0 qemu-image-file` <br>
+
+example: `sudo qemu-nbd --connect=/dev/nbd0 lfs_12_uefi.img` <br>
+
+Check the partitions available <br>
+```
+sudo fdisk -l /dev/nbd0
+```
 
 Mounting Partition to Local Folder <br>
-`sudo mount /dev/nbd0p1 /mnt/QemuDisk`
-`sudo mount /dev/nbd0p3 /mnt/QemuDisk`
+```
+sudo mount /dev/nbd0p1 /mnt/QemuDisk
+sudo mount /dev/nbd0p3 /mnt/QemuDisk
+```
 
-<br> Unmount <br>
-`sudo umount /mnt/QemuDisk`
-<br> Disconnect <br>
-`sudo qemu-nbd --disconnect /dev/nbd0`
-
+Unmount and Disconnect
+```
+sudo umount /mnt/QemuDisk
+sudo qemu-nbd --disconnect /dev/nbd0
+```
 <hr>
 
 # Creating a Qemu Disk Image
