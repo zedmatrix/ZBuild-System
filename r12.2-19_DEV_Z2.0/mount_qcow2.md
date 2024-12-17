@@ -1,25 +1,27 @@
-# Linux From Scratch r12.2-51-systemd
+# Linux From Scratch r12.2-51-systemd <br>
 
-## Mounting Qemu Disk Image 
+## Mounting Qemu Disk Image <br>
   to /dev/nbd {network block device}
+<br>
 
-Sets up network block 2 devices 4 partitions
-`sudo modprobe nbd nbds_max=2 max_part=4`
+Sets up network block 2 devices 4 partitions <br>
+`sudo modprobe nbd nbds_max=2 max_part=4` <br>
 
-Connect your qemu image to a network block device
-`sudo qemu-nbd --connect=/dev/nbd0 qemu-image-file`
-example: `sudo qemu-nbd --connect=/dev/nbd0 lfs_12_uefi.img`
+Connect your qemu image to a network block device <br>
+`sudo qemu-nbd --connect=/dev/nbd0 qemu-image-file` <br>
+example: `sudo qemu-nbd --connect=/dev/nbd0 lfs_12_uefi.img` <br>
+<br>
+Check the partitions available <br>
 
-Check the partitions available
-`sudo fdisk -l /dev/nbd0`
+`sudo fdisk -l /dev/nbd0` <br>
 
-Mounting Partition to Local Folder
+Mounting Partition to Local Folder <br>
 `sudo mount /dev/nbd0p1 /mnt/QemuDisk`
 `sudo mount /dev/nbd0p3 /mnt/QemuDisk`
 
-Unmount
+<br> Unmount <br>
 `sudo umount /mnt/QemuDisk`
-Disconnect
+<br> Disconnect <br>
 `sudo qemu-nbd --disconnect /dev/nbd0`
 
 <hr>
@@ -39,11 +41,10 @@ DIRECTORY=cd-source/
 mkisofs -o ${ISO_FILE} -R -J ${DIRECTORY}
 ```
 
-example: `mkisofs -o blfs-source.iso -R -J blfs_source/`
+<br> example: `mkisofs -o blfs-source.iso -R -J blfs_source/` <br>
 
-# Mounting ISO
+# Mounting a CDROM Image File
 ```
 ISO_FILE=cd-source.iso
 sudo mount -o loop ${ISO_FILE} /mnt/iso
 ```
-
