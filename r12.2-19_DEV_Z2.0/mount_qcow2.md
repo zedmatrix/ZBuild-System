@@ -1,19 +1,28 @@
 # Linux From Scratch r12.2-51-systemd
 
-# Mounting qcow Image to /devnbd {network block device}
-sudo modprobe nbd max_part=2
-`sudo modprobe nbd nbds_max=2 max_part=2`
+## Mounting Qemu Disk Image 
+  to /dev/nbd {network block device}
 
-`sudo qemu-nbd --connect=/dev/nbd0 lfs-source.img`
-sudo qemu-nbd --connect=/dev/nbd0 lfs_12_uefi.img
+Sets up network block 2 devices 4 partitions
+`sudo modprobe nbd nbds_max=2 max_part=4`
 
+Connect your qemu image to a network block device
+`sudo qemu-nbd --connect=/dev/nbd0 qemu-image-file`
+example: `sudo qemu-nbd --connect=/dev/nbd0 lfs_12_uefi.img`
+
+Check the partitions available
 `sudo fdisk -l /dev/nbd0`
 
+Mounting Partition to Local Folder
 `sudo mount /dev/nbd0p1 /mnt/QemuDisk`
 `sudo mount /dev/nbd0p3 /mnt/QemuDisk`
 
+Unmount
 `sudo umount /mnt/QemuDisk`
+Disconnect
 `sudo qemu-nbd --disconnect /dev/nbd0`
+
+<hr>
 
 # Creating a Qemu Disk Image
 ```
@@ -21,8 +30,7 @@ DISK_IMAGE=linuxfromscratch_dev
 DISK_SIZE=50G
 qemu-img create -f qcow2 ${DISK_IMAGE}.img ${DISK_SIZE}
 ```
-
-### example: qemu-img create -f qcow2 XLFS_12-2.img 60G
+example: `qemu-img create -f qcow2 XLFS_12-2.img 60G`
 
 # Creating ISO from a Source Directory
 ```
@@ -31,7 +39,7 @@ DIRECTORY=cd-source/
 mkisofs -o ${ISO_FILE} -R -J ${DIRECTORY}
 ```
 
-### example: mkisofs -o blfs-source.iso -R -J blfs_source/
+example: `mkisofs -o blfs-source.iso -R -J blfs_source/`
 
 # Mounting ISO
 ```
