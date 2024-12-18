@@ -18,7 +18,7 @@ ZBUILD_script=${ZBUILD_script:-"${ZBUILD_root}/zbuild2.sh"}
 package=docbook-xml-4.5
 packagedir=${package}
 archive=$(find ${ZBUILD_sources} -name "${package}*.zip" | sort -V | head -1 | xargs basename)
-delete="false"
+delete="true"
 patch="false"
 #
 #   Build Functions
