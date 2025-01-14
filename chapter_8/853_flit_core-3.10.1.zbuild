@@ -12,7 +12,7 @@ unset -f Src_post
 # Global Settings
 #
 [ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
-ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
+ZBUILD_log="${ZBUILD_root}/Zbuild_log"
 ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
 package=flit_core-3.10.1
@@ -20,7 +20,6 @@ packagedir=${package}
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
-
 #
 #   Build Functions
 # 
@@ -75,4 +74,3 @@ else
     unset -f Src_post
     unset package packagedir archive patch delete
 fi
-
