@@ -1,5 +1,5 @@
 #!/bin/bash
-#   8.66 - Iproute2-6.11.0
+#   8.66 - Iproute2-6.12.0
 #   unset functions
 #
 unset -f Src_prepare
@@ -12,7 +12,7 @@ unset -f Src_post
 # Global Settings
 #
 [ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
-ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
+ZBUILD_log="${ZBUILD_root}/Zbuild_log"
 ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
 package=iproute2-6.11.0
@@ -20,7 +20,6 @@ packagedir=${package}
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
-docdir="/usr/share/doc/${packagedir}"
 #
 #   Build Functions
 # 
@@ -48,14 +47,13 @@ Src_check() {
 Src_install() {
     zprint " Installing ${packagedir} "
     make SBINDIR=/usr/sbin install || exit 55
-    mkdir -pv ${docdir}
-    cp -v COPYING README* ${docdir}
+    mkdir -pv /usr/share/doc/${packagedir}
+    cp -v COPYING README* /usr/share/doc/${packagedir}
 }
 Src_post() {
     zprint " Finalizing ${packagedir} "
 }
-
-export package packagedir archive patch delete docdir
+export package packagedir archive patch delete
 export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
@@ -77,5 +75,5 @@ else
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive patch delete docdir
+    unset package packagedir archive patch delete
 fi
