@@ -1,5 +1,5 @@
 #!/bin/bash
-#   8.54 - Wheel-0.45.0
+#   8.54 - Wheel-0.45.1
 #   unset functions
 #
 unset -f Src_prepare
@@ -12,15 +12,14 @@ unset -f Src_post
 # Global Settings
 #
 [ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
-ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
+ZBUILD_log="${ZBUILD_root}/Zbuild_log"
 ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
-package=wheel-0.45.0
+package=wheel-0.45.1
 packagedir=${package}
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
-
 #
 #   Build Functions
 # 
@@ -50,7 +49,6 @@ Src_install() {
 Src_post() {
     zprint " Finalizing ${packagedir} "
 }
-
 export package packagedir archive patch delete
 export -f Src_Extract
 export -f Src_prepare
@@ -75,4 +73,3 @@ else
     unset -f Src_post
     unset package packagedir archive patch delete
 fi
-
