@@ -18,7 +18,7 @@ if blkid /dev/$BOOT | grep -q 'TYPE="vfat"'; then
     echo "/dev/$BOOT is already formatted as vfat."
 else
     echo "*** Formatting /dev/$BOOT as vfat "
-    mkfs.vfat /dev/$ROOT
+    mkfs.vfat /dev/$BOOT
 fi
 
 if blkid /dev/$SWAP | grep -q 'TYPE="swap"'; then
