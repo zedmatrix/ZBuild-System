@@ -12,7 +12,7 @@ unset -f Src_post
 # Global Settings
 #
 [ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
-ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
+ZBUILD_log="${ZBUILD_root}/Zbuild_log"
 ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
 package=zstd-1.5.6
@@ -20,7 +20,7 @@ packagedir=${package}
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
-prefix="prefix=/usr"
+
 #
 #   Build Functions
 # 
@@ -38,7 +38,7 @@ Src_configure() {
 }
 Src_compile() {
     zprint " Compiling ${packagedir} "
-    make ${prefix} || exit 77
+    make prefix=/usr || exit 77
 }
 Src_check() {
     zprint " Checking ${packagedir} "
@@ -46,14 +46,13 @@ Src_check() {
 }
 Src_install() {
     zprint " Installing ${packagedir} "
-    make ${prefix} install || exit 55
+    make prefix=/usr install || exit 55
 }
 Src_post() {
     zprint " Finalizing ${packagedir} "
     rm -v /usr/lib/libzstd.a
 }
-
-export package packagedir archive prefix delete patch
+export package packagedir archive delete patch
 export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
@@ -75,6 +74,5 @@ else
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive delete patch prefix
+    unset package packagedir archive delete patch
 fi
-
