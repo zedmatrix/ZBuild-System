@@ -1,0 +1,7 @@
+zprint "Creating /etc/pip.conf"
+cat > /etc/pip.conf << "EOF"
+[global]
+root-user-action = ignore
+disable-pip-version = true
+EOF
+echo "DONE"
