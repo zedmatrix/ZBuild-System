@@ -9,13 +9,13 @@ FILESDIR="$ZBUILD_root/chapter_7"
 
 echo "* Creating mtab and hosts *"
 ln -sv /proc/self/mounts /etc/mtab
-cp -v $FILESDIR/7.06.hosts.zbuild /etc/hosts
+cp -v $FILESDIR/706.hosts.zbuild /etc/hosts
 
 echo "* Creating /etc/passwd file *"
-cp -v $FILESDIR/7.06.passwd.zbuild /etc/passwd
+cp -v $FILESDIR/706.passwd.zbuild /etc/passwd
 
 echo "* Creating /etc/group file *"
-cp -v $FILESDIR/7.06.group.zbuild /etc/group
+cp -v $FILESDIR/706.group.zbuild /etc/group
 
 echo "* Localedef and tmpfiles *"
 localedef -i C -f UTF-8 C.UTF-8
