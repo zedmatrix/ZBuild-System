@@ -12,7 +12,7 @@ unset -f Src_post
 # Global Settings
 #
 [ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
-ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
+ZBUILD_log="${ZBUILD_root}/Zbuild_log"
 ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
 package=ncurses-6.5
@@ -20,12 +20,8 @@ packagedir=${package}
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
-prefix="--prefix=/usr"
-disable="--without-debug --without-normal"
-enable="--enable-pc-files --with-shared --with-cxx-shared"
-mandir="--mandir=/usr/share/man"
-pkgconfdir="--with-pkg-config-libdir=/usr/lib/pkgconfig"
-
+zconfig="--prefix=/usr --without-debug --without-normal --with-pkg-config-libdir=/usr/lib/pkgconfig"
+zconfig="${zconfig} --enable-pc-files --with-shared --with-cxx-shared --mandir=/usr/share/man"
 #
 #   Build Functions
 # 
@@ -40,7 +36,7 @@ Src_prepare() {
 }
 Src_configure() {
     zprint " Configuring ${packagedir} "
-    ./configure ${prefix} ${mandir} ${enable} ${disable} ${pkgconfdir} || exit 88
+    ./configure ${zconfig} || exit 88
 }
 Src_compile() {
     zprint " Compiling ${packagedir} "
@@ -56,7 +52,7 @@ Src_install() {
     rm -v dest/usr/lib/libncursesw.so.6.5
     sed -e 's/^#if.*XOPEN.*$/#if 1/' -i dest/usr/include/curses.h
     cp -av dest/* /
-    cp -vR doc -T /usr/share/doc/ncurses-6.5
+    cp -vR doc -T /usr/share/doc/${packagedir}
 }
 Src_post() {
     zprint " Finalizing ${packagedir} "
@@ -66,8 +62,7 @@ Src_post() {
     done
     ln -sfv libncursesw.so /usr/lib/libcurses.so
 }
-
-export package packagedir archive patch delete prefix enable disable mandir pkgconfdir
+export package packagedir archive patch delete zconfig
 export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
@@ -89,6 +84,6 @@ else
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive patch delete prefix enable disable mandir pkgconfdir
+    unset package packagedir archive patch delete zconfig
 fi
 
