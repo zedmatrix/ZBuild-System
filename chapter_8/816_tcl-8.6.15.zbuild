@@ -12,7 +12,7 @@ unset -f Src_post
 # Global Settings
 #
 [ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
-ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
+ZBUILD_log="${ZBUILD_root}/Zbuild_log"
 ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
 package=tcl8.6.15-src
@@ -20,10 +20,7 @@ packagedir=tcl-8.6.15
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
-prefix="--prefix=/usr"
-disable="--disable-rpath"
-mandir="--mandir=/usr/share/man"
-docdir="/usr/share/doc/${packagedir}"
+zconfig="--prefix=/usr --disable-rpath --mandir=/usr/share/man"
 #
 #   Build Functions
 # 
@@ -40,7 +37,7 @@ Src_prepare() {
 Src_configure() {
     zprint " Configuring ${packagedir} "
     cd unix
-    ./configure ${prefix} ${disable} ${mandir} || exit 88
+    ./configure ${zconfig} || exit 88
 }
 Src_compile() {
     zprint " Compiling ${packagedir} "
@@ -66,8 +63,8 @@ Src_install() {
     make install-private-headers
     cd ..
     tar -xf "${ZBUILD_sources}/tcl8.6.15-html.tar.gz" --strip-components=1
-    mkdir -vp ${docdir}
-    cp -vr ./html/* ${docdir}
+    mkdir -vp /usr/share/doc/${packagedir}
+    cp -vr ./html/* /usr/share/doc/${packagedir}
 }
 # Executed after popd
 Src_post() {
@@ -75,8 +72,7 @@ Src_post() {
     ln -sfv tclsh8.6 /usr/bin/tclsh
     mv -v /usr/share/man/man3/{Thread,Tcl_Thread}.3
 }
-
-export package packagedir archive delete patch prefix disable mandir docdir
+export package packagedir archive delete patch zconfig
 export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
@@ -98,6 +94,5 @@ else
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive delete patch prefix disable mandir docdir
+    unset package packagedir archive delete patch zconfig
 fi
-
