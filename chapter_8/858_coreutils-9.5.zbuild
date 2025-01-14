@@ -12,7 +12,7 @@ unset -f Src_post
 # Global Settings
 #
 [ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
-ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
+ZBUILD_log="${ZBUILD_root}/Zbuild_log"
 ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
 package=coreutils-9.5
@@ -20,8 +20,7 @@ packagedir=${package}
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="coreutils-9.5-i18n-2.patch"
-prefix="--prefix=/usr"
-enable="--enable-no-install-program=kill,uptime"
+zconfig="--prefix=/usr --enable-no-install-program=kill,uptime"
 #
 #   Build Functions
 # 
@@ -38,7 +37,7 @@ Src_prepare() {
 Src_configure() {
     zprint " Configuring ${packagedir} "
     FORCE_UNSAFE_CONFIGURE=1 \
-    ./configure ${prefix} ${enable} || exit 88
+    ./configure ${zconfig} || exit 88
 }
 Src_compile() {
     zprint " Compiling ${packagedir} "
@@ -62,8 +61,7 @@ Src_post() {
     mv -v /usr/share/man/man1/chroot.1 /usr/share/man/man8/chroot.8
     sed -i 's/"1"/"8"/' /usr/share/man/man8/chroot.8
 }
-
-export package packagedir archive patch delete prefix enable
+export package packagedir archive patch delete zconfig
 export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
@@ -85,6 +83,5 @@ else
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive patch delete prefix enable
+    unset package packagedir archive patch delete zconfig
 fi
-
