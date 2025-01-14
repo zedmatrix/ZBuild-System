@@ -1,5 +1,5 @@
 #!/bin/bash
-#   8.52 - Python-3.13.0
+#   8.52 - Python-3.13.1
 #   unset functions
 #
 unset -f Src_prepare
@@ -12,21 +12,15 @@ unset -f Src_post
 # Global Settings
 #
 [ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
-ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
+ZBUILD_log="${ZBUILD_root}/Zbuild_log"
 ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
-zbuild_pwd=$PWD
-package=Python-3.13.0
-packagedir=python-3.13.0
+package=Python-3.13.1
+packagedir=python-3.13.1
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
-prefix="--prefix=/usr"
-enable="--enable-shared --enable-optimizations"
-with="--with-system-expat"
-docdir="/usr/share/doc/${packagedir}"
-extradoc="${packagedir}-docs-html"
-
+zconfig="--prefix=/usr --enable-shared --enable-optimizations --with-system-expat"
 #
 #   Build Functions
 # 
@@ -41,7 +35,7 @@ Src_prepare() {
 }
 Src_configure () {
     zprint " Configuring ${packagedir} "
-    ./configure ${prefix} ${enable} ${with} || exit 88
+    ./configure ${zconfig} || exit 88
 }
 Src_compile() {
     zprint " Compiling ${packagedir} "
@@ -54,17 +48,14 @@ Src_check() {
 Src_install() {
     zprint " Installing ${packagedir} "
     make install || exit 55
-    install -vdm755 ${docdir}/html
-    tar --no-same-owner -xf "$ZBUILD_sources/${extradoc}.tar.bz2"
-    cp -vR --no-preserve=mode ${extradoc}/* ${docdir}/html
+    install -vdm755 /usr/share/doc/${packagedir}/html
+    tar --no-same-owner -xf "$ZBUILD_sources/${packagedir}-docs-html.tar.bz2"
+    cp -vR --no-preserve=mode ${packagedir}-docs-html/* /usr/share/doc/${packagedir}/html
 }
 Src_post() {
     zprint " Finalizing ${package} "
-    cp -v ${zbuild_pwd}/8.52_pip.conf.zbuild /etc/pip.conf
-
 }
-
-export package packagedir archive patch delete prefix with enable docdir extradoc zbuild_pwd
+export package packagedir archive patch delete zconfig
 export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
@@ -86,6 +77,5 @@ else
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive patch delete prefix with enable docdir extradoc zbuild_pwd
+    unset package packagedir archive patch delete zconfig
 fi
-
