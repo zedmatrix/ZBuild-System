@@ -12,7 +12,7 @@ unset -f Src_post
 # Global Settings
 #
 [ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
-ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
+ZBUILD_log="${ZBUILD_root}/Zbuild_log"
 ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
 package=gcc-14.2.0
@@ -20,11 +20,8 @@ packagedir=${package}
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
-prefix="--prefix=/usr"
-enable="--enable-languages=c,c++ --enable-default-pie --enable-default-ssp --enable-host-pie"
-disable="--disable-multilib --disable-bootstrap --disable-fixincludes"
-with="--with-system-zlib"
-
+zconfig="--prefix=/usr --with-system-zlib --disable-multilib --disable-bootstrap --disable-fixincludes"
+zconfig="${zconfig} --enable-languages=c,c++ --enable-default-pie --enable-default-ssp --enable-host-pie"
 #
 #   Build Functions
 # 
@@ -46,7 +43,7 @@ Src_prepare() {
 }
 Src_configure() {
     zprint " Configuring ${packagedir} "
-    ../configure ${prefix} LD=ld ${enable} ${disable} ${with} || exit 88
+    ../configure LD=ld ${zconfig} || exit 88
 }
 Src_compile() {
     zprint " Compiling ${packagedir} "
@@ -86,8 +83,7 @@ Src_post() {
     mkdir -pv /usr/share/gdb/auto-load/usr/lib
     mv -v /usr/lib/*gdb.py /usr/share/gdb/auto-load/usr/lib
 }
-
-export package packagedir archive patch delete prefix disable enable with
+export package packagedir archive patch delete zconfig
 export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
@@ -109,6 +105,5 @@ else
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive patch delete prefix disable enable with
+    unset package packagedir archive patch delete zconfig
 fi
-
