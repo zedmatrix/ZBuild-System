@@ -1,5 +1,5 @@
 #!/bin/bash
-#   8.26 - Libcap-2.70
+#   8.26 - Libcap-2.73
 #   unset functions
 #
 unset -f Src_prepare
@@ -12,17 +12,14 @@ unset -f Src_post
 # Global Settings
 #
 [ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
-ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
+ZBUILD_log="${ZBUILD_root}/Zbuild_log"
 ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
-package=libcap-2.70
+package=libcap-2.73
 packagedir=${package}
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
-prefix="prefix=/usr"
-lib="lib=lib"
-
 #
 #   Build Functions
 # 
@@ -41,7 +38,7 @@ Src_configure() {
 }
 Src_compile () {
     zprint " Compiling ${packagedir} "
-    make ${prefix} ${lib} || exit 77
+    make prefix=/usr lib=lib || exit 77
 }
 Src_check() {
     zprint " Checking ${packagedir} "
@@ -49,13 +46,12 @@ Src_check() {
 }
 Src_install() {
     zprint " Installing ${packagedir} "
-    make ${prefix} ${lib} install || exit 55
+    make prefix=/usr lib=lib install || exit 55
 }
 Src_post() {
     zprint " Finalizing ${packagedir} "
 }
-
-export package packagedir archive extract delete patch prefix lib
+export package packagedir archive extract delete patch
 export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
@@ -77,6 +73,5 @@ else
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive delete patch prefix lib
+    unset package packagedir archive delete patch
 fi
-
