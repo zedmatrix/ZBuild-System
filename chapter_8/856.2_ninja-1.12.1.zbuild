@@ -13,7 +13,7 @@ unset -f Src_post
 # Global Settings
 #
 [ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
-ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
+ZBUILD_log="${ZBUILD_root}/Zbuild_log"
 ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
 package=ninja-1.12.1
@@ -21,7 +21,6 @@ packagedir=${package}
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
-
 #
 #   Build Functions
 # 
@@ -60,7 +59,6 @@ Src_install () {
 Src_post() {
     zprint " Finalizing ${packagedir} "
 }
-
 export package packagedir archive patch delete
 export -f Src_Extract
 export -f Src_prepare
@@ -85,4 +83,3 @@ else
     unset -f Src_post
     unset package packagedir archive patch delete
 fi
-
