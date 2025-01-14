@@ -1,5 +1,5 @@
 #!/bin/bash
-#   8.11 - File-5.45
+#   8.11 - File-5.46
 #   unset functions
 #
 unset -f Src_prepare
@@ -12,15 +12,14 @@ unset -f Src_post
 # Global Settings
 #
 [ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
-ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
+ZBUILD_log="${ZBUILD_root}/Zbuild_log"
 ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
-package=file-5.45
+package=file-5.46
 packagedir=${package}
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
-prefix="--prefix=/usr"
 #
 #   Build Functions
 # 
@@ -33,10 +32,9 @@ Src_Extract() {
 Src_prepare() {
     zprint " Preparing ${packagedir} "
 }
-
 Src_configure () {
     zprint " Configuring ${packagedir} "
-    ./configure ${prefix} || exit 88
+    ./configure --prefix=/usr || exit 88
 }
 Src_compile() {
     zprint " Compiling ${packagedir} "
@@ -54,8 +52,7 @@ Src_install() {
 Src_post() {
     zprint " Finalizing ${package} "
 }
-
-export package packagedir archive delete false prefix
+export package packagedir archive delete patch
 export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
@@ -77,6 +74,5 @@ else
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive delete false prefix
+    unset package packagedir archive delete patch
 fi
-
