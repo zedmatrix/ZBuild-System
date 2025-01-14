@@ -12,7 +12,7 @@ unset -f Src_post
 # Global Settings
 #
 [ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
-ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
+ZBUILD_log="${ZBUILD_root}/Zbuild_log"
 ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
 package=perl-5.40.0
@@ -20,12 +20,11 @@ packagedir=${package}
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
-prefix="-D prefix=/usr -D vendorprefix=/usr -D useshrplib -D usethreads"
-coreperl="-D privlib=/usr/lib/perl5/5.40/core_perl -D archlib=/usr/lib/perl5/5.40/core_perl"
-siteperl="-D sitelib=/usr/lib/perl5/5.40/site_perl -D sitearch=/usr/lib/perl5/5.40/site_perl"
-vendorperl="-D vendorlib=/usr/lib/perl5/5.40/verdor_perl -D venderarch=/usr/lib/perl5/5.40/verdor_perl"
-mandir="-D man1dir=/usr/share/man/man1 -D man3dir=/usr/share/man/man3"
-
+zconfig="-D prefix=/usr -D vendorprefix=/usr -D useshrplib -D usethreads"
+zconfig="${zconfig} -D privlib=/usr/lib/perl5/5.40/core_perl -D archlib=/usr/lib/perl5/5.40/core_perl"
+zconfig="${zconfig} -D sitelib=/usr/lib/perl5/5.40/site_perl -D sitearch=/usr/lib/perl5/5.40/site_perl"
+zconfig="${zconfig} -D vendorlib=/usr/lib/perl5/5.40/verdor_perl -D venderarch=/usr/lib/perl5/5.40/verdor_perl"
+zconfig="${zconfig} -D man1dir=/usr/share/man/man1 -D man3dir=/usr/share/man/man3"
 #
 #   Build Functions
 # 
@@ -42,7 +41,7 @@ Src_prepare() {
 }
 Src_configure() {
     zprint " Configuring ${packagedir} "
-    sh Configure -des ${prefix} ${coreperl} ${siteperl} ${vendorperl} ${mandir} -D pager="/usr/bin/less -siR" || exit 88
+    sh Configure -des ${zconfig} -D pager="/usr/bin/less -siR" || exit 88
 }
 Src_compile() {
     zprint " Compiling ${packagedir} "
@@ -60,8 +59,7 @@ Src_post() {
     zprint " Finalizing ${package} "
     unset BUILD_ZLIB BUILD_BZIP2
 }
-
-export package packagedir archive patch delete prefix coreperl siteperl vendorperl mandir
+export package packagedir archive patch delete zconfig
 export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
@@ -83,6 +81,5 @@ else
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive patch delete prefix coreperl siteperl vendorperl mandir
+    unset package packagedir archive patch delete zconfig
 fi
-
