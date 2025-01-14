@@ -12,7 +12,7 @@ unset -f Src_post
 # Global Settings
 #
 [ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
-ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
+ZBUILD_log="${ZBUILD_root}/Zbuild_log"
 ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
 package=lz4-1.10.0
@@ -20,9 +20,6 @@ packagedir=${package}
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
-static="BUILD_STATIC=no"
-prefix="PREFIX=/usr"
-
 #
 #   Build Functions
 # 
@@ -40,7 +37,7 @@ Src_configure() {
 }
 Src_compile() {
     zprint " Compiling ${packagedir} "
-    make ${static} ${prefix} || exit 77
+    make BUILD_STATIC=no PREFIX=/usr || exit 77
 }
 Src_check() {
     zprint " Checking ${packagedir} "
@@ -48,7 +45,7 @@ Src_check() {
 }
 Src_install() {
     zprint " Installing ${packagedir} "
-    make ${static} ${prefix} install || exit 55
+    make BUILD_STATIC=no PREFIX=/usr install || exit 55
 }
 # Executed After popd
 Src_post() {
