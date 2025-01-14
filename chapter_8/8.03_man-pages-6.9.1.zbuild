@@ -63,7 +63,7 @@ export -f Src_check
 export -f Src_install
 export -f Src_post
 
-if [ ! -f ${ZBUILD_script} ];
+if [ ! -f ${ZBUILD_script} ]; then
     echo "Error: Missing ZBUILD_script."
     return 2
 else
