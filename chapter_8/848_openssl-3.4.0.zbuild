@@ -1,5 +1,5 @@
 #!/bin/bash
-#   8.48 - OpenSSL-3.3.2
+#   8.48 - OpenSSL-3.4.0
 #   unset functions
 #
 unset -f Src_prepare
