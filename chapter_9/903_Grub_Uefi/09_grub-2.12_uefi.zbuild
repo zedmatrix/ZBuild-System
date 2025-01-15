@@ -11,7 +11,7 @@ unset -f Src_post
 #
 # Global Settings
 #
-[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; return 2; }
+[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
 ZBUILD_log=${ZBUILD_log:-"${ZBUILD_root}/Zbuild_log"}
 ZBUILD_script=${ZBUILD_script:-"${ZBUILD_root}/zbuild2.sh"}
 
@@ -20,12 +20,8 @@ packagedir=${package}
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
-prefix="--prefix=/usr"
-sysconfdir="--sysconfdir=/etc"
-disable="--disable-efiemu --disable-werror"
-enable="--enable-grub-mkfont"
-target="--with-platform=efi --target=x86_64"
-docdir="--docdir=/usr/share/doc/${packagedir}"
+zconfig="--prefix=/usr --sysconfdir=/etc --disable-efiemu --disable-werror"
+zconfig="${zconfig} --with-platform=efi --target=x86_64"
 #
 #   Build Functions
 # 
@@ -38,36 +34,32 @@ Src_Extract() {
 Src_prepare() {
     zprint " Preparing ${package} "
     mkdir -pv /usr/share/fonts/unifont
-    gunzip -c "${ZBUILD_sources}/unifont-16.0.01.pcf.gz" > /usr/share/fonts/unifont/unifont.pcf
+    gunzip -c "${ZBUILD_sources}/unifont-16.0.01.pcf.gz" > /usr/share/fonts/unifont/unifont.pcf || exit 99
 }
 Src_configure() {
     zprint " Configuring ${package} "
     echo depends bli part_gpt > grub-core/extra_deps.lst
-    ./configure ${prefix} ${sysconfdir} ${disable} ${enable} ${target} || return 88
+    ./configure ${zconfig} || exit 88
 }
 Src_compile() {
     zprint " Compiling ${package} "
-    make || return 77
+    make || exit 77
 }
 Src_check() {
     zprint " Testsuite can be meaningless ${package} "
-    #make check 2>&1 | tee "${ZBUILD_log}/${packagedir}-check.log"
 }
 Src_install() {
     zprint " Installing ${package} "
-    make DESTDIR=$PWD/dest install || return 55
-    cp -av dest/usr/lib/grub/x86_64-efi -T /usr/lib/grub/x86_64-efi
-    cp -av dest/usr/share/grub/*.{pf2,h} /usr/share/grub
-    cp -av dest/usr/bin/grub-mkfont /usr/bin
-    cp -av dest/usr/bin/grub-mount /usr/bin
+    make -C grub-core install || exit 55
+    install -vm755 grub-mkfont /usr/bin/
+    install -vm644 ascii.h widthspec.h *.pf2 /usr/share/grub/
+    install -vm755 grub-mount /usr/bin/
 }
 Src_post() {
     zprint " Finalizing ${package} "
     /sbin/ldconfig
 }
-
-export package packagedir archive patch delete
-export prefix sysconfdir disable enable target
+export package packagedir archive patch delete zconfig
 export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
@@ -80,7 +72,7 @@ if [ -f ${ZBUILD_script} ]; then
     ${ZBUILD_script}
 else
     zprint "Error: Missing ZBUILD_script."
-    return 2
+    exit 2
 fi
 exit_code=$?
 
@@ -94,6 +86,5 @@ else
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive patch delete
-    unset prefix sysconfdir disable enable target
+    unset package packagedir archive patch delete zconfig
 fi
