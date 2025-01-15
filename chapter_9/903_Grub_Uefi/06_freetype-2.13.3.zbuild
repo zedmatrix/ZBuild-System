@@ -51,7 +51,7 @@ Src_install() {
     zprint " Installing ${package} "
     make install || exit 55
     cp -vR docs -T /usr/share/doc/${packagedir}
-    rm -v ${docdir}/freetype-config.1
+    rm -v /usr/share/doc/${packagedir}/freetype-config.1
 }
 Src_post() {
     zprint " Finalizing ${package} "
