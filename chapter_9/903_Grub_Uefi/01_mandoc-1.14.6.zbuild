@@ -11,7 +11,7 @@ unset -f Src_post
 #
 # Global Settings
 #
-[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; return 2; }
+[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
 ZBUILD_log=${ZBUILD_log:-"${ZBUILD_root}/Zbuild_log"}
 ZBUILD_script=${ZBUILD_script:-"${ZBUILD_root}/zbuild2.sh"}
 
@@ -20,7 +20,9 @@ packagedir=${package}
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
-
+#
+# Build Functions
+#
 Src_Extract() {
     zprint "Extracting: ${archive}"
     mkdir -v "${ZBUILD_root}/${packagedir}"
@@ -32,15 +34,15 @@ Src_prepare() {
 }
 Src_configure() {
     zprint " Configuring ${package} "
-    ./configure || return 88
+    ./configure || exit 88
 }
 Src_compile() {
     zprint " Compiling mandoc only "
-    make mandoc || return 77
+    make mandoc || exit 77
 }
 Src_check() {
     zprint "*** Checking ${package} ***"
-    make regress || return 66
+    make regress || exit 66
 }
 Src_install() {
     zprint " Installing ${package} "
@@ -52,7 +54,6 @@ Src_post() {
     zprint " Finalizing ${package} "
     /sbin/ldconfig
 }
-
 export package packagedir archive patch delete
 export -f Src_Extract
 export -f Src_prepare
@@ -66,7 +67,7 @@ if [ -f ${ZBUILD_script} ]; then
     ${ZBUILD_script}
 else
     zprint "Error: Missing ZBUILD_script."
-    return 2
+    exit 2
 fi
 exit_code=$?
 
