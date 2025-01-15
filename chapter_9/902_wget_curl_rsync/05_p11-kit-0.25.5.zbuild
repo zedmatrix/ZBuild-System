@@ -14,7 +14,7 @@ unset -f Src_post
 # Global Settings
 #
 [ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
-ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
+ZBUILD_log="${ZBUILD_root}/Zbuild_log"
 ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
 package=p11-kit-0.25.5
@@ -23,10 +23,8 @@ archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 |
 delete="true"
 patch="false"
 
-zbuild="${PWD}"
-prefix="--prefix=/usr"
-build="--buildtype=release"
-trust="-D trust_paths=/etc/pki/anchors"
+ztrust="${PWD}/05_add_trust.zbuild"
+zconfig="--prefix=/usr --buildtype=release -D trust_paths=/etc/pki/anchors"
 #
 #   Build Functions
 #
@@ -39,13 +37,13 @@ Src_Extract() {
 Src_prepare() {
 	zprint "Preparing ${packagedir}"
 	sed '20,$ d' -i trust/trust-extract-compat
-	cat "${zbuild}/05_add_trust.zbuild" >> trust/trust-extract-compat
+	cat "${ztrust}" >> trust/trust-extract-compat
 	mkdir -v p11-build
 	cd p11-build
 }
 Src_configure() {
 	zprint " Configuring ${packagedir} "
-	meson setup .. ${prefix} ${build} ${trust} || exit 88
+	meson setup .. ${zconfig} || exit 88
 }
 Src_compile() {
 	zprint " Compiling ${packagedir} "
@@ -67,8 +65,7 @@ Src_post() {
 	zprint " Finalizing ${packagedir} "
 	/usr/sbin/ldconfig
 }
-
-export package packagedir archive delete patch prefix build trust zbuild
+export package packagedir archive delete patch zconfig ztrust
 export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
@@ -90,5 +87,5 @@ else
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive delete patch prefix build trust zbuild
+    unset package packagedir archive delete patch zconfig ztrust
 fi
