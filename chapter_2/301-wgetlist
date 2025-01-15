@@ -33,7 +33,8 @@ https://ftp.gnu.org/gnu/grep/grep-3.11.tar.xz
 https://ftp.gnu.org/gnu/groff/groff-1.23.0.tar.gz
 https://ftp.gnu.org/gnu/grub/grub-2.12.tar.xz
 https://ftp.gnu.org/gnu/gzip/gzip-1.13.tar.xz
-https://github.com/vcrhonek/hwdata/archive/v0.389/hwdata-0.389.tar.gz
+#https://github.com/vcrhonek/hwdata/archive/v0.389/hwdata-0.389.tar.gz
+https://github.com/vcrhonek/hwdata/archive/v0.390/hwdata-0.390.tar.gz
 https://github.com/Mic92/iana-etc/releases/download/20240912/iana-etc-20240912.tar.gz
 https://ftp.gnu.org/gnu/inetutils/inetutils-2.5.tar.xz
 https://launchpad.net/intltool/trunk/0.51.0/+download/intltool-0.51.0.tar.gz
