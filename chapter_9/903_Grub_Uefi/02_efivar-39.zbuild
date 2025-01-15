@@ -38,20 +38,19 @@ Src_configure() {
 }
 Src_compile() {
     zprint " Compiling ${package} "
-    make || return 77
+    make || exit 77
 }
 Src_check() {
     zprint " No Testsuite ${package} "
 }
 Src_install() {
     zprint " Installing ${package} "
-    make install LIBDIR=/usr/lib || return 55
+    make install LIBDIR=/usr/lib || exit 55
 }
 # Executed After popd
 Src_post() {
     zprint " Finalizing ${package} "
 }
-
 export package packagedir archive delete patch
 export -f Src_Extract
 export -f Src_prepare
