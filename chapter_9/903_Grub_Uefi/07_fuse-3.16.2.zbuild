@@ -11,7 +11,7 @@ unset -f Src_post
 #
 # Global Settings
 #
-[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; return 2; }
+[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
 ZBUILD_log=${ZBUILD_log:-"${ZBUILD_root}/Zbuild_log"}
 ZBUILD_script=${ZBUILD_script:-"${ZBUILD_root}/zbuild2.sh"}
 
@@ -20,8 +20,6 @@ packagedir=${package}
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
-prefix="--prefix=/usr"
-build="--buildtype=release"
 #
 #   Build Functions
 # 
@@ -39,26 +37,25 @@ Src_prepare() {
 }
 Src_configure() {
     zprint " Configuring ${package} "
-    meson setup .. ${prefix} ${build} || return 88
+    meson setup .. --prefix=/usr --buildtype=release || exit 88
 }
 Src_compile() {
     zprint " Compiling ${package} "
-    ninja || return 77
+    ninja || exit 77
 }
 Src_check() {
     zprint " No Testsuite ${package} "
 }
 Src_install() {
     zprint " Installing ${package} "
-    ninja install || return 55
+    ninja install || exit 55
     chmod u+s /usr/bin/fusermount3
 }
 Src_post() {
     zprint " Finalizing ${package} "
     /sbin/ldconfig
 }
-
-export package packagedir archive patch delete prefix build
+export package packagedir archive patch delete
 export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
@@ -71,7 +68,7 @@ if [ -f ${ZBUILD_script} ]; then
     ${ZBUILD_script}
 else
     zprint "Error: Missing ZBUILD_script."
-    return 2
+    exit 2
 fi
 exit_code=$?
 
@@ -85,5 +82,5 @@ else
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive extract patch delete prefix build
+    unset package packagedir archive patch delete
 fi
