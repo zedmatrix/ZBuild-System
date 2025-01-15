@@ -38,7 +38,7 @@ Src_configure() {
 }
 Src_compile() {
     zprint " Compiling ${package} "
-    make || return 77
+    make || exit 77
 }
 Src_check() {
     zprint " No Testsuite ${package} "
