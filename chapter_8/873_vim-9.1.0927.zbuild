@@ -1,5 +1,5 @@
 #!/bin/bash
-#   8.73 - Vim-9.1.0866
+#   8.73 - Vim-9.1.0927
 #   unset functions
 #
 unset -f Src_prepare
@@ -12,16 +12,14 @@ unset -f Src_post
 # Global Settings
 #
 [ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
-ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
+ZBUILD_log="${ZBUILD_root}/Zbuild_log"
 ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
-package=vim-9.1.0866
+package=vim-9.1.0927
 packagedir=${package}
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
-prefix="--prefix=/usr"
-docdir="/usr/share/doc/${packagedir}"
 #
 #   Build Functions
 # 
@@ -37,7 +35,7 @@ Src_prepare() {
 }
 Src_configure() {
     zprint " Configuring ${packagedir} "
-    ./configure ${prefix} || exit 88
+    ./configure --prefix=/usr || exit 88
 }
 Src_compile() {
     zprint " Compiling ${packagedir} "
@@ -58,10 +56,9 @@ Src_post() {
     for L in /usr/share/man/{,*/}man1/vim.1; do
         ln -sv vim.1 $(dirname $L)/vi.1
     done
-    ln -sv ../vim/vim91/doc ${docdir}
+    ln -sv ../vim/vim91/doc /usr/share/doc/${packagedir}
 }
-
-export package packagedir archive patch delete prefix docdir
+export package packagedir archive patch delete
 export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
@@ -83,5 +80,5 @@ else
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive patch delete prefix docdir
+    unset package packagedir archive patch delete
 fi
