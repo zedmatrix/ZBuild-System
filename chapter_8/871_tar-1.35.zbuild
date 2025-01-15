@@ -12,7 +12,7 @@ unset -f Src_post
 # Global Settings
 #
 [ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
-ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
+ZBUILD_log="${ZBUILD_root}/Zbuild_log"
 ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
 package=tar-1.35
@@ -20,8 +20,6 @@ packagedir=${package}
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
-prefix="--prefix=/usr"
-docdir="docdir=/usr/share/doc/${packagedir}"
 #
 #   Build Functions
 # 
@@ -37,7 +35,7 @@ Src_prepare() {
 Src_configure() {
     zprint " Configuring ${packagedir} "
     FORCE_UNSAFE_CONFIGURE=1 \
-    ./configure ${prefix} || exit 88
+    ./configure --prefix=/usr || exit 88
 }
 Src_compile() {
     zprint " Compiling ${packagedir} "
@@ -50,13 +48,12 @@ Src_check() {
 Src_install() {
     zprint " Installing ${packagedir} "
     make install || exit 55
-    make -C doc install-html ${docdir}
+    make -C doc install-html docdir=/usr/share/doc/${packagedir}
 }
 Src_post() {
     zprint " Finalizing ${packagedir} "
 }
-
-export package packagedir archive patch delete prefix docdir
+export package packagedir archive patch delete
 export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
@@ -78,5 +75,5 @@ else
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive patch delete prefix docdir
+    unset package packagedir archive patch delete
 fi
