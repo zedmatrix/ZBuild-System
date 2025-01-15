@@ -1,5 +1,5 @@
 #!/bin/bash
-#   8.77 - D-Bus-1.14.10
+#   8.77 - D-Bus-1.16.0
 #   unset functions
 #
 unset -f Src_prepare
@@ -12,21 +12,15 @@ unset -f Src_post
 # Global Settings
 #
 [ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
-ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
+ZBUILD_log="${ZBUILD_root}/Zbuild_log"
 ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
-package=dbus-1.14.10
+package=dbus-1.16.0
 packagedir=${package}
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
-prefix="--prefix=/usr"
-sysconf="--sysconfdir=/etc"
-statedir="--localstatedir=/var --runstatedir=/run"
-enable="--enable-user-session"
-disable="--disable-doxygen-docs --disable-xml-docs --disable-static"
-docdir="--docdir=/usr/share/doc/${packagedir}"
-system="--with-system-socket=/run/dbus/system_bus_socket"
+zconfig="--prefix=/usr --buildtype=release --wrap-mode=nofallback"
 #
 #   Build Functions
 # 
@@ -38,30 +32,30 @@ Src_Extract() {
 # Executed After pushd into $ZBUILD_root/packagedir
 Src_prepare() {
     zprint " Preparing ${packagedir} "
+    mkdir -v build
+    cd build
 }
 Src_configure() {
     zprint " Configuring ${packagedir} "
-    ./configure ${prefix} ${sysconf} ${statedir} ${enable} ${disable} ${docdir} ${system} || exit 88
+    meson setup .. ${zconfig} || exit 88
 }
 Src_compile() {
     zprint " Compiling ${packagedir} "
-    make || exit 77
+    ninja || exit 77
 }
 Src_check() {
     zprint " Checking ${packagedir} "
-    make check 2>&1 | tee "${ZBUILD_log}/${packagedir}-check.log"
+    ninja test 2>&1 | tee "${ZBUILD_log}/${packagedir}-check.log"
 }
 Src_install() {
     zprint " Installing ${packagedir} "
-    make install || exit 55
+    ninja install || exit 55
 }
 Src_post() {
     zprint " Finalizing ${package} "
     ln -sfv /etc/machine-id /var/lib/dbus
 }
-
-export package packagedir archive patch delete
-export prefix sysconf statedir enable disable docdir system
+export package packagedir archive patch delete zconfig
 export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
@@ -83,6 +77,5 @@ else
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive patch delete
-    unset prefix sysconf statedir enable disable docdir system
+    unset package packagedir archive patch delete zconfig
 fi
