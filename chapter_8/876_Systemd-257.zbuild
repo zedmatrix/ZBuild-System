@@ -1,5 +1,5 @@
 #!/bin/bash
-#   8.76 - Systemd-256.5
+#   8.76 - Systemd-257
 #   unset functions
 #
 unset -f Src_prepare
@@ -12,23 +12,19 @@ unset -f Src_post
 # Global Settings
 #
 [ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
-ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
+ZBUILD_log="${ZBUILD_root}/Zbuild_log"
 ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
-package=systemd-256.5
+package=systemd-257
 packagedir=${package}
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
-prefix="--prefix=/usr"
-build="--buildtype=release"
-docdir="-D docdir=/usr/share/doc/${packagedir}"
-default="-D default-dnssec=no -D mode=release -D nobody-group=nogroup"
-firstboot="-D firstboot=false -D install-tests=false "
-disable="-D homed=disabled -D man=disabled -D sysupdate=disabled -D ukify=disabled"
-system="-D ldconfig=false -D sysusers=false -D dev-kvm-mode=0660"
-security="-D rpmmacrosdir=no -D userdb=false -D pamconfdir=no "
-
+zconfig="--prefix=/usr --buildtype=release -D docdir=/usr/share/doc/${packagedir}"
+zconfig="${zconfig} -D default-dnssec=no -D mode=release -D nobody-group=nogroup -D firstboot=false"
+zconfig="${zconfig} -D install-tests=false -D homed=disabled -D man=disabled -D sysupdate=disabled"
+zconfig="${zconfig} -D ukify=disabled -D ldconfig=false -D sysusers=false -D dev-kvm-mode=0660 -D rpmmacrosdir=no"
+zconfig="${zconfig} -D userdb=false -D pamconfdir=no "
 #
 #   Build Functions
 # 
@@ -46,7 +42,7 @@ Src_prepare() {
 }
 Src_configure() {
     zprint " Configuring ${packagedir} "
-    meson setup .. ${prefix} ${build} ${default} ${firstboot} ${disable} ${system} ${security} ${docdir}
+    meson setup .. ${zconfig}
 }
 Src_compile() {
     zprint " Building ${packagedir} "
@@ -60,7 +56,7 @@ Src_check() {
 Src_install() {
     zprint " Installing ${packagedir} "
     ninja install
-    tar -xf "$ZBUILD_sources/systemd-man-pages-256.5.tar.xz" --no-same-owner --strip-components=1 -C /usr/share/man
+    tar -xf "$ZBUILD_sources/systemd-man-pages-257.tar.xz" --no-same-owner --strip-components=1 -C /usr/share/man
 }
 # Executed After popd
 Src_post() {
@@ -68,9 +64,7 @@ Src_post() {
     systemd-machine-id-setup
     systemctl preset-all
 }
-
-export package packagedir archive patch delete prefix build
-export docdir default firstboot disable system security
+export package packagedir archive patch delete zconfig
 export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
@@ -92,6 +86,5 @@ else
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive patch delete prefix build
-    unset docdir default firstboot disable system security
+    unset package packagedir archive patch delete zconfig
 fi
