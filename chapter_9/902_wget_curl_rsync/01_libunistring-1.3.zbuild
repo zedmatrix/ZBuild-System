@@ -12,7 +12,7 @@ unset -f Src_post
 # Global Settings
 #
 [ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
-ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
+ZBUILD_log="${ZBUILD_root}/Zbuild_log"
 ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
 package=libunistring-1.3
@@ -20,10 +20,7 @@ packagedir=${package}
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
-
-prefix="--prefix=/usr"
-disable="--disable-static"
-docdir="--docdir=/usr/share/doc/${packagedir}"
+zconfig="--prefix=/usr --disable-static --docdir=/usr/share/doc/${packagedir}"
 #
 #   Build Functions
 #
@@ -38,7 +35,7 @@ Src_prepare() {
 }
 Src_configure() {
 	zprint " Configuring ${packagedir} "
-	./configure ${prefix} ${disable} ${docdir} || exit 88
+	./configure ${zconfig} || exit 88
 }
 Src_compile() {
 	zprint " Compiling ${packagedir} "
@@ -57,8 +54,7 @@ Src_post() {
 	zprint "Finalizing ${packagedir}"
 	/usr/sbin/ldconfig
 }
-
-export package packagedir archive delete patch prefix disable docdir
+export package packagedir archive delete patch zconfig
 export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
@@ -80,5 +76,5 @@ else
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive delete patch prefix disable docdir
+    unset package packagedir archive delete patch zconfig
 fi
