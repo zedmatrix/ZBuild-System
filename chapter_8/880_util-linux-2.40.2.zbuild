@@ -12,7 +12,7 @@ unset -f Src_post
 # Global Settings
 #
 [ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
-ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
+ZBUILD_log="${ZBUILD_root}/Zbuild_log"
 ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
 package=util-linux-2.40.2
@@ -20,13 +20,10 @@ packagedir=${package}
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
-binlibdir="--bindir=/usr/bin --sbindir=/usr/sbin --libdir=/usr/lib"
-runstatedir="--runstatedir=/run"
-disable="--disable-chfn-chsh --disable-login --disable-nologin --disable-su --disable-setpriv"
-disable="${disable} --disable-runuser --disable-pylibmount --disable-static --disable-liblastlog2"
-without="--without-python"
-docdir="--docdir=/usr/share/doc/${packagedir}"
-
+zconfig="--bindir=/usr/bin --sbindir=/usr/sbin --libdir=/usr/lib --runstatedir=/run --without-python"
+zconfig="${zconfig} --disable-chfn-chsh --disable-login --disable-nologin --disable-su --disable-setpriv"
+zconfig="${zconfig} --disable-runuser --disable-pylibmount --disable-static --disable-liblastlog2"
+zconfig="${zconfig} --docdir=/usr/share/doc/${packagedir}"
 #
 #   Build Functions
 # 
@@ -41,7 +38,7 @@ Src_prepare() {
 }
 Src_configure() {
     zprint " Configuring ${packagedir} "
-    ./configure ${binlibdir} ${runstatedir} ${disable} ${without} ADJTIME_PATH=/var/lib/hwclock/adjtime ${docdir}
+    ./configure ${zconfig} ADJTIME_PATH=/var/lib/hwclock/adjtime
 }
 Src_compile() {
     zprint " Compiling ${packagedir} "
@@ -60,8 +57,7 @@ Src_install() {
 Src_post() {
     zprint " Finalizing ${packagedir} "
 }
-
-export package packagedir archive patch delete binlibdir runstatedir disable without docdir
+export package packagedir archive patch delete zconfig
 export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
@@ -83,5 +79,5 @@ else
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive patch delete binlibdir runstatedir disable without docdir
+    unset package packagedir archive patch delete zconfig
 fi
