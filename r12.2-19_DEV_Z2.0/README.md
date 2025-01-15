@@ -1,2 +1,5 @@
-# Linux From Scratch r12.2-19-systemd
-## Zbuild 2.0 script
+# Linux From Scratch Revisions
+
+Linux From Scratch Version r12.2-68 - systemd
+Beyond Linux From Scratch Version r12.2-939 - systemd
+Zbuild 2.0 script
