@@ -16,34 +16,27 @@ unset -f Src_post
 #   Global
 #
 ZBUILD_sources="/opt/source"
-ZBUILD_root="/BUILD"
-ZBUILD_log="${ZBUILD_root}/Zbuild_Log"
+ZBUILD_root="/zbuild"
+ZBUILD_log="${ZBUILD_root}/Zbuild_log"
 ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 #
 #   Package Specific Options
 #
-#   configure specific
-prefix="--prefix=/usr"
-disable="--disable-static"
-enable="--enable-shared"
-docdir="--docdir=/usr/share/doc/${packagedir}"
-sysconfdir="--sysconfdir=/etc"
-localstatedir="--localstatedir=/var"
-runstatedir="--runstatedir=/run"
-#   meson specific
-prefix="--prefix=/usr"
-build="--buildtype=release"
-#   cmake specific
-prefix="-D CMAKE_INSTALL_PREFIX=/usr"
-build="-D CMAKE_BUILD_TYPE=Release"
-disable="-D BUILD_TESTING=OFF -W no-dev"
-#   zbuild mini options
 package=
 packagedir=${package}
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
+#   configure specific
+zconfig="--prefix=/usr --disable-static --enable-shared"
+zconfig="${zconfig} --docdir=/usr/share/doc/${packagedir}"
+zconfig="${zconfig} --sysconfdir=/etc --localstatedir=/var --runstatedir=/run"
 
+#   meson specific
+zconfig="--prefix=/usr --buildtype=release"
+
+#   cmake specific
+zconfig="-D CMAKE_INSTALL_PREFIX=/usr -D CMAKE_BUILD_TYPE=Release -D BUILD_TESTING=OFF -W no-dev"
 #
 #   Build Functions
 #
@@ -55,44 +48,38 @@ Src_Extract() {
 Src_prepare() {
     zprint " Preparing ${packagedir} "
     #mkdir -v build && cd build
-
 }
 # Not Optional will exit 88
 Src_configure() {
     zprint " Configuring ${package} "
-    ./configure ${prefix} ${disable} ${enable} ${docdir}
-    #cmake .. ${prefix} ${build} ${disable}
-    #meson setup .. ${prefix} ${build}
+    ./configure ${zconfig} || exit 88
+    #cmake .. ${zconfig} || exit 88
+    #meson setup .. ${zconfig} || exit 88
 }
 # Not Optional will exit 77
 Src_compile() {
     zprint " Compiling ${packagedir} "
-    make 2>&1 | tee "${ZBUILD_log}/${package}-make.log"
+    make || exit 77
     #ninja
 }
 # Not Optional will exit 66
 Src_check() {
     zprint " Checking ${packagedir} "
     make check 2>&1 | tee "${ZBUILD_log}/${package}-check.log"
-    #ninja test
+    #ninja test 2>&1 | tee "${ZBUILD_log}/${package}-check.log"
 }
 # Not Optional will exit 55
 Src_install() {
     zprint " Installing ${packagedir} "
-    make install
-    #ninja install
+    make install || exit 55
+    #ninja install || exit 55
 }
 # Executed After popd - Optional
 Src_post() {
     zprint " Finalizing ${packagedir} "
 
 }
-
-export package packagedir archive delete patch
-export prefix disable enable docdir
-#export prefix build disable
-#export ZBUILD_sources ZBUILD_root ZBUILD_log
-
+export package packagedir archive delete patch zconfig
 export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
@@ -115,7 +102,5 @@ else
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive delete patch
-    unset prefix disable enable docdir build
+    unset package packagedir archive delete patch zconfig
 fi
-
