@@ -11,7 +11,7 @@ unset -f Src_post
 #
 # Global Settings
 #
-[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; return 2; }
+[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
 ZBUILD_log=${ZBUILD_log:-"${ZBUILD_root}/Zbuild_log"}
 ZBUILD_script=${ZBUILD_script:-"${ZBUILD_root}/zbuild2.sh"}
 
@@ -20,9 +20,6 @@ packagedir=${package}
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
-prefix="--prefix=/usr"
-disable="--disable-static"
-docdir="/usr/share/doc/${packagedir}"
 #
 #   Build Functions
 # 
@@ -36,14 +33,13 @@ Src_prepare() {
     zprint " Preparing ${package} "
     gzip -cd ${ZBUILD_sources}/libpng-1.6.43-apng.patch.gz | patch -p1
 }
-
 Src_configure() {
     zprint " Configuring ${package} "
-    ./configure ${prefix} ${disable} || return 88
+    ./configure --prefix=/usr --disable-static || exit 88
 }
 Src_compile() {
     zprint " Compiling ${package} "
-    make || return 77
+    make || exit 77
 }
 Src_check() {
     zprint " Checking ${package} "
@@ -51,16 +47,15 @@ Src_check() {
 }
 Src_install() {
     zprint " Installing ${package} "
-    make install || return 55
-    mkdir -v ${docdir}
-    cp -v README libpng-manual.txt ${docdir}
+    make install || exit 55
+    mkdir -v /usr/share/doc/${packagedir}
+    cp -v README libpng-manual.txt /usr/share/doc/${packagedir}
 }
 Src_post() {
     zprint " Finalizing ${package} "
     /sbin/ldconfig
 }
-
-export package packagedir archive patch delete prefix disable docdir
+export package packagedir archive patch delete
 export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
@@ -73,7 +68,7 @@ if [ -f ${ZBUILD_script} ]; then
     ${ZBUILD_script}
 else
     zprint "Error: Missing ZBUILD_script."
-    return 2
+    exit 2
 fi
 exit_code=$?
 
@@ -87,5 +82,5 @@ else
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive patch delete prefix disable docdir
+    unset package packagedir archive patch delete
 fi
