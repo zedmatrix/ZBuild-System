@@ -1,0 +1,28 @@
+zprint "Installing Git manpages"
+tar -xf $ZBUILD_sources/git-manpages-2.47.1.tar.xz -C /usr/share/man --no-same-owner --no-overwrite-dir
+
+zprint "Installing Git documentation"
+mkdir -vp /usr/share/doc/git-2.47.1
+tar -xf $ZBUILD_sources/git-htmldocs-2.47.1.tar.xz -C /usr/share/doc/git-2.47.1 --no-same-owner --no-overwrite-dir
+
+zprint "Changing File and Directory modes"
+find /usr/share/doc/git-2.47.1 -type d -exec chmod 755 {} \;
+find /usr/share/doc/git-2.47.1 -type f -exec chmod 644 {} \;
+
+zprint "Re-Organize Git Documentation"
+mkdir -vp /usr/share/doc/git-2.47.1/man-pages/{html,text}
+mv -v /usr/share/doc/git-2.47.1/{git*.txt,man-pages/text}
+mv -v /usr/share/doc/git-2.47.1/{git*.,index.,man-pages/}html
+
+mkdir -vp /usr/share/doc/git-2.47.1/technical/{html,text}
+mv -v /usr/share/doc/git-2.47.1/technical/{*.txt,text}
+mv -v /usr/share/doc/git-2.47.1/technical/{*.,}html
+
+mkdir -vp /usr/share/doc/git-2.47.1/howto/{html,text}
+mv -v /usr/share/doc/git-2.47.1/howto/{*.txt,text}
+mv -v /usr/share/doc/git-2.47.1/howto/{*.,}html
+
+sed -i '/^<a href=/s|howto/|&html/|' /usr/share/doc/git-2.47.1/howto-index.html
+sed -i '/^\* link:/s|howto/|&html/|' /usr/share/doc/git-2.47.1/howto-index.txt
+
+zprint "Done"
