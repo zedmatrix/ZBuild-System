@@ -16,7 +16,7 @@ unset -f Src_post
 # Global Settings
 #
 [ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
-ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
+ZBUILD_log="${ZBUILD_root}/Zbuild_log"
 ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
 package=
@@ -28,16 +28,12 @@ patch="false"
 #   Package Definitions
 #
 #   Configure
-prefix="--prefix=/usr"
-enable="--enable-shared"
-disable="--disable-static"
+zconfig="--prefix=/usr --enable-shared --disable-static"
 docdir="--docdir=/usr/share/doc/${packagedir}"
 #   Meson/Ninja
-prefix="--prefix=/usr"
-build="--buildtype=release"
+zconfig="--prefix=/usr --buildtype=release"
 #   CMake
-prefix="-D CMAKE_INSTALL_PREFIX=/usr"
-build="-D CMAKE_INSTALL_BUILDTYPE=Release"
+zconfig="-D CMAKE_INSTALL_PREFIX=/usr -D CMAKE_INSTALL_BUILDTYPE=Release"
 #
 #   Build Functions
 # 
@@ -53,9 +49,9 @@ Src_prepare() {
 }
 Src_configure() {
     zprint " Configuring ${packagedir} "
-    #./configure ${prefix} ${enable} ${disable} ${docdir} || exit 88
-    #cmake .. ${prefix} ${build}  || exit 88
-    #meson setup .. ${prefix} ${build}  || exit 88
+    #./configure ${zconfig} || exit 88
+    #cmake .. ${zconfig}  || exit 88
+    #meson setup .. ${zconfig}  || exit 88
 }
 Src_compile() {
     zprint " Compiling ${package} "
@@ -74,13 +70,9 @@ Src_install() {
 }
 Src_post() {
     zprint " Finalizing ${packagedir} "
-
     /usr/sbin/ldconfig
 }
-
-export package packagedir archive delete patch
-#export prefix enable disable docdir
-#export prefix build
+export package packagedir archive delete patch zconfig docdir
 export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
@@ -103,7 +95,5 @@ else
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive extract delete patch
-    unset prefix enable disable docdir
-    unset prefix build
+    unset package packagedir archive extract delete patch zconfig docdir
 fi
