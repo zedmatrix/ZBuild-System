@@ -11,3 +11,6 @@ LFS chapters 5 to 7 environment.
 
 ## Testing
 I have tested all of the scripts and go through updating them to the latest Linux From Scratch Development Release.<br>
+
+Quick unmount single line
+`umount -v /mnt/lfs{/dev{/shm,/pts,},/run,/sys,/proc,}`
