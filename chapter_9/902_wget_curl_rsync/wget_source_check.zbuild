@@ -21,7 +21,7 @@ pushd ${SOURCE}
 
         if [ ! -f "${SOURCE}/${package}" ]; then
             zprint "Downloading: $package"
-            wget "$package_url"
+            wget --no-clobber "$package_url"
 
             if echo "$md5  $package" | md5sum -c -; then
                 echo "File: $file MD5 checksum: OK" >> $LOG
