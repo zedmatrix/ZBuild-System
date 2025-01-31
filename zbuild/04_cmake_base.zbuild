@@ -27,6 +27,7 @@ patch="false"
 #
 zconfig="-D CMAKE_INSTALL_PREFIX=/usr -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_LIBEXECDIR=libexec"
 zconfig="${zconfig} -D KDE_INSTALL_USE_QT_SYS_PATHS=ON -D BUILD_TESTING=OFF -W no-dev -G Ninja"
+zconfig="${zconfig} -D docdir=/usr/share/doc/${packagedir}"
 #
 #   Build Functions
 # 
