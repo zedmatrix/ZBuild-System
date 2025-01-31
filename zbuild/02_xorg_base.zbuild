@@ -15,7 +15,7 @@ unset -f Src_post
 # Global Settings
 #
 [ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
-ZBUILD_log="${ZBUILD_root}/Zbuild_Logs"
+ZBUILD_log="${ZBUILD_root}/Zbuild_log"
 ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
 package=
@@ -23,13 +23,9 @@ packagedir=${package}
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
-# Xorg Specific Config = XORG_PREFIX && XORG_CONFIG
-prefix="--prefix=/usr"
-sysconfdir="--sysconfdir=/etc"
-localstatedir="--localstatedir=/var"
-disable="--disable-static"
-docdir="--docdir=/usr/share/doc/${packagedir}"
-
+# Xorg Specific Config = XORG_PREFIX=/usr && XORG_CONFIG
+zconfig="--prefix=/usr --sysconfdir=/etc --localstatedir=/var --disable-static"
+zconfig="${zconfig} --docdir=/usr/share/doc/${packagedir}"
 #
 #   Build Functions
 # 
@@ -40,31 +36,29 @@ Src_Extract() {
 }
 # Executed After pushd into $ZBUILD_root/packagedir
 Src_prepare() {
-    zprint "Preparing ${packagedir}"
+    zprint " No Prepare ${packagedir} "
 }
 Src_configure() {
-    zprint "Configuring ${packagedir}"
-    ./configure ${prefix} ${sysconfdir} ${localstatedir} ${disable} || exit 88
+    zprint " Configuring ${packagedir} "
+    ./configure ${zconfig} || return 88
 }
 Src_compile() {
-    zprint "Compiling ${packagedir}"
-    make || exit 77
+    zprint " Compiling ${packagedir} "
+    make || return 77
 }
 Src_check() {
-    zprint "Checking ${packagedir}"
+    zprint " Checking ${packagedir} "
     make check 2>&1 | tee "${ZBUILD_log}/${packagedir}-check.log"
 }
 Src_install() {
-    zprint "Installing ${packagedir}"
-    make install || exit 55
+    zprint " Installing ${packagedir} "
+    make install || return 55
 }
 Src_post () {
-    zprint "Finalizing ${packagedir}"
+    zprint " Finalizing ${packagedir} "
     /usr/sbin/ldconfig
 }
-
-export package packagedir archive delete patch
-export prefix sysconfdir localstatedir disable enable docdir
+export package packagedir archive delete patch zconfig
 export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
@@ -73,10 +67,15 @@ export -f Src_check
 export -f Src_install
 export -f Src_post
 
-${ZBUILD_script} || { echo "Error: Missing ZBUILD_script."; exit 2; }
-exit_code=$?
+if [ -f ${ZBUILD_script} ]; then
+    ${ZBUILD_script}
+    exit_code=$?
+else
+    echo "Error: Missing ZBUILD_script."
+    exit_code=2
+fi
 
-if [[ exit_code -ne 0 ]]; then
+if [[ $exit_code -ne 0 ]]; then
     zprint " Error Code: ${exit_code} "
 else
     zprint " Success "
@@ -86,6 +85,5 @@ else
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive delete patch
-    unset prefix sysconfdir localstatedir disable enable docdir
+    unset package packagedir archive delete patch zconfig
 fi
