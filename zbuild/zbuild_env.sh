@@ -1,12 +1,10 @@
 #!/bin/bash
-unset pkg pkgver package packagedir delete patch
-unset prefix build sysconfdir localstatedir runstatedir disable enable
-
 # begin /etc/profile.d/zbuild_env.sh
-RED="${RED:-\033[1;31m}"
-GREEN="${GREEN:-\033[1;32m}"
-YELLOW="${YELLOW:-\033[1;33m}"
-NORMAL="${NORMAL:-\033[0m}"
+
+zzred="${zzred:-\033[1;31m}"
+zzgreen="${zzgreen:-\033[1;32m}"
+zzyellow="${zzyellow:-\033[1;33m}"
+zznormal="${zznormal:-\033[0m}"
 
 ZBUILD_root="/zbuild"
 ZBUILD_sources="/sources"
@@ -19,7 +17,7 @@ Src_Extract() {
     tar -xf "${ZBUILD_sources}/${archive}" -C "${ZBUILD_root}/${packagedir}" --strip-components=1
 }
 
-zprint() { printf "${YELLOW} *** %s *** ${NORMAL} \n" "$*"; }
+zprint() { printf "${zzyellow} *** %s *** ${zznormal} \n" "$*"; }
 
 CurlPaste() {
         file=${1}
@@ -38,8 +36,9 @@ Source_wget() {
         fi
 }
 
-export RED GREEN YELLOW NORMAL
+export zzred zzgreen zzyellow zznormal
 export ZBUILD_root ZBUILD_sources ZBUILD_script ZBUILD_log
-export -f Src_Extract zprint Source_wget
+export -f zprint Source_wget Curl_Paste
+
 
 # end /etc/profile.d/zbuild_env.sh
