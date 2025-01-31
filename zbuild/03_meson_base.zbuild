@@ -24,6 +24,7 @@ archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 |
 delete="true"
 patch="false"
 zconfig="--prefix=/usr --buildtype=release"
+zconfig="${zconfig} -D docdir=/usr/share/doc/${packagedir}"
 #
 #   Build Functions
 # 
