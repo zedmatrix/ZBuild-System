@@ -1,6 +1,11 @@
-# Building Linux From Scratch
-## Development Version r12.2-82 Systemd
-### Download and Prepare a Gentoo Root
+# Building
+## Linux From Scratch
+Development Version r12.2-82 Systemd
+
+## Beyond Linux From Scratch
+Development Version r12-2-1160
+
+## Download and Prepare a Gentoo Root
 To aide in your development of Linux From Scratch 
 First thing I did to start my journey was using the <br>
 Gentoo Live CD https://www.gentoo.org/downloads/<br>
@@ -27,6 +32,7 @@ nameserver 1.1.1.1
 EOF
 ```
 * Mount Virtual Filesystems and chroot into the build root environment
+* If available use: `export LFS_root=/mnt/lfsroot && arch-chroot $LFS_root`
 ```
 mount --types proc /proc /mnt/gentoo/proc
 mount --rbind /sys /mnt/gentoo/sys
