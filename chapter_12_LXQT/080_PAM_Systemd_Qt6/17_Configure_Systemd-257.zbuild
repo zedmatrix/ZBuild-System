@@ -1,0 +1,35 @@
+grep 'pam_systemd' /etc/pam.d/system-session ||
+cat >> /etc/pam.d/system-session << "EOF"
+# Begin Systemd addition
+
+session  required    pam_loginuid.so
+session  optional    pam_systemd.so
+
+# End Systemd addition
+EOF
+[ -f "/etc/pam.d/system-session" ] && zprint "/etc/pam.d/system-session ...Updated"
+
+cat > /etc/pam.d/systemd-user << "EOF"
+# Begin /etc/pam.d/systemd-user
+
+account  required    pam_access.so
+account  include     system-account
+
+session  required    pam_env.so
+session  required    pam_limits.so
+session  required    pam_loginuid.so
+session  optional    pam_keyinit.so force revoke
+session  optional    pam_systemd.so
+
+auth     required    pam_deny.so
+password required    pam_deny.so
+
+# End /etc/pam.d/systemd-user
+EOF
+[ -f "/etc/pam.d/systemd-user" ] && zprint "/etc/pam.d/systemd-user ..Installed"
+systemctl daemon-reexec
+
+zprint "You Should re-login ALL sessions to make sure the system is running with"
+zprint "    the New versions of Shadow-4.17.2 and Linux-PAM-1.7.0 and Systemd-257"
+zprint "    This ensures the running login session registered with systemd-logind"
+

@@ -1,0 +1,20 @@
+cat > /etc/acpi/events/lid << "EOF"
+event=button/lid
+action=/etc/acpi/lid.sh
+EOF
+[ -f "/etc/acpi/events/lid" ] && zprint "Created... /etc/acpi/events/lid"
+
+cat > /etc/acpi/lid.sh << "EOF"
+#!/bin/sh
+/bin/grep -q open /proc/acpi/button/lid/LID/state && exit 0
+/usr/bin/systemctl suspend
+EOF
+chmod +x /etc/acpi/lid.sh
+[ -f "/etc/acpi/lid.sh" ] && zprint "Created... /etc/acpi/lid.sh"
+
+mkdir -pv /etc/systemd/logind.conf.d
+echo HandleLidSwitch=ignore > /etc/systemd/logind.conf.d/acpi.conf
+[ -f "/etc/systemd/logind.conf.d/acpi.conf" ] && zprint "Created acpi.conf"
+
+zprint "Done"
+

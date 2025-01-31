@@ -1,0 +1,6 @@
+zprint "Configuring Login Access"
+if [ -f /etc/login.access ]; then mv -v /etc/login.access{,.NOUSE}; fi
+
+zprint "Configuring Resource Limits"
+if [ -f /etc/limits ]; then mv -v /etc/limits{,.NOUSE}; fi
+

@@ -1,0 +1,13 @@
+packagedir=lua-5.4.7-tests
+
+zprint "Extracting Lua-tests"
+
+tar -xf ${ZBUILD_sources}/${packagedir}.tar.gz || exit 1
+
+pushd $packagedir
+
+lua -e "_U=true" all.lua 
+
+popd
+
+zprint "Done"

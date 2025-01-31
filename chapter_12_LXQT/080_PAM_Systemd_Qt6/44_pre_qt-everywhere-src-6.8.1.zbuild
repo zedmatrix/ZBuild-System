@@ -1,0 +1,7 @@
+zprint "export QT6PREFIX=/opt/qt6"
+export QT6PREFIX=/opt/qt6
+
+zprint "Create a Versioned Directory and Link it"
+mkdir -pv /opt/qt-6.8.1
+ln -sfnv qt-6.8.1 /opt/qt6
+

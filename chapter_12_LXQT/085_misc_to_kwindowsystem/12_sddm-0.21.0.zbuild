@@ -1,0 +1,92 @@
+#!/bin/bash
+#       Install Zbuild v2.0 - Master - Includes CMake and Meson/Ninja
+#       sddm-0.21.0
+#
+#       DEPENDS ()
+#
+#    unset functions
+unset -f Src_Extract
+unset -f Src_prepare
+unset -f Src_configure
+unset -f Src_compile
+unset -f Src_check
+unset -f Src_install
+unset -f Src_post
+#
+# Global Settings
+#
+[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
+ZBUILD_log="${ZBUILD_root}/Zbuild_log"
+ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
+
+package=sddm-0.21.0
+packagedir=${package}
+archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
+delete="true"
+patch="false"
+#   CMake
+zconfig="-D CMAKE_INSTALL_PREFIX=/usr -D CMAKE_BUILD_TYPE=Release -D RUNTIME_DIR=/run/sddm -D BUILD_MAN_PAGES=ON"
+zconfig="${zconfig} -D BUILD_WITH_QT6=ON -D DATA_INSTALL_DIR=/usr/share/sddm"
+zconfig="${zconfig} -D DBUS_CONFIG_FILENAME=sddm_org.freedesktop.DisplayManager.conf"
+#
+#   Build Functions
+#
+Src_Extract() {
+    zprint "Extracting: ${archive}"
+    mkdir -v "${ZBUILD_root}/${packagedir}"
+    tar -xf "${ZBUILD_sources}/${archive}" -C "${ZBUILD_root}/${packagedir}" --strip-components=1
+}
+# Executed After pushd into $ZBUILD_root/packagedir - optional just warns
+Src_prepare() {
+    zprint " Preparing ${packagedir} "
+	groupadd -g 64 sddm
+	useradd  -c "sddm Daemon" -d /var/lib/sddm -u 64 -g sddm -s /bin/false sddm && echo "sddm user/group created"
+    mkdir -v build
+	cd build
+}
+Src_configure() {
+    zprint " Configuring ${packagedir} "
+    cmake .. ${zconfig} || exit 88
+}
+Src_compile() {
+    zprint " Compiling ${package} "
+    make || exit 77
+}
+Src_check() {
+    zprint " No Testsuite Available ${packagedir} "
+}
+Src_install() {
+    zprint " Installing ${packagedir} "
+    make install || exit 55
+	install -v -dm755 -o sddm -g sddm /var/lib/sddm
+	/usr/bin/sddm --example-config > /etc/sddm.conf
+}
+Src_post() {
+    zprint " Finalizing ${packagedir} "
+    /usr/sbin/ldconfig
+}
+export package packagedir archive delete patch zconfig
+export -f Src_Extract
+export -f Src_prepare
+export -f Src_configure
+export -f Src_compile
+export -f Src_check
+export -f Src_install
+export -f Src_post
+
+# setup in zbuild_env.sh
+${ZBUILD_script} || { echo "Error: Missing ZBUILD_script."; exit 2; }
+exit_code=$?
+
+if [[ exit_code -ne 0 ]]; then
+    zprint " Error Code: ${exit_code} "
+else
+    zprint " Success "
+    unset -f Src_prepare
+    unset -f Src_configure
+    unset -f Src_compile
+    unset -f Src_check
+    unset -f Src_install
+    unset -f Src_post
+    unset package packagedir archive extract delete patch zconfig
+fi

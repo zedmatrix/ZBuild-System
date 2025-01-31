@@ -1,0 +1,4 @@
+zprint "Cleaning SDL2-2.30.11"
+rm -rf ${ZBUILD_root}/SDL2-2.30.11
+rm -v /usr/lib/libSDL2*.a
+

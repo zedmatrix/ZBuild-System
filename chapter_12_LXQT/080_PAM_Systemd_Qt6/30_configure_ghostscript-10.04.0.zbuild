@@ -1,0 +1,4 @@
+tar -xvf ${ZBUILD_sources}/ghostscript-fonts-std-8.11.tar.gz -C /usr/share/ghostscript --no-same-owner
+tar -xvf ${ZBUILD_sources}/gnu-gs-fonts-other-6.0.tar.gz -C /usr/share/ghostscript --no-same-owner
+fc-cache -v /usr/share/ghostscript/fonts/
+gs -q -dBATCH /usr/share/ghostscript/10.04.0/examples/tiger.eps

@@ -1,0 +1,28 @@
+zprint "Testing Xwayland-24.1.4"
+[ ! -d "/zbuild/xwayland-24.1.4/build" ] && { zprint "Missing Build Dir... Exiting."; exit 1; }
+pushd "/zbuild/xwayland-24.1.4/build"
+
+mkdir -v tools
+pushd tools
+
+git clone https://gitlab.freedesktop.org/mesa/piglit.git --depth 1
+cat > piglit/piglit.conf << EOF
+[xts]
+path=$(pwd)/xts
+EOF
+
+git clone https://gitlab.freedesktop.org/xorg/test/xts --depth 1
+
+export DISPLAY=:22
+../hw/vfb/Xvfb $DISPLAY &
+VFB_PID=$!
+cd xts
+CFLAGS=-fcommon ./autogen.sh
+make
+kill $VFB_PID
+unset DISPLAY VFB_PID
+popd
+
+popd 
+zprint "Done"
+
