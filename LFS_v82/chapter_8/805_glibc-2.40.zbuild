@@ -54,8 +54,7 @@ Src_install() {
     zprint " Installing ${packagedir} "
     touch /etc/ld.so.conf
     sed '/test-installation/s@$(PERL)@echo not running@' -i ../Makefile
-    make DESTDIR=$PWD/dest install
-    install -vm755 dest/usr/lib/*.so.* /usr/lib
+    make install
 }
 Src_post() {
     zprint " Finalizing ${package} "
