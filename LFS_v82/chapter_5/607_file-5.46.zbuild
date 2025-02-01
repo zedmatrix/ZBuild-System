@@ -1,5 +1,5 @@
 #!/bin/bash
-#   6.07 - File-5.45 - temporary
+#   6.07 - File-5.46 - temporary
 #   unset functions
 #
 unset -f Src_prepare
@@ -8,25 +8,23 @@ unset -f Src_compile
 unset -f Src_check
 unset -f Src_install
 unset -f Src_post
-# 
+#
 #  Global
 #
 [ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
-ZBUILD_log=${ZBUILD_log:-"${ZBUILD_root}/Zbuild_log"}
-ZBUILD_script=${ZBUILD_script:-"${ZBUILD_root}/zbuild2.sh"}
+ZBUILD_log="${ZBUILD_root}/Zbuild_log"
+ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
-package=file-5.45
+package=file-5.46
 packagedir=${package}
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
 disable="--disable-bzlib --disable-libseccomp --disable-xzlib --disable-zlib"
-prefix="--prefix=/usr"
-host="--host=${LFS_TGT}"
-
+zconfig="--prefix=/usr --host=${LFS_TGT}"
 #
 #   Build Functions
-# 
+#
 Src_Extract() {
 	zprint "Extracting: ${archive}"
 	mkdir -v "${ZBUILD_root}/${packagedir}"
@@ -43,12 +41,11 @@ Src_prepare() {
 }
 Src_configure() {
     zprint " Configuring ${package} "
-    build="--build=$(./config.guess)"
-    ./configure ${prefix} ${host} ${build}
+    ./configure ${zconfig} --build=$(./config.guess) || return 88
 }
 Src_compile() {
     zprint " Compiling ${package} "
-    make FILE_COMPILE=$(pwd)/build/src/file || exit 77
+    make FILE_COMPILE=$(pwd)/build/src/file || return 77
 }
 Src_check() {
     zprint " No Testsuite ${package} "
@@ -62,8 +59,7 @@ Src_post() {
     zprint " Finalizing ${package} "
     rm -v $LFS/usr/lib/libmagic.la
 }
-
-export package packagedir archive extract delete patch disable prefix host build
+export package packagedir archive delete patch disable zconfig
 export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
@@ -74,11 +70,11 @@ export -f Src_post
 
 if [ -f ${ZBUILD_script} ]; then
     ${ZBUILD_script}
+    exit_code=$?
 else
-    zprint "Error: Missing ZBUILD_script."
-    exit 1
+    zprint " Error: Missing $ZBUILD_script "
+    exit_code=2
 fi
-exit_code=$?
 
 if [[ $exit_code -ne 0 ]]; then
     zprint " Error Code: ${exit_code} "
@@ -90,5 +86,5 @@ else
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive delete patch disable prefix host build
+    unset package packagedir archive delete patch disable zconfig
 fi

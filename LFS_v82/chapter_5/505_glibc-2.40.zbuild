@@ -12,22 +12,19 @@ unset -f Src_post
 #  Global
 #
 [ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
-ZBUILD_log=${ZBUILD_log:-"${ZBUILD_root}/Zbuild_log"}
-ZBUILD_script=${ZBUILD_script:-"${ZBUILD_root}/zbuild2.sh"}
+ZBUILD_log="${ZBUILD_root}/Zbuild_log"
+ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
 package=glibc-2.40
 packagedir=${package}
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="glibc-2.40-fhs-1.patch"
-prefix="--prefix=/usr"
-host="--host=${LFS_TGT}"
-enable="--enable-kernel=4.19 --with-headers=${LFS}/usr/include"
-disable="--disable-nscd"
-
+zconfig="--prefix=/usr --host=${LFS_TGT} --disable-nscd"
+zconfig="${zconfig} --enable-kernel=4.19 --with-headers=${LFS}/usr/include"
 #
 #   Build Functions
-# 
+#
 Src_Extract() {
 	zprint "Extracting: ${archive}"
 	mkdir -v "${ZBUILD_root}/${packagedir}"
@@ -51,20 +48,18 @@ Src_prepare() {
 Src_configure() {
     zprint " Configuring ${package} "
     echo "rootsbindir=/usr/sbin" > configparms
-    build="--build=$(../scripts/config.guess)"
-    ../configure ${prefix} ${host} ${build} ${enable} ${disable} libc_cv_slibdir=/usr/lib || exit 88
+    ../configure ${zconfig} --build=$(../scripts/config.guess) libc_cv_slibdir=/usr/lib || return 88
 }
 Src_compile() {
     zprint " Compiling ${package} "
-    make || exit 77
+    make || return 77
 }
 Src_check() {
     zprint "No Testsuite ${package} "
-
 }
 Src_install() {
     zprint " Installing ${package} "
-    make DESTDIR=$LFS install || exit 55
+    make DESTDIR=$LFS install || return 55
     sed '/RTLDLIST=/s@/usr@@g' -i $LFS/usr/bin/ldd
 }
 # executes after popd
@@ -74,9 +69,7 @@ Src_post() {
     readelf -l a.out | grep ld-linux
     rm -v a.out
 }
-
-export package packagedir archive delete patch
-export prefix host build enable disable
+export package packagedir archive delete patch zconfig
 export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
@@ -87,13 +80,13 @@ export -f Src_post
 
 if [ -f ${ZBUILD_script} ]; then
     ${ZBUILD_script}
+    exit_code=$?
 else
-    zprint "Error: Missing ZBUILD_script."
-    exit 1
+    zprint "Error: Missing ${ZBUILD_script} Exiting."
+    exit_code=2
 fi
-exit_code=$?
 
-if [[ exit_code -ne 0 ]]; then
+if [[ $exit_code -ne 0 ]]; then
     zprint " Error Code: ${exit_code} "
 else
     zprint " Success "
@@ -103,7 +96,5 @@ else
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive delete patch
-    unset prefix host build enable disable
+    unset package packagedir archive delete patch zconfig
 fi
-

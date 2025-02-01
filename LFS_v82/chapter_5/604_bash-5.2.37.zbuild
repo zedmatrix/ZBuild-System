@@ -12,21 +12,18 @@ unset -f Src_post
 #  Global
 #
 [ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
-ZBUILD_log=${ZBUILD_log:-"${ZBUILD_root}/Zbuild_log"}
-ZBUILD_script=${ZBUILD_script:-"${ZBUILD_root}/zbuild2.sh"}
+ZBUILD_log="${ZBUILD_root}/Zbuild_log"
+ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
 package=bash-5.2.37
 packagedir=${package}
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
-prefix="--prefix=/usr"
-host="--host=$LFS_TGT"
-disable="--without-bash-malloc bash_cv_strtold_broken=no"
-
+zconfig="--prefix=/usr --host=$LFS_TGT --without-bash-malloc bash_cv_strtold_broken=no"
 #
 #   Build Functions
-# 
+#
 Src_Extract() {
 	zprint "Extracting: ${archive}"
 	mkdir -v "${ZBUILD_root}/${packagedir}"
@@ -34,16 +31,15 @@ Src_Extract() {
 }
 # executed after pushd
 Src_prepare() {
-    zprint " Preparing ${package} "
+    zprint " No Preparing ${package} "
 }
 Src_configure() {
     zprint " Configuring ${package} "
-    build="--build=$(sh support/config.guess)"
-    ./configure ${prefix} ${host} ${build} ${disable}
+    ./configure ${zconfig} --build=$(sh support/config.guess) || return 88
 }
 Src_compile() {
     zprint " Compiling ${package} "
-    make || exit 77
+    make || return 77
 }
 Src_check() {
     zprint " No Testsuite ${package} "
@@ -57,8 +53,7 @@ Src_post() {
     zprint " Finalizing ${package} "
     ln -sv bash $LFS/bin/sh
 }
-
-export package packagedir archive delete patch prefix host build disable
+export package packagedir archive delete patch zconfig
 export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
@@ -69,11 +64,11 @@ export -f Src_post
 
 if [ -f ${ZBUILD_script} ]; then
     ${ZBUILD_script}
+    exit_code=$?
 else
-    zprint "Error: Missing ZBUILD_script."
-    exit 1
+    zprint " Error: Missing $ZBUILD_script "
+    exit_code=2
 fi
-exit_code=$?
 
 if [[ $exit_code -ne 0 ]]; then
     zprint " Error Code: ${exit_code} "
@@ -85,6 +80,5 @@ else
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive delete patch prefix host build disable
+    unset package packagedir archive delete patch zconfig
 fi
-
