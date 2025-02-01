@@ -1,6 +1,6 @@
 #!/bin/bash
 if [ -v LFS ] && [ -n "$LFS" ]; then
-   echo "* Mounting Virtual Kernel Filesystems *"
+   zprint "  Mounting Virtual Kernel Filesystems  "
    mount -v --bind /dev $LFS/dev
    mount -vt devpts devpts -o gid=5,mode=0620 $LFS/dev/pts
    mount -vt proc proc $LFS/proc
@@ -12,5 +12,5 @@ if [ -v LFS ] && [ -n "$LFS" ]; then
      mount -vt tmpfs -o nosuid,nodev tmpfs $LFS/dev/shm
    fi
 else
-   echo "Error: Check Your \$LFS Variable"
+   zprint "  Error: Check Your \$LFS Variable  "
 fi

@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "* Creating Directories *"
+zprint " Creating Directories "
 mkdir -pv /{boot,home,mnt,srv}
 mkdir -pv /etc/{opt,sysconfig}
 mkdir -pv /lib/firmware
@@ -19,4 +19,4 @@ ln -sfv /run/lock /var/lock
 install -dv -m 0750 /root
 install -dv -m 1777 /tmp /var/tmp
 
-echo "* Finished Creating Directory Structure For LFS *"
+zprint " Finished Creating Directory Structure For LFS "

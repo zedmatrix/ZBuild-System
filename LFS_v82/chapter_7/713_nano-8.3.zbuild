@@ -1,8 +1,7 @@
 #!/bin/bash
-#   7.10 - Python-3.13.0 - Temporary
+#   BLFS - Nano-8.3
 #   unset functions
 #
-unset -f Src_package
 unset -f Src_prepare
 unset -f Src_configure
 unset -f Src_compile
@@ -16,15 +15,15 @@ unset -f Src_post
 ZBUILD_log=${ZBUILD_log:-"${ZBUILD_root}/Zbuild_log"}
 ZBUILD_script=${ZBUILD_script:-"${ZBUILD_root}/zbuild2.sh"}
 
-package=Python-3.13.0
+package=nano-8.3
 packagedir=${package}
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
-
+zconfig="--prefix=/usr --sysconfdir=/etc --enable-utf8 --docdir=/usr/share/doc/${packagedir}"
 #
 #   Build Functions
-# 
+#
 Src_Extract() {
 	zprint "Extracting: ${archive}"
 	mkdir -v "${ZBUILD_root}/${packagedir}"
@@ -33,31 +32,28 @@ Src_Extract() {
 # Executed After pushd into $ZBUILD_root/packagedir
 Src_prepare() {
     zprint " Preparing ${packagedir} "
-
 }
 Src_configure() {
     zprint " Configuring ${packagedir} "
-    ./configure --prefix=/usr --enable-shared --without-ensurepip
+    ./configure ${zconfig} || return 88
 }
 Src_compile() {
     zprint " Compiling ${packagedir} "
-    make || exit 77
+    make || return 77
 }
 Src_check() {
-    zprint " Checking ${packagedir} "
-
+    zprint " No Testsuite ${packagedir} "
 }
 Src_install() {
     zprint " Installing ${packagedir} "
     make install
+    install -v -m644 doc/{nano.html,sample.nanorc} /usr/share/doc/${packagedir}
 }
 # Executed After popd
 Src_post() {
-    zprint " Finalizing ${packagedir} "
-
+    zprint " No Finalizing ${package} "
 }
-
-export package packagedir archive delete patch
+export package packagedir archive delete patch zconfig
 export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
@@ -68,11 +64,11 @@ export -f Src_post
 
 if [ -f ${ZBUILD_script} ]; then
     ${ZBUILD_script}
+    exit_code=$?
 else
-    zprint "Error: Missing ZBUILD_script."
-    exit 1
+    zprint " Error: Missing $ZBUILD_script "
+    exit_code=2
 fi
-exit_code=$?
 
 if [[ $exit_code -ne 0 ]]; then
     zprint " Error Code: ${exit_code} "
@@ -84,5 +80,5 @@ else
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive delete patch
+    unset package packagedir archive delete patch zconfig
 fi
