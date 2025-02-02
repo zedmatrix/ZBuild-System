@@ -20,10 +20,9 @@ packagedir=${package}
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
-
 #
 #   Build Functions
-# 
+#
 Src_Extract() {
     zprint "Extracting: ${archive}"
     mkdir -v "${ZBUILD_root}/${packagedir}"
@@ -31,14 +30,14 @@ Src_Extract() {
 }
 # Executed After pushd into $ZBUILD_root/packagedir
 Src_prepare() {
-    zprint " Preparing ${packagedir} "
+    zprint " No Preparing ${packagedir} "
 }
 Src_configure() {
-    zprint " Configuring ${packagedir} "
+    zprint " No Configuring ${packagedir} "
 }
 Src_compile() {
     zprint " Compiling ${packagedir} "
-    make prefix=/usr || exit 77
+    make prefix=/usr || return 77
 }
 Src_check() {
     zprint " Checking ${packagedir} "
@@ -46,7 +45,7 @@ Src_check() {
 }
 Src_install() {
     zprint " Installing ${packagedir} "
-    make prefix=/usr install || exit 55
+    make prefix=/usr install || return 55
 }
 Src_post() {
     zprint " Finalizing ${packagedir} "
@@ -61,10 +60,14 @@ export -f Src_check
 export -f Src_install
 export -f Src_post
 
-${ZBUILD_script} || { echo "Error: Missing ZBUILD_script."; return 2; }
-exit_code=$?
+if [ -f ${ZBUILD_script} ]; then
+    ${ZBUILD_script}
+    exit_code=$?
+else
+    zprint " Error: Missing $ZBUILD_script "
+    exit_code=2
 
-if [[ exit_code -ne 0 ]]; then
+if [[ $exit_code -ne 0 ]]; then
     zprint " Error Code: ${exit_code} "
 else
     zprint " Success "
