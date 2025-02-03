@@ -15,7 +15,7 @@ unset -f Src_post
 ZBUILD_log="${ZBUILD_root}/Zbuild_log"
 ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
-package=MarkupSafe-3.0.2
+package=markupsafe-3.0.2
 packagedir=${package}
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
