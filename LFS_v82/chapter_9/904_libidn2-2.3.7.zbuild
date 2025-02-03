@@ -1,7 +1,8 @@
 #!/bin/bash
-#   BLFS Efibootmgr-18
-#   unset functions
+#		Install Zbuild 2.0
+#   libidn2-2.3.7
 #
+#   unset functions
 unset -f Src_prepare
 unset -f Src_configure
 unset -f Src_compile
@@ -12,17 +13,17 @@ unset -f Src_post
 # Global Settings
 #
 [ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
-ZBUILD_log=${ZBUILD_log:-"${ZBUILD_root}/Zbuild_log"}
-ZBUILD_script=${ZBUILD_script:-"${ZBUILD_root}/zbuild2.sh"}
+ZBUILD_log="${ZBUILD_root}/Zbuild_log"
+ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
-package=efibootmgr-18
+package=libidn2-2.3.7
 packagedir=${package}
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
 #
 #   Build Functions
-# 
+#
 Src_Extract() {
     zprint "Extracting: ${archive}"
     mkdir -v "${ZBUILD_root}/${packagedir}"
@@ -30,25 +31,28 @@ Src_Extract() {
 }
 # Executed After pushd into $ZBUILD_root/packagedir
 Src_prepare() {
-    zprint " No Prepare ${package} "
+	zprint "Preparing ${packagedir}"
 }
 Src_configure() {
-    zprint " No Configure ${package} "
+	zprint "Configuring ${package}"
+	./configure --prefix=/usr --disable-static || return 88
 }
 Src_compile() {
-    zprint " Compiling ${package} "
-    make EFIDIR=LFS EFI_LOADER=grubx64.efi || exit 77
+	zprint "Compiling ${package}"
+	make || return 77
 }
 Src_check() {
-    zprint " No Testsuite ${package} "
+	zprint "Checking ${package}"
+	make check 2>&1 | tee "${ZBUILD_log}/${packagedir}-check.log"
 }
 Src_install() {
-    zprint " Installing ${package} "
-    make install EFIDIR=LFS || exit 55
+	zprint "Installing ${package}"
+	make install || return 55
 }
+# Executed After popd
 Src_post() {
-    zprint " Finalizing ${package} "
-    /sbin/ldconfig
+	zprint "Finalizing ${packagedir}"
+	/usr/sbin/ldconfig
 }
 export package packagedir archive delete patch
 export -f Src_Extract
@@ -61,14 +65,14 @@ export -f Src_post
 
 if [ -f ${ZBUILD_script} ]; then
     ${ZBUILD_script}
+    exit_code=$?
 else
-    zprint "Error: Missing ZBUILD_script."
-    exit 2
+    zprint " Error: Missing $ZBUILD_script "
+    exit_code=2
 fi
-exit_code=$?
 
 if [[ $exit_code -ne 0 ]]; then
-    zprint " Error Code: $exit_code "
+    zprint " Error Code: ${exit_code} "
 else
     zprint " Success "
     unset -f Src_prepare
@@ -77,5 +81,5 @@ else
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive patch delete
+    unset package packagedir archive delete patch
 fi

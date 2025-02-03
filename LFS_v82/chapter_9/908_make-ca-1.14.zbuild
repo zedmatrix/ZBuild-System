@@ -1,7 +1,9 @@
 #!/bin/bash
-#   BLFS Which-2.21
-#   unset functions
+#		Zbuild 2.0 Install File
 #
+#   make-ca-1.14
+#
+#   unset functions
 unset -f Src_prepare
 unset -f Src_configure
 unset -f Src_compile
@@ -11,47 +13,48 @@ unset -f Src_post
 #
 # Global Settings
 #
-[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
-ZBUILD_log=${ZBUILD_log:-"${ZBUILD_root}/Zbuild_log"}
-ZBUILD_script=${ZBUILD_script:-"${ZBUILD_root}/zbuild2.sh"}
+[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; return 2; }
+ZBUILD_log="${ZBUILD_root}/Zbuild_log"
+ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
-package=which-2.21
+package=make-ca-1.14
 packagedir=${package}
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
 #
 #   Build Functions
-# 
+#
 Src_Extract() {
     zprint "Extracting: ${archive}"
     mkdir -v "${ZBUILD_root}/${packagedir}"
     tar -xf "${ZBUILD_sources}/${archive}" -C "${ZBUILD_root}/${packagedir}" --strip-components=1
 }
 # Executed After pushd into $ZBUILD_root/packagedir
-Src_prepare() {
-    zprint " No Prepare ${package} "
-}
 Src_configure() {
-    zprint " Configuring ${package} "
-    ./configure --prefix=/usr || exit 88
+	zprint " Installing ${packagedir} "
+	make install || return 55
+	install -vdm755 /etc/ssl/local
 }
 Src_compile() {
-    zprint " Compiling ${package} "
-    make || exit 77
+	zprint " Configuring ${packagedir} "
+	/usr/sbin/make-ca -g
 }
 Src_check() {
-    zprint " No Testsuite ${package} "
+	zprint " Notes ${packagedir} "
+	zprint "You should run: systemctl enable update-pki.timer"
 }
 Src_install() {
-    zprint " Installing ${package} "
-    make install || exit 55
+	zprint " Configure PIP3 Cert use ${packagedir} "
+	mkdir -pv /etc/profile.d
+	echo "export _PIP_STANDALONE_CERT=/etc/pki/tls/certs/ca-bundle.crt" > /etc/profile.d/pythoncerts.sh
 }
+# Executed After popd
 Src_post() {
-    zprint " Finalizing ${package} "
-    /sbin/ldconfig
+	zprint " Finalizing ${packagedir} "
+	/usr/sbin/ldconfig
 }
-export package packagedir archive patch delete
+export package packagedir archive delete patch
 export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
@@ -62,21 +65,21 @@ export -f Src_post
 
 if [ -f ${ZBUILD_script} ]; then
     ${ZBUILD_script}
+    exit_code=$?
 else
-    zprint "Error: Missing ZBUILD_script."
-    exit 2
+    zprint " Error: Missing $ZBUILD_script "
+    exit_code=2
 fi
-exit_code=$?
 
 if [[ $exit_code -ne 0 ]]; then
     zprint " Error Code: ${exit_code} "
 else
-    zprint "*** Success ***"
+    zprint " Success "
     unset -f Src_prepare
     unset -f Src_configure
     unset -f Src_compile
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive patch delete
+    unset package packagedir archive delete patch
 fi

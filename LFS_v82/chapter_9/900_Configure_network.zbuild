@@ -1,3 +1,4 @@
+#!/bin/bash
 zprint "Creating etc/systemd/network File"
 cat > /etc/systemd/network/10-ethernet-dhcp.network << "EOF"
 [Match]
