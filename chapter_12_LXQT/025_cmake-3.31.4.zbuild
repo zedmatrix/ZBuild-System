@@ -1,8 +1,8 @@
 #!/bin/bash
-#       Install Zbuild v2.0 - Master - Includes CMake and Meson/Ninja
+#       Install Zbuild v2.0
 #       cmake-3.31.4
 #
-#       DEPENDS ()
+#       DEPENDS (cURL-8.11.1, libarchive-3.7.7, libuv-1.50.0, nghttp2-1.64.0)
 #
 #    unset functions
 unset -f Src_Extract
@@ -21,13 +21,11 @@ ZBUILD_script="${ZBUILD_root}/zbuild2.sh"
 
 package=cmake-3.31.4
 packagedir=${package}
-archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)  #adjust as some may be *.tgz
+archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
-
 zconfig="--prefix=/usr --system-libs --mandir=/share/man --no-system-jsoncpp --no-system-cppdap"
 zconfig="${zconfig} --no-system-librhash --docdir=/usr/share/doc/${packagedir}"
-
 #
 #   Build Functions
 #
@@ -43,11 +41,11 @@ Src_prepare() {
 }
 Src_configure() {
     zprint " Configuring ${packagedir} "
-    ./bootstrap ${zconfig} || exit 88
+    ./bootstrap ${zconfig} || return 88
 }
 Src_compile() {
     zprint " Compiling ${package} "
-    make || exit 77
+    make || return 77
 }
 Src_check() {
     zprint " Checking ${packagedir} "
@@ -55,7 +53,7 @@ Src_check() {
 }
 Src_install() {
     zprint " Installing ${packagedir} "
-    make install || exit 55
+    make install || return 55
 }
 Src_post() {
     zprint " Finalizing ${packagedir} "
@@ -70,11 +68,15 @@ export -f Src_check
 export -f Src_install
 export -f Src_post
 
-# setup in zbuild_env.sh
-${ZBUILD_script} || { echo "Error: Missing ZBUILD_script."; exit 2; }
-exit_code=$?
+if [ -f ${ZBUILD_script} ]; then
+    ${ZBUILD_script}
+    exit_code=$?
+else
+    zprint " Error: Missing $ZBUILD_script "
+    exit_code=2
+fi
 
-if [[ exit_code -ne 0 ]]; then
+if [[ $exit_code -ne 0 ]]; then
     zprint " Error Code: ${exit_code} "
 else
     zprint " Success "
@@ -84,5 +86,5 @@ else
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive extract delete patch zconfig
+    unset package packagedir archive delete patch zconfig
 fi
