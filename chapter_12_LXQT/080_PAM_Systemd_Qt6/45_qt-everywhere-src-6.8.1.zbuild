@@ -24,11 +24,8 @@ packagedir=${package}
 archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
 delete="true"
 patch="false"
-
-QT6PREFIX=/opt/qt6
-zconfig="-prefix $QT6PREFIX -sysconfdir /etc/xdg -dbus-linked -openssl-linked -system-sqlite -no-rpath"
+zconfig="-prefix /opt/qt6 -sysconfdir /etc/xdg -dbus-linked -openssl-linked -system-sqlite -no-rpath"
 zconfig="${zconfig} -nomake examples -no-sbom -journald -skip qt3d -skip qtquick3dphysics -skip qtwebengine"
-
 #
 #   Build Functions
 #
@@ -40,36 +37,39 @@ Src_Extract() {
 # Executed After pushd into $ZBUILD_root/packagedir - optional just warns
 Src_prepare() {
     zprint " No Preparing ${packagedir} "
+    [ ! -d /opt/qt-6.8.1 ] && mkdir -pv /opt/qt-6.8.1
+    ln -sfnv qt-6.8.1 /opt/qt6 || return 99
 }
 Src_configure() {
     zprint " Configuring ${packagedir} "
-	LC_CTYPE=en_US.UTF-8 \
-    ./configure ${zconfig} || exit 88
+    export LC_ALL=en_US.UTF-8
+    export LANG=en_US.UTF-8
+    ./configure ${zconfig} || return 88
 }
 Src_compile() {
     zprint " Compiling ${package} "
-    ninja || exit 77
+    ninja || return 77
 }
 Src_check() {
     zprint " No Testsuite Available ${packagedir} "
 }
 Src_install() {
     zprint " Installing ${packagedir} "
-    ninja install || exit 55
-	find $QT6PREFIX/ -name \*.prl -exec sed -i -e '/^QMAKE_PRL_BUILD_DIR/d' {} \;
+    ninja install || return 55
+	find /opt/qt6/ -name \*.prl -exec sed -i -e '/^QMAKE_PRL_BUILD_DIR/d' {} \;
 
-	#pushd qttools/src
-	#install -v -Dm644 assistant/assistant/images/assistant-128.png /usr/share/pixmaps/assistant-qt6.png
-	#install -v -Dm644 designer/src/designer/images/designer.png /usr/share/pixmaps/designer-qt6.png
-	#install -v -Dm644 linguist/linguist/images/icons/linguist-128-32.png /usr/share/pixmaps/linguist-qt6.png
-	#install -v -Dm644 qdbus/qdbusviewer/images/qdbusviewer-128.png /usr/share/pixmaps/qdbusviewer-qt6.png
-	#popd
+	pushd qttools/src
+	install -v -Dm644 assistant/assistant/images/assistant-128.png /usr/share/pixmaps/assistant-qt6.png
+	install -v -Dm644 designer/src/designer/images/designer.png /usr/share/pixmaps/designer-qt6.png
+	install -v -Dm644 linguist/linguist/images/icons/linguist-128-32.png /usr/share/pixmaps/linguist-qt6.png
+	install -v -Dm644 qdbus/qdbusviewer/images/qdbusviewer-128.png /usr/share/pixmaps/qdbusviewer-qt6.png
+	popd
 }
 Src_post() {
     zprint " Finalizing ${packagedir} "
     /usr/sbin/ldconfig
 }
-export package packagedir archive delete patch QT6PREFIX zconfig
+export package packagedir archive delete patch zconfig
 export -f Src_Extract
 export -f Src_prepare
 export -f Src_configure
@@ -78,11 +78,15 @@ export -f Src_check
 export -f Src_install
 export -f Src_post
 
-# setup in zbuild_env.sh
-${ZBUILD_script} || { echo "Error: Missing ZBUILD_script."; exit 2; }
-exit_code=$?
+if [ -f ${ZBUILD_script} ]; then
+    ${ZBUILD_script}
+    exit_code=$?
+else
+    zprint " Error: Missing $ZBUILD_script "
+    exit_code=2
+fi
 
-if [[ exit_code -ne 0 ]]; then
+if [[ $exit_code -ne 0 ]]; then
     zprint " Error Code: ${exit_code} "
 else
     zprint " Success "
@@ -92,5 +96,5 @@ else
     unset -f Src_check
     unset -f Src_install
     unset -f Src_post
-    unset package packagedir archive extract delete patch zconfig
+    unset package packagedir archive delete patch zconfig
 fi
