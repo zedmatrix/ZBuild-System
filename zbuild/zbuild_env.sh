@@ -19,11 +19,11 @@ ZBUILD_Extract() {
 }
 
 SourceGet() {
-if [ -z $1 ]; then
-		 echo "Atleast one argument is needed"
-	else
-		wget "$1" --continue --no-clobber -P ${ZBUILD_sources}
-	fi
+    if [ -z $1 ]; then
+    	printf "${zzred} Error: \n\t Usage: $0 Url ${zznormal} \n"
+    else
+	wget "$1" --continue --no-clobber -P ${ZBUILD_sources}
+    fi
 }
 
 zzprint() { printf "${zzyellow} *** %s *** ${zznormal} \n" "$*"; }
