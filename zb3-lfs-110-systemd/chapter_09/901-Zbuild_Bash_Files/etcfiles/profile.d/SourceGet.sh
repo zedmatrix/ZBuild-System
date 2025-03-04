@@ -1,3 +1,4 @@
+#!/bin/bash
 SourceGet() {
     if [[ -z $1 ]]; then
         printf "${zzred} Usage: Source_wget [url/file] ${zznormal} \n"
