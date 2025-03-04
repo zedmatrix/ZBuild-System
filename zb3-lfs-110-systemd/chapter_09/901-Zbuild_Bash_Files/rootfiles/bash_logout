@@ -1,0 +1,8 @@
+#!/bin/bash
+# Begin ~/.bash_logout
+
+# Personal items to perform on logout.
+clear
+echo "Good Bye"
+
+# End ~/.bash_logout

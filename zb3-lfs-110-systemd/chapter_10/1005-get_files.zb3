@@ -1,0 +1,3 @@
+#!/bin/bash
+zprint "Downloading Cpio-2.15 and Git-2.48.1'
+wget -i 1005_Cpio-Git.wget -P $ZBUILD_sources/ -nc

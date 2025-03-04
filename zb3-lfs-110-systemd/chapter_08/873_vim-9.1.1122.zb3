@@ -1,0 +1,84 @@
+#!/bin/bash
+#   8.73 - Vim-9.1.1122
+#   unset functions
+#
+unset -f Src_Extract
+unset -f Src_prepare
+unset -f Src_configure
+unset -f Src_compile
+unset -f Src_check
+unset -f Src_install
+unset -f Src_post
+#
+# Global Settings
+#
+[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
+ZBUILD_log="${ZBUILD_root}/Zbuild_log"
+ZBUILD_script="${ZBUILD_root}/zbuild3.sh"
+
+package=vim-9.1.1122
+packagedir=${package}
+archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
+delete="true"
+patch="false"
+#
+#   Build Functions
+#
+Src_Extract() {
+    mkdir -v "${ZBUILD_root}/${packagedir}"
+    tar -xf "${ZBUILD_sources}/${archive}" -C "${ZBUILD_root}/${packagedir}" --strip-components=1
+}
+Src_prepare() {
+    echo '#define SYS_VIMRC_FILE "/etc/vimrc"' >> src/feature.h && echo " Patched "
+}
+Src_configure() {
+    ./configure --prefix=/usr || return 88
+}
+Src_compile() {
+    make || return 77
+}
+Src_check() {
+    chown -R tester .
+    sed '/test_glvs/d' -i src/testdir/Make_all.mak
+    su tester -c "TERM=xterm-256color LANG=en_US.UTF-8 make -j1 test" &> "${ZBUILD_log}/${packagedir}-check.log"
+}
+Src_install() {
+    make install || return 55
+}
+Src_post() {
+    ln -sv vim /usr/bin/vi
+    for L in /usr/share/man/{,*/}man1/vim.1; do
+        ln -sv vim.1 $(dirname $L)/vi.1
+    done
+    ln -sv ../vim/vim91/doc /usr/share/doc/${packagedir}
+}
+export package packagedir archive patch delete
+export -f Src_Extract
+export -f Src_prepare
+export -f Src_configure
+export -f Src_compile
+export -f Src_check
+export -f Src_install
+export -f Src_post
+
+if [ -f ${ZBUILD_script} ]; then
+    ${ZBUILD_script}
+    exit_code=$?
+else
+    zprint " Error: Missing $ZBUILD_script "
+    exit_code=2
+fi
+
+if [[ $exit_code -ne 0 ]]; then
+    zprint " Error Code: ${exit_code} "
+else
+    zprint " Success "
+    unset -f Src_Extract
+    unset -f Src_prepare
+    unset -f Src_configure
+    unset -f Src_compile
+    unset -f Src_check
+    unset -f Src_install
+    unset -f Src_post
+    unset package packagedir archive patch delete
+fi

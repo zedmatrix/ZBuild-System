@@ -1,0 +1,75 @@
+#!/bin/bash
+#	Zbuild 3.0		Install Script
+#   9.18 - Fuse-3.16.2
+#   unset functions
+#
+unset -f Src_Extract
+unset -f Src_prepare
+unset -f Src_configure
+unset -f Src_compile
+unset -f Src_check
+unset -f Src_install
+unset -f Src_post
+#
+# Global Settings
+#
+[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
+ZBUILD_log=${ZBUILD_log:-"${ZBUILD_root}/Zbuild_log"}
+ZBUILD_script=${ZBUILD_script:-"${ZBUILD_root}/zbuild3.sh"}
+
+package=fuse-3.16.2
+packagedir=${package}
+archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
+delete="true"
+patch="false"
+#
+#   Build Functions
+#
+Src_Extract() {
+    mkdir -v "${ZBUILD_root}/${packagedir}"
+    tar -xf "${ZBUILD_sources}/${archive}" -C "${ZBUILD_root}/${packagedir}" --strip-components=1
+}
+Src_prepare() {
+    sed -i '/^udev/,$ s/^/#/' util/meson.build && echo " Patched "
+    mkdir -v build
+    cd build
+}
+Src_configure() {
+    meson setup .. --prefix=/usr --buildtype=release || return 88
+}
+Src_compile() {
+    ninja || return 77
+}
+Src_install() {
+    ninja install || return 55
+    chmod u+s /usr/bin/fusermount3
+    cd ..
+    cp -Rv doc/html -T /usr/share/doc/${packagedir}
+    install -v -m644 doc/{README.NFS,kernel.txt} /usr/share/doc/${packagedir}
+}
+export package packagedir archive patch delete
+export -f Src_Extract
+export -f Src_prepare
+export -f Src_configure
+export -f Src_compile
+export -f Src_install
+
+if [ -f ${ZBUILD_script} ]; then
+    ${ZBUILD_script}
+    exit_code=$?
+else
+    zprint " Error: Missing $ZBUILD_script "
+    exit_code=2
+fi
+
+if [[ $exit_code -ne 0 ]]; then
+    zprint " Error Code: ${exit_code} "
+else
+    zprint " Success "
+    unset -f Src_Extract
+    unset -f Src_prepare
+    unset -f Src_configure
+    unset -f Src_compile
+    unset -f Src_install
+    unset package packagedir archive patch delete
+fi

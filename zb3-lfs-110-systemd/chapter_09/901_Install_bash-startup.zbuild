@@ -1,0 +1,14 @@
+#!/bin/bash
+packagedir=901-Zbuild_Bash_Files
+
+zprint "Extracting: ${packagedir}"
+mkdir -v ${packagedir}
+tar -xvf 901-bash_startup.tar.xz -C ${packagedir}
+
+zprint "Installing: ${packagedir}"
+cd ${packagedir}
+#make
+
+zprint "Clean up"
+cd ..
+#rm -rf ${packagedir}

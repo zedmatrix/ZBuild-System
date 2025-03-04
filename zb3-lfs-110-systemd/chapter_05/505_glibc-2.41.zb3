@@ -1,0 +1,89 @@
+#!/bin/bash
+#   5.05 - Glibc-2.41 temporary
+#   unset functions
+#
+unset -f Src_Extract
+unset -f Src_prepare
+unset -f Src_configure
+unset -f Src_compile
+unset -f Src_check
+unset -f Src_install
+unset -f Src_post
+#
+#  Global
+#
+[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
+ZBUILD_log="${ZBUILD_root}/Zbuild_log"
+ZBUILD_script="${ZBUILD_root}/zbuild3.sh"
+
+package=glibc-2.41
+packagedir=${package}
+archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
+delete="true"
+patch="glibc-2.40-fhs-1.patch"
+zconfig="--prefix=/usr --host=${LFS_TGT} --disable-nscd"
+zconfig="${zconfig} --enable-kernel=4.19 --with-headers=${LFS}/usr/include"
+#
+#   Build Functions
+#
+Src_Extract() {
+	mkdir -v "${ZBUILD_root}/${packagedir}"
+	tar -xf "${ZBUILD_sources}/${archive}" -C "${ZBUILD_root}/${packagedir}" --strip-components=1
+}
+Src_prepare() {
+    case $(uname -m) in
+        i?86)
+            ln -sfv ld-linux.so.2 $LFS/lib/ld-lsb.so.3
+        ;;
+        x86_64)
+            ln -sfv ../lib/ld-linux-x86-64.so.2 $LFS/lib64
+            ln -sfv ../lib/ld-linux-x86-64.so.2 $LFS/lib64/ld-lsb-x86-64.so.2
+        ;;
+    esac
+    mkdir -v build
+    cd build
+}
+Src_configure() {
+    echo "rootsbindir=/usr/sbin" > configparms
+    ../configure ${zconfig} --build=$(../scripts/config.guess) libc_cv_slibdir=/usr/lib || return 88
+}
+Src_compile() {
+    make || return 77
+}
+Src_install() {
+    make DESTDIR=$LFS install || return 55
+    sed '/RTLDLIST=/s@/usr@@g' -i $LFS/usr/bin/ldd
+}
+Src_post() {
+    echo 'int main(){}' | $LFS_TGT-gcc -xc -
+    readelf -l a.out | grep ld-linux
+    rm -v a.out
+}
+export package packagedir archive delete patch zconfig
+export -f Src_Extract
+export -f Src_prepare
+export -f Src_configure
+export -f Src_compile
+export -f Src_install
+export -f Src_post
+
+if [ -f ${ZBUILD_script} ]; then
+    ${ZBUILD_script}
+    exit_code=$?
+else
+    zprint "Error: Missing ${ZBUILD_script} Exiting."
+    exit_code=2
+fi
+
+if [[ $exit_code -ne 0 ]]; then
+    zprint " Error Code: ${exit_code} "
+else
+    zprint " Success "
+    unset -f Src_Extract
+    unset -f Src_prepare
+    unset -f Src_configure
+    unset -f Src_compile
+    unset -f Src_install
+    unset -f Src_post
+    unset package packagedir archive delete patch zconfig
+fi

@@ -1,0 +1,67 @@
+#!/bin/bash
+#   7.09 - Perl-5.40.1
+#   unset functions
+#
+unset -f Src_Extract
+unset -f Src_prepare
+unset -f Src_configure
+unset -f Src_compile
+unset -f Src_check
+unset -f Src_install
+unset -f Src_post
+#
+#  Global
+#
+[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
+ZBUILD_log=${ZBUILD_log:-"${ZBUILD_root}/Zbuild_log"}
+ZBUILD_script=${ZBUILD_script:-"${ZBUILD_root}/zbuild3.sh"}
+
+package=perl-5.40.1
+packagedir=${package}
+archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
+delete="true"
+patch="false"
+zconfig="-D prefix=/usr -D vendorprefix=/usr -D useshrplib"
+zconfig="${zconfig} -D privlib=/usr/lib/perl5/5.40/core_perl -D archlib=/usr/lib/perl5/5.40/core_perl"
+zconfig="${zconfig} -D sitelib=/usr/lib/perl5/5.40/site_perl -D sitearch=/usr/lib/perl5/5.40/site_perl"
+zconfig="${zconfig} -D vendorlib=/usr/lib/perl5/5.40/verdor_perl -D venderarch=/usr/lib/perl5/5.40/verdor_perl"
+#
+#   Build Functions
+#
+Src_Extract() {
+	mkdir -v "${ZBUILD_root}/${packagedir}"
+	tar -xf "${ZBUILD_sources}/${archive}" -C "${ZBUILD_root}/${packagedir}" --strip-components=1
+}
+Src_configure() {
+    sh Configure -des ${zconfig} || return 88
+}
+Src_compile() {
+    make || return 77
+}
+Src_install() {
+    make install
+}
+export package packagedir archive delete patch zconfig
+export -f Src_Extract
+export -f Src_configure
+export -f Src_compile
+export -f Src_install
+
+if [ -f ${ZBUILD_script} ]; then
+    ${ZBUILD_script}
+    exit_code=$?
+else
+    zprint " Error: Missing $ZBUILD_script "
+    exit_code=2
+fi
+
+if [[ $exit_code -ne 0 ]]; then
+    zprint " Error Code: ${exit_code} "
+else
+    zprint " Success "
+    unset -f Src_Extract
+    unset -f Src_configure
+    unset -f Src_compile
+    unset -f Src_install
+    unset package packagedir archive delete patch zconfig
+fi

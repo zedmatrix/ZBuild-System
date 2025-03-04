@@ -1,0 +1,21 @@
+#!/bin/bash
+if [ -d $LFS ] && [ -n $LFS ]; then
+
+    echo "*** Adding lfs user *"
+    groupadd lfs
+    useradd -s /bin/bash -g lfs -m -k /dev/null lfs
+
+    echo "*** Setting {lfs} user {lfs} passwd *"
+    echo "lfs:temporary" | chpasswd
+
+    echo "*** Change ownership on $LFS filesystem to user {lfs} "
+    chown -v lfs $LFS/{usr{,/*},lib,var,etc,bin,sbin,tools,zbuild}
+    case $(uname -m) in
+        x86_64) chown -v lfs $LFS/lib64 ;;
+    esac
+
+    echo "*** Start a shell running as user lfs"
+    echo '>>> su - lfs '
+else
+    echo "Error: {LFS} is not set or is empty"
+fi

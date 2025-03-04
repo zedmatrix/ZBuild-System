@@ -1,0 +1,29 @@
+#!/bin/bash
+if [ -z "$ZBUILD_root" ]; then
+   zprint " Error: Can't Find the \$BUILD_ROOT. Exiting. "
+   exit 1
+fi
+
+# named from the git hub source file cloned into /zbuild or copied over to
+FILESDIR="$PWD"
+
+zprint "  Creating mtab and hosts  "
+ln -sv /proc/self/mounts /etc/mtab
+cp -v $FILESDIR/706.hosts.zbuild /etc/hosts || exit 1
+
+zprint " Creating /etc/passwd file  "
+cp -v $FILESDIR/706.passwd.zbuild /etc/passwd || exit 1
+
+zprint " Creating /etc/group file  "
+cp -v $FILESDIR/706.group.zbuild /etc/group || exit 1
+
+zprint " Localedef and tmpfiles  "
+localedef -i C -f UTF-8 C.UTF-8
+install -o tester -d /home/tester
+
+touch /var/log/{btmp,lastlog,faillog,wtmp}
+chgrp -v utmp /var/log/lastlog
+chmod -v 664  /var/log/lastlog
+chmod -v 600  /var/log/btmp
+
+zprint "  Now exec /usr/bin/bash --login  "

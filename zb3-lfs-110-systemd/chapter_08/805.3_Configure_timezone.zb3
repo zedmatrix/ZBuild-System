@@ -1,0 +1,28 @@
+#!/bin/bash
+timezonedir=${ZBUILD_root}/timezone
+
+mkdir -v $timezonedir
+
+tar -xf ${ZBUILD_sources}/tzdata2025a.tar.gz -C $timezonedir || { echo "tar failure. exiting."; exit 1; }
+pushd $timezonedir
+
+ZONEINFO=/usr/share/zoneinfo
+mkdir -pv $ZONEINFO/{posix,right}
+
+for tz in etcetera southamerica northamerica europe africa antarctica  \
+          asia australasia backward; do
+    zic -L /dev/null   -d $ZONEINFO       ${tz}
+    zic -L /dev/null   -d $ZONEINFO/posix ${tz}
+    zic -L leapseconds -d $ZONEINFO/right ${tz}
+done
+
+cp -v zone.tab zone1970.tab iso3166.tab $ZONEINFO
+zic -d $ZONEINFO -p America/Vancouver
+unset ZONEINFO
+
+popd
+zprint " Cleaning Up $timezonedir "
+rm -rf $timezonedir
+
+tzselect
+ln -sfv /usr/share/zoneinfo/America/Vancouver /etc/localtime

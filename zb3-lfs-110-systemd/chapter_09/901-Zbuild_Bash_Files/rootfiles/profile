@@ -1,0 +1,13 @@
+#!/bin/bash
+# Begin ~/.profile
+# Personal environment variables and startup programs.
+
+if [ -d "$HOME/bin" ] ; then
+  pathprepend $HOME/bin
+fi
+
+# Set up user specific i18n variables
+export LC_ALL=en_US.UTF-8
+export LANG=en_US.UTF-8
+
+# End ~/.profile

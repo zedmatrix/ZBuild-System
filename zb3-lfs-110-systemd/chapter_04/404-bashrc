@@ -1,0 +1,34 @@
+#!/bin/bash
+# Start of Temporary Build Environment Setup
+set +h
+umask 022
+zzred="${zzred:-\033[1;31m}"
+zzgreen="${zzgreen:-\033[1;32m}"
+zzyellow="${zzyellow:-\033[1;33m}"
+zznormal="${zznormal:-\033[0m}"
+
+LFS=/mnt/lfs
+LC_ALL=POSIX
+LFS_TGT=$(uname -m)-lfs-linux-gnu
+ZBUILD_root="${LFS}/zbuild"
+ZBUILD_sources="${LFS}/sources"
+ZBUILD_log="${ZBUILD_root}/Zbuild_log"
+ZBUILD_script="${ZBUILD_root}/zbuild3.sh"
+
+PATH=/usr/bin
+
+if [ ! -L /bin ]; then PATH=/bin:$PATH; fi
+PATH=$LFS/tools/bin:$PATH
+CONFIG_SITE=$LFS/usr/share/config.site
+
+# Print a message in green with surrounding asterisks
+zprint() { printf "${zzgreen}*** %s ***${zznormal}\n" "$@"; }
+
+PS1="(lfs)\[${zzred}\] \u \[${zzgreen}\] \w \]\$\[${zznormal}\]"
+export MAKEFLAGS=-j$(nproc)
+export LFS LC_ALL LFS_TGT PATH CONFIG_SITE
+export ZBUILD_root ZBUILD_sources ZBUILD_log ZBUILD_script
+export zzred zzgreen zzyellow zznormal
+export -f zprint
+
+# End of Temporary Build Environment Setup

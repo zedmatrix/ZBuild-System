@@ -1,0 +1,91 @@
+#!/bin/bash
+#   6.18 - GCC-14.2.0 - pass 2
+#   unset functions
+#
+unset -f Src_Extract
+unset -f Src_prepare
+unset -f Src_configure
+unset -f Src_compile
+unset -f Src_check
+unset -f Src_install
+unset -f Src_post
+#
+#  Global
+#
+[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; exit 2; }
+ZBUILD_log=${ZBUILD_log:-"${ZBUILD_root}/Zbuild_log"}
+ZBUILD_script=${ZBUILD_script:-"${ZBUILD_root}/zbuild3.sh"}
+
+package=gcc-14.2.0
+packagedir=${package}
+archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
+delete="true"
+patch="false"
+zconfig="--host=${LFS_TGT} --target=${LFS_TGT} --prefix=/usr --with-build-sysroot=${LFS}"
+zconfig="${zconfig} --enable-default-pie --enable-default-ssp --enable-languages=c,c++"
+zconfig="${zconfig} --disable-nls --disable-multilib --disable-libatomic --disable-libgomp"
+zconfig="${zconfig} --disable-libquadmath --disable-libsanitizer --disable-libssp --disable-libvtv"
+#
+#   Build Functions
+#
+Src_Extract() {
+	mkdir -v "${ZBUILD_root}/${packagedir}"
+	tar -xf "${ZBUILD_sources}/${archive}" -C "${ZBUILD_root}/${packagedir}" --strip-components=1
+}
+Src_prepare() {
+    tar -xf "${ZBUILD_sources}/mpfr-4.2.1.tar.xz" || { echo "Extract of mpfr failed."; return 99; }
+    tar -xf "${ZBUILD_sources}/gmp-6.3.0.tar.xz" || { echo "Extract of gmp failed."; return 99; }
+    tar -xf "${ZBUILD_sources}/mpc-1.3.1.tar.gz" || { echo "Extract of mpc failed."; return 99; }
+    mv -v mpfr-4.2.1 mpfr
+    mv -v gmp-6.3.0 gmp
+    mv -v mpc-1.3.1 mpc
+
+    case $(uname -m) in
+      x86_64)
+        sed -e '/m64=/s/lib64/lib/' -i.orig gcc/config/i386/t-linux64
+      ;;
+    esac
+    sed '/thread_header =/s/@.*@/gthr-posix.h/' -i libgcc/Makefile.in libstdc++-v3/include/Makefile.in
+    mkdir -v build
+    cd build
+}
+Src_configure() {
+    ../configure ${zconfig} --build=$(../config.guess) LDFLAGS_FOR_TARGET=-L$PWD/$LFS_TGT/libgcc || return 88
+}
+Src_compile() {
+    make || return 77
+}
+Src_install() {
+    make DESTDIR=$LFS install
+}
+Src_post() {
+    ln -sv gcc $LFS/usr/bin/cc
+}
+export package packagedir archive patch delete patch zconfig
+export -f Src_Extract
+export -f Src_prepare
+export -f Src_configure
+export -f Src_compile
+export -f Src_install
+export -f Src_post
+
+if [ -f ${ZBUILD_script} ]; then
+    ${ZBUILD_script}
+    exit_code=$?
+else
+    zprint " Error: Missing $ZBUILD_script "
+    exit_code=2
+fi
+
+if [[ $exit_code -ne 0 ]]; then
+    zprint " Error Code: ${exit_code} "
+else
+    zprint " Success "
+    unset -f Src_Extract
+    unset -f Src_prepare
+    unset -f Src_configure
+    unset -f Src_compile
+    unset -f Src_install
+    unset -f Src_post
+    unset package packagedir archive delete patch zconfig
+fi

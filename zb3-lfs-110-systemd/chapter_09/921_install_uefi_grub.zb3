@@ -1,0 +1,16 @@
+#!/bin/bash
+zprint "Mounting ESP/EFI System Partition"
+BOOT=/dev/vdb1
+mount --mkdir -v -t vfat $BOOT -o codepage=437,iocharset=iso8859-1 /boot/efi
+
+zprint "Installing GRUB for EFI"
+grub-install --target=x86_64-efi --removable
+
+zprint "Mounting /sys/firmware/efi/efivarfs"
+mountpoint /sys/firmware/efi/efivars || mount -v -t efivarfs efivarfs /sys/firmware/efi/efivars
+grub-install --bootloader-id=LFS --recheck
+
+zprint "UEFI Boot Manager Check"
+efibootmgr | cut -f 1
+
+zprint "Done"

@@ -1,0 +1,63 @@
+#!/bin/bash
+#   8.03 - Man-Pages-6.12
+#   unset functions
+#
+unset -f Src_Extract
+unset -f Src_prepare
+unset -f Src_configure
+unset -f Src_compile
+unset -f Src_check
+unset -f Src_install
+unset -f Src_post
+#
+# Global Settings
+#
+[ -z "${ZBUILD_root}" ] && { echo "Error: ZBUILD_root not set. Exiting."; return 2; }
+ZBUILD_log=${ZBUILD_log:-"${ZBUILD_root}/Zbuild_log"}
+ZBUILD_script=${ZBUILD_script:-"${ZBUILD_root}/zbuild3.sh"}
+
+package=man-pages-6.12
+packagedir=${package}
+archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 | xargs basename)
+delete="true"
+patch="false"
+#
+#   Build Functions
+#
+Src_Extract() {
+    mkdir -v "${ZBUILD_root}/${packagedir}"
+    tar -xf "${ZBUILD_sources}/${archive}" -C "${ZBUILD_root}/${packagedir}" --strip-components=1
+}
+Src_configure() {
+    rm -v man3/crypt*
+}
+Src_compile() {
+	return 0
+}
+Src_install() {
+    make -R GIT=false prefix=/usr install
+}
+export package packagedir archive delete patch
+export -f Src_Extract
+export -f Src_configure
+export -f Src_compile
+export -f Src_install
+
+if [ -f ${ZBUILD_script} ]; then
+    ${ZBUILD_script}
+    exit_code=$?
+else
+    zprint " Error: Missing $ZBUILD_script "
+    exit_code=2
+fi
+
+if [[ $exit_code -ne 0 ]]; then
+    zprint " Error Code: $exit_code "
+else
+    zprint " Success "
+    unset -f Src_Extract
+    unset -f Src_configure
+    unset -f Src_compile
+    unset -f Src_install
+    unset package packagedir archive delete patch
+fi

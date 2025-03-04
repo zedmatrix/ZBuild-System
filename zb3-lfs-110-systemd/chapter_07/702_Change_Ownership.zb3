@@ -1,0 +1,15 @@
+#!/bin/bash
+if [ -v LFS ] && [ -n "$LFS" ]; then
+
+  zprint " Changing Ownership from lfs to root "
+  chown --from lfs -vR root:root $LFS/{usr,lib,var,etc,bin,sbin,tools,zbuild}
+
+  case $(uname -m) in
+    x86_64) chown --from lfs -vR root:root $LFS/lib64 ;;
+  esac
+
+  zprint " Creating Virtual Kernel Directories "
+  mkdir -pv $LFS/{dev,proc,sys,run}
+else
+  zprint " Error: Check your \$LFS Variable "
+fi

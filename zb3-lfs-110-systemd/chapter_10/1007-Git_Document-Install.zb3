@@ -1,0 +1,30 @@
+#!/bin/bash
+packagedir=/usr/share/doc/git-2.48.1
+zprint "Installing Git manpages to /usr/share/man "
+tar -xf $ZBUILD_sources/git-manpages-2.48.1.tar.xz -C /usr/share/man --no-same-owner --no-overwrite-dir
+
+zprint "Installing Git documentation to ${packagedir} "
+mkdir -vp ${packagedir}
+tar -xf $ZBUILD_sources/git-htmldocs-2.48.1.tar.xz -C ${packagedir} --no-same-owner --no-overwrite-dir
+
+zprint "Changing File and Directory modes"
+find ${packagedir} -type d -exec chmod 755 {} \;
+find ${packagedir} -type f -exec chmod 644 {} \;
+
+zprint "Re-Organize Git Documentation"
+mkdir -vp ${packagedir}/man-pages/{html,text}
+mv -v ${packagedir}/{git*.txt,man-pages/text}
+mv -v ${packagedir}/{git*.,index.,man-pages/}html
+
+mkdir -vp ${packagedir}/technical/{html,text}
+mv -v ${packagedir}/technical/{*.txt,text}
+mv -v ${packagedir}/technical/{*.,}html
+
+mkdir -vp ${packagedir}/howto/{html,text}
+mv -v ${packagedir}/howto/{*.txt,text}
+mv -v ${packagedir}/howto/{*.,}html
+
+sed -i '/^<a href=/s|howto/|&html/|' ${packagedir}/howto-index.html
+sed -i '/^\* link:/s|howto/|&html/|' ${packagedir}/howto-index.txt
+
+zprint "Done - ${packagedir} "
