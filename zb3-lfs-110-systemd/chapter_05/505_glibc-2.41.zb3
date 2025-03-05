@@ -22,7 +22,7 @@ archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 |
 delete="true"
 patch="glibc-2.40-fhs-1.patch"
 zconfig="--prefix=/usr --host=${LFS_TGT} --disable-nscd"
-zconfig="${zconfig} --enable-kernel=4.19 --with-headers=${LFS}/usr/include"
+zconfig="${zconfig} --enable-kernel=5.4 --with-headers=${LFS}/usr/include"
 #
 #   Build Functions
 #
