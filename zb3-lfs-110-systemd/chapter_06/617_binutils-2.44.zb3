@@ -22,7 +22,7 @@ archive=$(find ${ZBUILD_sources} -name "${package}*.tar.*" | sort -V | head -1 |
 delete="true"
 patch="false"
 zconfig="--prefix=/usr --host=${LFS_TGT} --disable-nls --disable-werror --enable-default-hash-style=gnu"
-zconfig="${zconfig} --enable-shared --enable-gprofng=no --enable-64-bit-bfd --enable-new-dtags "
+zconfig="${zconfig} --enable-shared --enable-gprofng=no --enable-64-bit-bfd --enable-new-dtags"
 #
 #   Build Functions
 #
@@ -31,7 +31,7 @@ Src_Extract() {
 	tar -xf "${ZBUILD_sources}/${archive}" -C "${ZBUILD_root}/${packagedir}" --strip-components=1
 }
 Src_prepare() {
-    sed '6009s/$add_dir//' -i ltmain.sh
+    sed '6031s/$add_dir//' -i ltmain.sh
     mkdir -v build
     cd build
 }
