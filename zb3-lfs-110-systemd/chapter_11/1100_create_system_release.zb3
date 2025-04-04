@@ -1,7 +1,7 @@
 #!/bin/bash
 name=" ** EDITME ** "
 version="r12.2-110-systemd"
-zprint "Creating System Release Files"
+printf "\n\t *** Creating System Release Files *** \n"
 
 echo ${version} > /etc/lfs-release
 [ -f /etc/lfs-release ] && echo " Created: /etc/lfs-release "
@@ -24,4 +24,4 @@ HOME_URL="https://www.linuxfromscratch.org/lfs/"
 EOF
 [ -f /etc/os-release ] && echo " Created: /etc/os-release "
 
-zprint "Done"
+printf "\n\n *** The End *** \n\n"
