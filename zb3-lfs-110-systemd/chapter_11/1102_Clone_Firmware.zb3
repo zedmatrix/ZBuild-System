@@ -1,8 +1,11 @@
 #!/bin/bash
-zprint "Cloning Firmware"
-git clone https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
+printf "\n\t *** Cloning Firmware to /usr/src ***\n"
+pushd /usr/src
+    git clone https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
+popd
 
-echo '>>> ./copy-firmware.sh /usr/lib/firmware'
+printf "\n\t Now Just Install All Firmware \n"
+printf "\n$ ./copy-firmware.sh /usr/lib/firmware \n"
 
 head -n7 /proc/cpuinfo
 
