@@ -1,0 +1,75 @@
+#!/bin/bash
+#       Install Zbuild v3.4 - LFS - Base System
+#
+#	GRUB-2.12 for EFI
+#
+#    unset functions
+unset -f Src_prepare
+unset -f Src_configure
+unset -f Src_compile
+unset -f Src_check
+unset -f Src_install
+#
+# Global Settings
+#
+ZBUILD_root=/zbuild
+ZBUILD_script=${ZBUILD_root}/zbuild4.sh
+ZBUILD_log=${ZBUILD_root}/Zbuild_log
+[ ! -d ${ZBUILD_root} ] && { echo "Error: ${ZBUILD_root} directory Missing. Exiting."; exit 2; }
+[ ! -d ${ZBUILD_log} ] && mkdir -v $ZBUILD_log
+[ ! -f ${ZBUILD_script} ] && { echo "ERROR: Missing ${ZBUILD_script}. Exiting."; exit 3; }
+
+# pkgurl = archive
+pkgname=grub
+pkgver=2.12
+pkgurl="https://ftp.gnu.org/gnu/grub/grub-2.12.tar.xz"
+pkgpatch=""
+zdelete="true"
+#   Configure
+pkgdir=${pkgname}-${pkgver}
+zconfig="--prefix=/usr --sysconfdir=/etc --disable-efiemu --with-platform=efi --target=x86_64 --disable-werror"
+#
+#   Build Functions
+#
+Src_prepare() {
+	return 0
+	#mkdir -pv /usr/share/fonts/unifont
+	#gunzip -c /sources/unifont-16.0.01.pcf.gz > /usr/share/fonts/unifont/unifont.pcf
+}
+Src_configure() {
+	echo depends bli part_gpt > grub-core/extra_deps.lst
+    ./configure ${zconfig} || return 88
+}
+Src_compile() {
+    make || return 77
+}
+Src_install() {
+	make -C grub-core install
+	install -vm755 grub-mkfont /usr/bin/
+	install -vm644 ascii.h widthspec.h *.pf2 /usr/share/grub/
+	install -vm755 grub-mount /usr/bin/
+}
+export pkgname pkgver pkgurl pkgdir zdelete zconfig
+export -f Src_prepare
+export -f Src_configure
+export -f Src_compile
+export -f Src_install
+
+if [ -f ${ZBUILD_script} ]; then
+    ${ZBUILD_script}
+    exitcode=$?
+else
+    printf "\n\t Error: Missing ZBUILD_script. \n"
+    exitcode=2
+fi
+
+if [[ $exitcode -ne 0 ]]; then
+    printf "\n\t Error Code: ${exitcode} \n"
+else
+    printf "\t Success \n"
+    unset -f Src_prepare
+    unset -f Src_configure
+    unset -f Src_compile
+    unset -f Src_install
+    unset pkgname pkgver pkgurl pkgdir zdelete zconfig
+fi
