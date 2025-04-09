@@ -1,3 +1,4 @@
+#!/bin/bash
 printf "\n\t Configuring Linux-6.13.7 \n"
 pkgsrc=/sources
 pkgdest=/usr/src
