@@ -7,6 +7,7 @@ UEFI="-drive if=pflash,format=raw,file=LFS_UEFI.flash"
 
 # create like image $ qemu-img create -f qcow2 lfs_12_uefi.img 50G
 LFS="-drive id=disk0,if=none,format=qcow2,file=lfs_12_uefi.img -device virtio-blk-pci,drive=disk0,bootindex=0"
+
 # a scratch drive created in a similar way and you can restrict to smaller size like 3G
 Source="-drive id=disk1,if=none,format=qcow2,file=lfs-source.img -device virtio-blk-pci,drive=disk1,bootindex=1"
 
