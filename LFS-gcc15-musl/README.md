@@ -9,21 +9,22 @@ write out partition and exit
 # Formatting
 `mkfs -v -t ext4 /dev/sda1`
 
-# Setting Environment
+# Setting Environment - stage1
 `export LFS=/mnt/lfs`
 `umask 022`
 `mkdir -pv $LFS`
 `mount /dev/sda1 $LFS`
 
-# Create Limited Directory Layout 
+## Create Limited Directory Layout 
 >Files
     0-environment.sh<br>
     1-limited-dir.sh<br>
 
-# Getting Packages for Limited Toolchain
+## Getting Packages for Limited Toolchain
 >File: 2-limited-packages.sh
 
-# Compiling Cross Toolchain - Chapter 5
+## Compiling Cross Toolchain - stage2
+### Chapter 5 LFS Book System-V
 >Files: 
     5.1-binutils-2.44.sh<br>
     5.2-gcc-15.1.0.sh<br>
@@ -31,7 +32,7 @@ write out partition and exit
     5.4-musl-1.2.5.sh<br>
     5.5-Libstdcpp.sh<br>
     
-## Chapter 6
+## Chapter 6 - stage2
 >Files:
     6.1-m4-1.4.20.sh<br>
     6.2-ncurses-6.5.sh<br>
@@ -71,7 +72,9 @@ write out partition and exit
     `exit && cd $LFS`<br>
     `tar --exclude=/{sources,zbuild} -cJpf /home/lfs-musl-temptools-r12.3-71.tar.xz .`<br>
 
-## Chapter 8 - Basic System
+## Chapter 8 - Basic System - stage3
 >   Finish Downloading Sources
     `wget -c -nc -P $LFS/sources -i wget-list-sysv`<br>
     
+### Book Version Version r12.3-71
+[Linux From Scratch](https://www.linuxfromscratch.org/lfs/view/development/)
