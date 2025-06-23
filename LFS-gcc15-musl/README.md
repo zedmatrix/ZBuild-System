@@ -76,5 +76,7 @@ write out partition and exit
 >   Finish Downloading Sources
     `wget -c -nc -P $LFS/sources -i wget-list-sysv`<br>
     
+## Stage4 - Configuring and Building mdevd
+    
 ### Book Version Version r12.3-71
 [Linux From Scratch](https://www.linuxfromscratch.org/lfs/view/development/)

@@ -1,0 +1,73 @@
+#!/bin/bash
+mkdir -pv /etc/rc.d/init.d
+mkdir -pv /etc/rc.d/rc{0,1,2,3,4,5,6,S}.d
+
+cat > /etc/rc.d/init.d/mdev << "EOF"
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          mdevd
+# Required-Start:    $local_fs
+# Default-Start:     S
+# Default-Stop:      0 6
+# Short-Description: Start mdevd
+### END INIT INFO
+
+case "$1" in
+  start)
+    echo "Starting mdevd..."
+    /usr/sbin/mdevd &
+    echo "Coldplugging devices..."
+    /usr/bin/mdevd-coldplug
+    ;;
+  stop)
+    echo "Stopping mdevd..."
+    killall mdevd
+    ;;
+  restart)
+    $0 stop
+    $0 start
+    ;;
+  *)
+    echo "Usage: $0 {start|stop|restart}"
+    exit 1
+esac
+EOF
+chmod +x /etc/rc.d/init.d/mdevd
+ln -s ../init.d/mdevd /etc/rc.d/rcS.d/S05mdevd
+ln -s ../init.d/mdevd /etc/rc.d/rc6.d/K05mdevd
+
+# missing /etc/rc.d/init.d/rc
+cat > /etc/rc.d/init.d/rc << "EOF"
+#!/bin/sh
+
+RUNLEVEL="$1"
+[ -z "$RUNLEVEL" ] && RUNLEVEL="S"
+
+echo "Running SysVinit runlevel: $RUNLEVEL"
+
+for f in /etc/rc.d/rc${RUNLEVEL}.d/S* ; do
+  [ -x "$f" ] && "$f" start
+done
+EOF
+
+chmod +x /etc/rc.d/init.d/rc
+
+cat > /etc/rc.d/init.d/init << "EOF"
+#!/bin/sh
+
+echo "Mounting kernel filesystems..."
+
+mkdir -p /proc /sys /dev /dev/pts /dev/shm /run
+
+mountpoint -q /proc     || mount -t proc proc /proc
+mountpoint -q /sys      || mount -t sysfs sys /sys
+mountpoint -q /dev      || mount -t devtmpfs dev /dev
+mountpoint -q /dev/pts  || mount -t devpts devpts /dev/pts -o gid=5,mode=620
+mountpoint -q /dev/shm  || mount -t tmpfs tmpfs /dev/shm
+mountpoint -q /run      || mount -t tmpfs tmpfs /run
+
+echo "Done mounting filesystems."
+EOF
+
+chmod -v +x /etc/rc.d/init.d/init
+ln -sv ../init.d/init /etc/rc.d/rcS.d/S00mountfs
