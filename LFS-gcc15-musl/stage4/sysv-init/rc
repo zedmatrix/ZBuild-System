@@ -1,0 +1,28 @@
+#!/bin/sh
+# Begin /etc/rc.d/init.d/rc
+
+. /lib/lsb/init-functions.sh
+
+RUNLEVEL="$1"
+[ -z "$RUNLEVEL" ] && RUNLEVEL="S"
+
+message_info "Running SysVinit runlevel: $RUNLEVEL\n"
+
+for f in /etc/rc.d/rc${RUNLEVEL}.d/S* ; do
+    case "$f" in
+        *.sh)
+            # skip shell fragments or helper scripts
+            continue
+            ;;
+    esac
+
+    if [ -x "$f" ]; then
+        #message_info "Running $f"
+        "$f" start
+    else
+        message_warn "$f is not executable"
+    fi
+done
+
+exit 0
+# End /etc/rc.d/init.d/rc

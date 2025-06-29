@@ -1,0 +1,38 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides: network
+# Required-Start: $local_fs
+# Default-Start: 2 3 4 5
+# Default-Stop: 0 1 6
+# Short-Description: Starts dhcpcd for network interface(s)
+### END INIT INFO
+
+. /lib/lsb/init-functions.sh
+
+DHCPCD_BIN=/sbin/dhcpcd
+IFACE=${IFACE:-eth0}  # default interface
+
+case "$1" in
+  start)
+    message_info "Starting network on $IFACE...\n"
+    start_daemon $DHCPCD_BIN "$IFACE"
+    ;;
+  stop)
+    message_info "Stopping dhcpcd on $IFACE...\n"
+    killproc $DHCPCD_BIN -x "$IFACE"
+    ip link set "$IFACE" down
+    ;;
+  restart)
+    $0 stop
+    sleep 1
+    $0 start
+    ;;
+  status)
+    status_proc "$DHCPCD_BIN"
+    ;;
+  *)
+    echo "Usage: $0 {start|stop|restart|status}"
+    exit 1
+    ;;
+esac
+

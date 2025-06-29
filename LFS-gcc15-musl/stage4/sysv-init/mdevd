@@ -1,0 +1,45 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          mdevd
+# Required-Start:    $local_fs
+# Default-Start:     S
+# Default-Stop:      0 6
+# Short-Description: Start mdevd
+### END INIT INFO
+
+. /lib/lsb/init-functions.sh
+
+MDEVD_BIN=/usr/sbin/mdevd
+COLDPLUG_BIN=/usr/bin/mdevd-coldplug
+
+case "$1" in
+  start)
+    message_info "Starting mdevd...\n"
+    background="yes"
+    if start_daemon "$MDEVD_BIN"; then
+      message_info "Coldplugging devices...\n"
+      "$COLDPLUG_BIN"
+    else
+      message_fail "Failed to start mdevd"
+      exit 1
+    fi
+    ;;
+
+  stop)
+    message_info "Stopping mdevd...\n"
+    killproc mdevd
+    ;;
+
+  restart)
+    "$0" stop
+    sleep 1
+    "$0" start
+    ;;
+
+  *)
+    echo "Usage: $0 {start|stop|restart}"
+    exit 1
+    ;;
+esac
+
+exit 0
